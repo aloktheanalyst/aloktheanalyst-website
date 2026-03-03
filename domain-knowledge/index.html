@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domain Knowledge — aloktheanalyst</title>
+<meta name="description" content="Deep-dive domain knowledge guides for data analysts. B2B SaaS funnels, marketing analytics, product analytics and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0f;--surf:#111118;--surf2:#16161f;--border:#1e1e2e;--blue:#4f9cf9;--blue-d:#2563eb;--blue-g:rgba(79,156,249,0.12);--white:#f0f4ff;--muted:#6b7280;--text:#d1d5db}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,156,249,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(79,156,249,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--white);text-decoration:none;letter-spacing:.05em}
+.nav-brand span{color:var(--blue)}
+.nav-links{display:flex;align-items:center;gap:24px;list-style:none}
+.nav-links a{font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--white)}
+.nav-links a.active{color:var(--blue)}
+.nav-sub{font-size:12px;background:var(--blue-d);color:#fff;padding:2px 10px;border-radius:99px;font-weight:600}
+
+.page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:96px 24px 80px}
+
+.breadcrumb{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:36px}
+.breadcrumb a{color:var(--muted);text-decoration:none;transition:color .2s}
+.breadcrumb a:hover{color:var(--blue)}
+
+.hero{margin-bottom:52px}
+.hero-eye{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:14px}
+.hero-eye::before{content:'// ';opacity:.4}
+.hero h1{font-size:clamp(28px,5vw,48px);font-weight:700;letter-spacing:-.02em;color:var(--white);line-height:1.1;margin-bottom:14px}
+.hero p{font-size:15px;color:var(--muted);max-width:540px;line-height:1.75}
+
+.sec-hdr{display:flex;align-items:center;gap:12px;margin-bottom:22px;margin-top:8px}
+.sec-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);white-space:nowrap}
+.sec-tag::before{content:'// ';opacity:.4}
+.sec-line{flex:1;height:1px;background:var(--border)}
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:48px}
+
+.dcard{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:24px;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:border-color .2s,transform .2s,box-shadow .2s;position:relative;overflow:hidden}
+.dcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue-d),var(--blue));opacity:0;transition:opacity .2s}
+.dcard:hover{border-color:rgba(79,156,249,0.3);transform:translateY(-3px);box-shadow:0 8px 28px rgba(79,156,249,0.09)}
+.dcard:hover::before{opacity:1}
+.dcard.cs{opacity:.5;cursor:not-allowed;pointer-events:none}
+.cs-badge{position:absolute;top:14px;right:14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--surf2);border:1px solid var(--border);padding:2px 8px;border-radius:99px}
+.cicon{width:42px;height:42px;border-radius:10px;background:var(--blue-g);border:1px solid rgba(79,156,249,0.18);display:flex;align-items:center;justify-content:center;font-size:18px}
+.ctopic{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:5px}
+.ctitle{font-size:16px;font-weight:600;color:var(--white);line-height:1.3;margin-bottom:4px}
+.cdesc{font-size:12.5px;color:var(--muted);line-height:1.65}
+.cmeta{display:flex;align-items:center;gap:7px;margin-top:auto;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap}
+.cpill{font-size:9.5px;font-weight:500;padding:2px 8px;border-radius:99px;background:rgba(79,156,249,0.07);border:1px solid rgba(79,156,249,0.16);color:rgba(79,156,249,.75)}
+.carr{margin-left:auto;color:var(--muted);font-size:15px;transition:transform .2s,color .2s}
+.dcard:hover .carr{transform:translateX(4px);color:var(--blue)}
+
+footer{border-top:1px solid var(--border);padding:28px 24px;position:relative;z-index:1}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-brand{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+.footer-links{display:flex;gap:20px;list-style:none}
+.footer-links a{font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--white)}
+
+@media(max-width:620px){nav{padding:0 16px}.nav-links li:nth-child(n+5){display:none}.footer-inner{justify-content:center}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-brand">ALOK<span>.</span>ANALYST</a>
+  <ul class="nav-links">
+    <li><a href="/#youtube">Videos</a></li>
+    <li><a href="/#linkedin">Posts</a></li>
+    <li><a href="/#courses">Courses</a></li>
+    <li><a href="/domain-knowledge/" class="active">Domain Knowledge</a></li>
+    <li><a href="/#casestudy">Practice</a></li>
+    <li><a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" style="color:var(--blue)">Subscribe</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+  <div class="breadcrumb">
+    <a href="/">Home</a>
+    <span style="opacity:.35">›</span>
+    <span>Domain Knowledge</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eye">Domain Knowledge</div>
+    <h1>Go beyond the tools.<br>Understand the domain.</h1>
+    <p>Deep-dive guides on how data analytics is applied in real industry verticals. Learn the metrics, funnels, and frameworks senior analysts are expected to know — not just the SQL.</p>
+  </div>
+
+  <div class="sec-hdr">
+    <span class="sec-tag">Marketing Analytics</span>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="card-grid">
+
+    <a href="/domain-knowledge/saas-marketing-funnel.html" class="dcard">
+      <div class="cicon">📊</div>
+      <div>
+        <div class="ctopic">B2B SaaS · Marketing</div>
+        <div class="ctitle">The Complete B2B SaaS Marketing Funnel</div>
+        <div class="cdesc">Budget, inbound vs outbound, lead scoring, MQL→SQL, pipeline, LTV:CAC, and attribution — with 2025 benchmarks at every stage. Interactive parallel-track visualization.</div>
+      </div>
+      <div class="cmeta">
+        <span class="cpill">8 Stages</span>
+        <span class="cpill">2025 Benchmarks</span>
+        <span class="cpill">Interactive</span>
+        <span class="carr">→</span>
+      </div>
+    </a>
+
+    <div class="dcard cs">
+      <span class="cs-badge">Coming Soon</span>
+      <div class="cicon">🛒</div>
+      <div>
+        <div class="ctopic">E-Commerce · Marketing</div>
+        <div class="ctitle">E-Commerce Analytics Funnel</div>
+        <div class="cdesc">Acquisition, retention and revenue metrics for DTC brands. ROAS, LTV, CAC payback, and cohort analysis.</div>
+      </div>
+      <div class="cmeta">
+        <span class="cpill">ROAS</span><span class="cpill">Cohorts</span><span class="cpill">CAC</span>
+      </div>
+    </div>
+
+    <div class="dcard cs">
+      <span class="cs-badge">Coming Soon</span>
+      <div class="cicon">📱</div>
+      <div>
+        <div class="ctopic">Product · Growth</div>
+        <div class="ctitle">PLG — Product-Led Growth Analytics</div>
+        <div class="cdesc">Activation, expansion, and virality metrics for PLG SaaS. Time-to-value, PQL scoring, and feature adoption funnels.</div>
+      </div>
+      <div class="cmeta">
+        <span class="cpill">PQL</span><span class="cpill">Activation</span><span class="cpill">Virality</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sec-hdr">
+    <span class="sec-tag">Finance & Revenue Analytics</span>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="card-grid">
+
+    <div class="dcard cs">
+      <span class="cs-badge">Coming Soon</span>
+      <div class="cicon">💰</div>
+      <div>
+        <div class="ctopic">SaaS · Finance</div>
+        <div class="ctitle">SaaS Revenue Analytics</div>
+        <div class="cdesc">ARR, MRR, expansion, contraction, churn waterfall, and Rule of 40. The financial metrics every SaaS analyst must know cold.</div>
+      </div>
+      <div class="cmeta">
+        <span class="cpill">ARR</span><span class="cpill">NRR</span><span class="cpill">Rule of 40</span>
+      </div>
+    </div>
+
+    <div class="dcard cs">
+      <span class="cs-badge">Coming Soon</span>
+      <div class="cicon">🏦</div>
+      <div>
+        <div class="ctopic">BFSI · Analytics</div>
+        <div class="ctitle">Banking & Fintech Analytics</div>
+        <div class="cdesc">Credit risk metrics, transaction analytics, customer LTV, and churn prediction in financial services.</div>
+      </div>
+      <div class="cmeta">
+        <span class="cpill">Credit Risk</span><span class="cpill">Churn</span><span class="cpill">LTV</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">© 2025 aloktheanalyst.com — Built with 🔥</div>
+    <ul class="footer-links">
+      <li><a href="https://www.youtube.com/@aloktheanalyst">YouTube</a></li>
+      <li><a href="https://www.linkedin.com/in/aloktheanalyst/">LinkedIn</a></li>
+      <li><a href="/#courses">Courses</a></li>
+      <li><a href="/#casestudy">Practice</a></li>
+    </ul>
+  </div>
+</footer>
+
+</body>
+</html>
