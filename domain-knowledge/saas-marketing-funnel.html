@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2B SaaS Marketing Funnel — Domain Knowledge — aloktheanalyst</title>
+<meta name="description" content="The complete B2B SaaS marketing funnel with 2025 benchmarks. Inbound vs outbound, MQL, SQL, pipeline, LTV:CAC, and attribution — interactive parallel-track visualization.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── SITE CHROME ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0f;--surf:#111118;--surf2:#16161f;--border:#1e1e2e;--blue:#4f9cf9;--blue-d:#2563eb;--white:#f0f4ff;--muted:#6b7280;--text:#d1d5db}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,156,249,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(79,156,249,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--white);text-decoration:none;letter-spacing:.05em}
+.nav-brand span{color:var(--blue)}
+.nav-links{display:flex;align-items:center;gap:24px;list-style:none}
+.nav-links a{font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--white)}
+.nav-links a.active{color:var(--blue)}
+
+.site-wrap{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:80px 24px 80px}
+
+/* breadcrumb */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
+.breadcrumb a{color:var(--muted);text-decoration:none;transition:color .2s}
+.breadcrumb a:hover{color:var(--blue)}
+
+/* page header */
+.pg-header{margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+.pg-eye{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+.pg-eye::before{content:'// ';opacity:.4}
+.pg-title{font-size:clamp(22px,4vw,38px);font-weight:700;letter-spacing:-.02em;color:var(--white);line-height:1.2;margin-bottom:10px}
+.pg-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.pg-pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(79,156,249,0.08);border:1px solid rgba(79,156,249,0.2);color:rgba(79,156,249,.8);font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.pg-desc{font-size:13.5px;color:var(--muted);margin-top:10px;max-width:680px;line-height:1.7}
+
+/* embed wrapper — scopes the funnel */
+.funnel-wrap{background:#04091a;border-radius:16px;border:1px solid rgba(59,130,246,0.2);overflow:hidden;margin-bottom:48px}
+
+/* key concepts */
+.concepts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:48px}
+.concept-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.cc-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.cc-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:500;color:var(--white);line-height:1;margin-bottom:4px}
+.cc-desc{font-size:11.5px;color:var(--muted);line-height:1.6}
+
+footer{border-top:1px solid var(--border);padding:28px 24px;position:relative;z-index:1}
+.footer-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-brand{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+.footer-links{display:flex;gap:20px;list-style:none}
+.footer-links a{font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--white)}
+
+@media(max-width:620px){nav{padding:0 16px}.nav-links li:nth-child(n+5){display:none}.footer-inner{justify-content:center}}
+
+/* ─── FUNNEL EMBED STYLES (scoped to .funnel-wrap) ─── */
+.funnel-wrap {:root{--bg:#04091a;--surf:#080f22;--s2:#0b142d;--b3:#3b82f6;--b4:#1d5fd8;--b2:#93c5fd;--wh:#fff;--mu:#6888b0;--bd:rgba(59,130,246,0.15);--bds:rgba(59,130,246,0.3);--ibd:rgba(59,130,246,0.28);--ibg:rgba(59,130,246,0.07);--obd:rgba(255,255,255,0.16);--obg:rgba(255,255,255,0.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--wh);font-family:'Outfit',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+.page{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:52px 24px 80px;}
+
+/* HEADER */
+.header{text-align:center;margin-bottom:44px;animation:up .7s ease both;}
+.btag{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,0.09);border:1px solid var(--bds);border-radius:99px;padding:5px 15px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--b3);margin-bottom:18px;}
+.btag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--b3);animation:pulse 2s infinite;}
+h1{font-size:clamp(26px,5vw,50px);font-weight:900;letter-spacing:-.03em;line-height:1;margin-bottom:8px;}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--b3),var(--b2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hsub{font-size:13px;color:var(--mu);}
+
+/* LEGEND */
+.legend{display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:36px;animation:up .6s .1s ease both;}
+.leg{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+.ldot{width:9px;height:9px;border-radius:50%;}
+.ldot.i{background:var(--b3);box-shadow:0 0 10px rgba(59,130,246,.5);}
+.ldot.o{background:var(--wh);box-shadow:0 0 10px rgba(255,255,255,.3);}
+.lsep{width:1px;height:16px;background:var(--bd);}
+
+/* FUNNEL GRID — 3 cols: left | center | right */
+.funnel{display:grid;grid-template-columns:1fr 90px 1fr;position:relative;}
+.funnel::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,transparent,var(--bds) 5%,var(--bds) 95%,transparent);transform:translateX(-50%);z-index:0;}
+
+/* section labels */
+.sl{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:22px 0 12px;}
+.sl-line{flex:1;height:1px;background:var(--bd);}
+.sl-txt{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);white-space:nowrap;}
+
+/* cells */
+.cl{grid-column:1;padding-right:12px;}
+.cc{grid-column:2;display:flex;flex-direction:column;align-items:center;z-index:2;}
+.cr{grid-column:3;padding-left:12px;}
+
+/* card */
+.card{border-radius:12px;padding:16px 18px;transition:transform .2s;position:relative;overflow:hidden;}
+.card:hover{transform:translateY(-2px);}
+.card.i{background:var(--ibg);border:1px solid var(--ibd);border-top:2px solid var(--b4);}
+.card.o{background:var(--obg);border:1px solid var(--obd);border-top:2px solid rgba(255,255,255,.38);}
+.ctag{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
+.card.i .ctag{color:var(--b3);}
+.card.o .ctag{color:rgba(255,255,255,.42);}
+.cmet{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;line-height:1;margin-bottom:4px;}
+.card.i .cmet{color:var(--b2);}
+.card.o .cmet{color:var(--wh);}
+.ctitle{font-size:13px;font-weight:700;margin-bottom:5px;color:var(--wh);}
+.cdesc{font-size:11px;color:var(--mu);line-height:1.6;margin-bottom:9px;}
+.rows{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;}
+.rl{color:var(--mu);}
+.rv{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;}
+.card.i .rv{color:var(--b2);}
+.card.o .rv{color:rgba(255,255,255,.8);}
+.bar{height:2px;border-radius:99px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:1px;}
+.fill{height:100%;border-radius:99px;}
+.card.i .fill{background:var(--b4);}
+.card.o .fill{background:rgba(255,255,255,.26);}
+.tags{display:flex;flex-wrap:wrap;gap:4px;}
+.tag{font-size:9px;font-weight:500;padding:2px 7px;border-radius:99px;}
+.card.i .tag{background:rgba(59,130,246,.11);border:1px solid rgba(59,130,246,.24);color:var(--b2);}
+.card.o .tag{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.11);color:rgba(255,255,255,.52);}
+
+/* node in center column */
+.node{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--s2);border:2px solid var(--bds);box-shadow:0 0 14px rgba(59,130,246,0.2);flex-shrink:0;position:relative;z-index:3;}
+.seg{width:2px;background:var(--bds);flex:1;min-height:24px;}
+
+/* track headers */
+.th-l{grid-column:1;animation:up .4s ease both;}
+.th-c{grid-column:2;}
+.th-r{grid-column:3;text-align:right;animation:up .4s ease both;}
+.tlabel{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:5px 14px;border-radius:99px;}
+.tlabel.i{background:rgba(59,130,246,0.11);border:1px solid var(--ibd);color:var(--b3);}
+.tlabel.o{background:rgba(255,255,255,0.05);border:1px solid var(--obd);color:rgba(255,255,255,.65);}
+.tdot{width:7px;height:7px;border-radius:50%;}
+.i .tdot{background:var(--b3);}
+.o .tdot{background:var(--wh);}
+
+/* MERGE / FULL WIDTH */
+.mw{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;z-index:5;}
+.mnode{background:var(--b4);border:2px solid var(--b3);border-radius:11px;padding:9px 24px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;color:var(--wh);box-shadow:0 0 22px rgba(59,130,246,0.28);white-space:nowrap;}
+.mnode .mi{font-size:19px;}
+.mnode .ms{font-size:10.5px;color:rgba(255,255,255,.5);font-weight:400;font-family:'JetBrains Mono',monospace;margin-top:1px;}
+.cpill{background:var(--s2);border:1px solid var(--bds);border-radius:99px;padding:3px 13px;font-size:10px;color:var(--mu);display:flex;gap:6px;align-items:center;white-space:nowrap;}
+.cpill b{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--b2);font-weight:500;}
+.arr{display:flex;flex-direction:column;align-items:center;padding:6px 0;}
+.arr-seg{width:2px;height:18px;background:var(--bds);}
+.arr-head{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid rgba(59,130,246,0.4);}
+
+/* merge card */
+.mc{background:rgba(16,40,90,0.55);border:1px solid var(--bds);border-top:2px solid var(--b3);border-radius:13px;padding:18px 24px;width:100%;position:relative;overflow:hidden;}
+.mc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,0.04) 0%,transparent 60%);pointer-events:none;}
+.mc-title{font-size:15px;font-weight:800;letter-spacing:-.01em;margin-bottom:3px;}
+.mc-sub{font-size:11px;color:var(--mu);margin-bottom:14px;}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.mg-l{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--b3);margin-bottom:3px;}
+.mg-v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:500;color:var(--b2);line-height:1;margin-bottom:3px;}
+.mg-d{font-size:10.5px;color:var(--mu);line-height:1.5;}
+
+/* svg fan lines */
+.fanwrap{grid-column:1/-1;position:relative;height:44px;z-index:4;}
+.fanwrap svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+
+/* converge label */
+.convlabel{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:10px 0 6px;}
+.convlabel .sl-line{flex:1;height:1px;background:var(--bd);}
+.convlabel .sl-txt{color:var(--b3);font-size:9.5px;font-family:'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;}
+
+/* KPI */
+.kpi-strip{margin-top:44px;background:var(--s2);border:1px solid var(--bds);border-radius:14px;padding:28px 34px;position:relative;overflow:hidden;animation:up .7s .8s ease both;}
+.kpi-strip::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--b4),var(--b3),transparent);}
+.kst{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--b3);margin-bottom:22px;}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+.kv{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:500;color:var(--wh);line-height:1;margin-bottom:2px;}
+.kn{font-size:9.5px;color:var(--b3);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
+.kno{font-size:10px;color:var(--mu);}
+.footer{text-align:center;margin-top:36px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mu);letter-spacing:.1em;opacity:.4;animation:up .6s 1s ease both;}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@media(max-width:860px){.mgrid{grid-template-columns:1fr 1fr}.kg{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:580px){.funnel{display:flex;flex-direction:column}.funnel::before{display:none}.cl,.cr{padding:0}.cc{display:none}.fanwrap{display:none}.mgrid{grid-template-columns:1fr}.kg{grid-template-columns:repeat(2,1fr)}}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-brand">ALOK<span>.</span>ANALYST</a>
+  <ul class="nav-links">
+    <li><a href="/#youtube">Videos</a></li>
+    <li><a href="/#linkedin">Posts</a></li>
+    <li><a href="/#courses">Courses</a></li>
+    <li><a href="/domain-knowledge/" class="active">Domain Knowledge</a></li>
+    <li><a href="/#casestudy">Practice</a></li>
+    <li><a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" style="color:var(--blue)">Subscribe</a></li>
+  </ul>
+</nav>
+
+<div class="site-wrap">
+
+  <div class="breadcrumb">
+    <a href="/">Home</a>
+    <span style="opacity:.35">›</span>
+    <a href="/domain-knowledge/">Domain Knowledge</a>
+    <span style="opacity:.35">›</span>
+    <span>B2B SaaS Marketing Funnel</span>
+  </div>
+
+  <div class="pg-header">
+    <div class="pg-eye">B2B SaaS · Marketing Analytics</div>
+    <div class="pg-title">The Complete B2B SaaS<br>Marketing Funnel</div>
+    <div class="pg-meta">
+      <span class="pg-pill">8 Stages</span>
+      <span class="pg-pill">2025 Benchmarks</span>
+      <span class="pg-pill">Inbound vs Outbound</span>
+      <span class="pg-pill">Interactive</span>
+    </div>
+    <p class="pg-desc">Inbound and outbound run as two <strong>parallel tracks</strong> that converge at MQL, split again through the pipeline by segment (SMB vs Enterprise), then converge at Closed Won. Every stage includes real 2025 benchmarks.</p>
+  </div>
+
+  <!-- Quick-reference KPIs -->
+  <div class="concepts">
+    <div class="concept-card"><div class="cc-label">Marketing / ARR</div><div class="cc-val">8%</div><div class="cc-desc">Median B2B SaaS program spend ratio</div></div>
+    <div class="concept-card"><div class="cc-label">Blended CPL</div><div class="cc-val">$237</div><div class="cc-desc">Average cost-per-lead, B2B SaaS</div></div>
+    <div class="concept-card"><div class="cc-label">Lead → MQL</div><div class="cc-val">39–41%</div><div class="cc-desc">Industry conversion benchmark</div></div>
+    <div class="concept-card"><div class="cc-label">Win Rate</div><div class="cc-val">19%</div><div class="cc-desc">Median (2024 Gong) — down from 23%</div></div>
+    <div class="concept-card"><div class="cc-label">LTV : CAC</div><div class="cc-val">3 : 1</div><div class="cc-desc">Minimum healthy ratio target</div></div>
+    <div class="concept-card"><div class="cc-label">Enterprise NRR</div><div class="cc-val">118%</div><div class="cc-desc">Median net revenue retention 2025</div></div>
+  </div>
+
+  <!-- FUNNEL EMBED -->
+  <div class="funnel-wrap">
+<div class="page">
+<div class="header">
+  <div class="btag">aloktheanalyst · B2B SaaS Marketing Analytics</div>
+  <h1>The <em>Parallel</em> Funnel</h1>
+  <p class="hsub">Inbound & Outbound run in parallel → converge at MQL → split → converge again</p>
+</div>
+<div class="legend">
+  <div class="leg"><div class="ldot i"></div><span style="color:var(--b2)">Inbound Track</span></div>
+  <div class="lsep"></div>
+  <div class="leg"><div class="ldot o"></div><span style="color:rgba(255,255,255,.75)">Outbound Track</span></div>
+  <div class="lsep"></div>
+  <div class="leg" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--mu);">tracks merge at MQL · SQL · Closed Won</div>
+</div>
+<div class="funnel">
+
+  <!-- TRACK HEADERS -->
+  <div class="th-l"><div class="tlabel i"><div class="tdot"></div>Inbound Track</div></div>
+  <div class="th-c"></div>
+  <div class="th-r"><div class="tlabel o" style="float:right"><div class="tdot"></div>Outbound Track</div></div>
+
+  <!-- S1: BUDGET -->
+  <div class="sl"><div class="sl-line"></div><div class="sl-txt">01 · Budget Allocation</div><div class="sl-line"></div></div>
+  <div class="cl" style="animation:up .5s .05s ease both">
+    <div class="card i">
+      <div class="ctag">Inbound Spend</div><div class="cmet">45–55%</div><div class="ctitle">of program budget</div>
+      <div class="rows">
+        <div class="row"><span class="rl">Content / SEO</span><span class="rv">25–35%</span></div><div class="bar"><div class="fill" style="width:30%"></div></div>
+        <div class="row"><span class="rl">Paid Search</span><span class="rv">12–18%</span></div><div class="bar"><div class="fill" style="width:15%"></div></div>
+        <div class="row"><span class="rl">Email & Nurture</span><span class="rv">5–10%</span></div><div class="bar"><div class="fill" style="width:7%"></div></div>
+      </div>
+      <div class="cdesc">SEO 3-yr ROI: 748%. Email $36–$40 per $1. Highest long-term efficiency.</div>
+      <div class="tags"><span class="tag">SEO</span><span class="tag">Google Ads</span><span class="tag">Email</span></div>
+    </div>
+  </div>
+  <div class="cc"><div class="node" style="margin-top:8px">💰</div><div class="seg"></div></div>
+  <div class="cr" style="animation:up .5s .1s ease both">
+    <div class="card o">
+      <div class="ctag">Outbound Spend</div><div class="cmet">20–30%</div><div class="ctitle">of program budget</div>
+      <div class="rows">
+        <div class="row"><span class="rl">ABM / Events</span><span class="rv">10–15%</span></div><div class="bar"><div class="fill" style="width:12%"></div></div>
+        <div class="row"><span class="rl">SDR / Cold Outreach</span><span class="rv">8–12%</span></div><div class="bar"><div class="fill" style="width:10%"></div></div>
+        <div class="row"><span class="rl">LinkedIn Ads</span><span class="rv">5–8%</span></div><div class="bar"><div class="fill" style="width:6%"></div></div>
+      </div>
+      <div class="cdesc">70/20/10 rule. SaaS Magic Number target: &gt;1.0. Goals-driven: Target Customers × Target CAC = Budget.</div>
+      <div class="tags"><span class="tag">ABM</span><span class="tag">SDR</span><span class="tag">Events</span></div>
+    </div>
+  </div>
+
+  <!-- S2: LEAD GEN -->
+  <div class="sl"><div class="sl-line"></div><div class="sl-txt">02 · Lead Generation (TOFU)</div><div class="sl-line"></div></div>
+  <div class="cl" style="animation:up .5s .15s ease both">
+    <div class="card i">
+      <div class="ctag">Inbound Channels</div><div class="cmet">~$164</div><div class="ctitle">Average CPL</div>
+      <div class="rows">
+        <div class="row"><span class="rl">Referrals</span><span class="rv">~$25</span></div><div class="bar"><div class="fill" style="width:10%"></div></div>
+        <div class="row"><span class="rl">Organic Search</span><span class="rv">~$31</span></div><div class="bar"><div class="fill" style="width:13%"></div></div>
+        <div class="row"><span class="rl">Google Ads</span><span class="rv">$75–$120</span></div><div class="bar"><div class="fill" style="width:48%"></div></div>
+      </div>
+      <div class="cdesc">PLG: 6% visitor-to-signup. Organic close rate 14.6% — 8.6× better than outbound. Visitor→Lead: 1.4%.</div>
+      <div class="tags"><span class="tag">SEO</span><span class="tag">PLG</span><span class="tag">Referral</span><span class="tag">Paid</span></div>
+    </div>
+  </div>
+  <div class="cc"><div class="node">🎯</div><div class="seg"></div></div>
+  <div class="cr" style="animation:up .5s .2s ease both">
+    <div class="card o">
+      <div class="ctag">Outbound Channels</div><div class="cmet">~$310</div><div class="ctitle">Average CPL</div>
+      <div class="rows">
+        <div class="row"><span class="rl">LinkedIn Ads</span><span class="rv">$150–$250</span></div><div class="bar"><div class="fill" style="width:55%"></div></div>
+        <div class="row"><span class="rl">Trade Shows</span><span class="rv">~$840</span></div><div class="bar"><div class="fill" style="width:100%"></div></div>
+        <div class="row"><span class="rl">SDR Cold Email</span><span class="rv">$267–$1,980</span></div><div class="bar"><div class="fill" style="width:80%"></div></div>
+      </div>
+      <div class="cdesc">Cold email reply: 5.1%. Multi-channel outbound = 287% better results. ABM = 208% higher revenue.</div>
+      <div class="tags"><span class="tag">Cold Email</span><span class="tag">LinkedIn DM</span><span class="tag">Events</span></div>
+    </div>
+  </div>
+
+  <!-- S3: LEAD SCORING -->
+  <div class="sl"><div class="sl-line"></div><div class="sl-txt">03 · Lead Scoring</div><div class="sl-line"></div></div>
+  <div class="cl" style="animation:up .5s .25s ease both">
+    <div class="card i">
+      <div class="ctag">Behavioral Scoring</div><div class="cmet">+25 pts</div><div class="ctitle">Demo Request (top signal)</div>
+      <div class="rows">
+        <div class="row"><span class="rl">Pricing page</span><span class="rv">+15</span></div><div class="bar"><div class="fill" style="width:60%"></div></div>
+        <div class="row"><span class="rl">Content download</span><span class="rv">+10</span></div><div class="bar"><div class="fill" style="width:40%"></div></div>
+        <div class="row"><span class="rl">Email click</span><span class="rv">+5</span></div><div class="bar"><div class="fill" style="width:20%"></div></div>
+        <div class="row"><span class="rl">Blog visit</span><span class="rv">+1 to +3</span></div><div class="bar"><div class="fill" style="width:8%"></div></div>
+      </div>
+      <div class="cdesc">Decay: −25%/month inactive. ≥65 pts = auto-route to sales.</div>
+      <div class="tags"><span class="tag">HubSpot</span><span class="tag">Marketo</span></div>
+    </div>
+  </div>
+  <div class="cc"><div class="node">🏷️</div><div class="seg"></div></div>
+  <div class="cr" style="animation:up .5s .3s ease both">
+    <div class="card o">
+      <div class="ctag">Firmographic Scoring</div><div class="cmet">+25 pts</div><div class="ctitle">ICP Company Size Match</div>
+      <div class="rows">
+        <div class="row"><span class="rl">Target industry</span><span class="rv">+20</span></div><div class="bar"><div class="fill" style="width:80%"></div></div>
+        <div class="row"><span class="rl">C-level title</span><span class="rv">+20</span></div><div class="bar"><div class="fill" style="width:80%"></div></div>
+        <div class="row"><span class="rl">Tech stack fit</span><span class="rv">+15</span></div><div class="bar"><div class="fill" style="width:60%"></div></div>
+        <div class="row"><span class="rl">Personal email</span><span class="rv">−10</span></div><div class="bar"><div class="fill" style="width:0%"></div></div>
+      </div>
+      <div class="cdesc">Dual matrix: A–D fit × 1–4 engagement. "A1" = immediate handoff. Competitor domain: −20 pts.</div>
+      <div class="tags"><span class="tag">ZoomInfo</span><span class="tag">Clearbit</span><span class="tag">Bombora</span></div>
+    </div>
+  </div>
+
+  <!-- CONVERGE → MQL -->
+  <div class="convlabel"><div class="sl-line"></div><div class="sl-txt">tracks converge at MQL</div><div class="sl-line"></div></div>
+  <div class="fanwrap">
+    <svg viewBox="0 0 1000 44" preserveAspectRatio="none">
+      <path d="M 250 0 C 250 30 500 44 500 44" fill="none" stroke="rgba(59,130,246,0.4)" stroke-width="2"/>
+      <path d="M 750 0 C 750 30 500 44 500 44" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+    </svg>
+  </div>
+  <div class="mw" style="animation:up .5s .35s ease both">
+    <div class="mnode"><span class="mi">🏷️</span><div><div>MQL — Marketing Qualified Lead</div><div class="ms">Both tracks qualify here · threshold: 50–80 pts</div></div></div>
+    <div style="margin:8px 0"><div class="cpill">Lead → MQL: <b>39–41%</b> &nbsp;·&nbsp; LVR target: <b>8%/month</b></div></div>
+    <div class="arr"><div class="arr-seg"></div><div class="arr-head"></div></div>
+    <div class="mc">
+      <div class="mc-title">MQL → SQL Conversion by Channel</div>
+      <div class="mc-sub">Inbound channels convert 2–4× higher · outbound SQLs are 50% larger ACV</div>
+      <div class="mgrid">
+        <div><div class="mg-l">Inbound MQL→SQL</div><div class="mg-v">25–51%</div><div class="mg-d">SEO 51% · Email 46% · Webinar 30% · Paid 26%</div></div>
+        <div><div class="mg-l">Outbound MQL→SQL</div><div class="mg-v">13–20%</div><div class="mg-d">ABM 20% · Events 17% · Cold Email 15% · LinkedIn 13%</div></div>
+        <div><div class="mg-l">Overall Benchmark</div><div class="mg-v">13–40%</div><div class="mg-d">SAL rejection &gt;30% = scoring criteria mismatch signal.</div></div>
+      </div>
+    </div>
+    <div class="arr"><div class="arr-seg"></div><div class="arr-head"></div></div>
+    <div class="mnode" style="margin-bottom:8px"><span class="mi">✅</span><div><div>SQL — Sales Qualified Lead</div><div class="ms">BANT (SMB) · MEDDIC (Enterprise) · &lt;5 min response SLA</div></div></div>
+    <div><div class="cpill">SQL → Opportunity: <b>42%</b> &nbsp;·&nbsp; Pipeline coverage: <b>3–5×</b></div></div>
+  </div>
+
+  <!-- SPLIT → PIPELINE -->
+  <div class="convlabel"><div class="sl-line"></div><div class="sl-txt" style="color:var(--b3)">pipeline splits by segment</div><div class="sl-line"></div></div>
+  <div class="fanwrap">
+    <svg viewBox="0 0 1000 44" preserveAspectRatio="none">
+      <path d="M 500 0 C 500 30 250 44 250 44" fill="none" stroke="rgba(59,130,246,0.4)" stroke-width="2"/>
+      <path d="M 500 0 C 500 30 750 44 750 44" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <!-- S5: PIPELINE -->
+  <div class="sl"><div class="sl-line"></div><div class="sl-txt">05 · Pipeline (BOFU)</div><div class="sl-line"></div></div>
+  <div class="cl" style="animation:up .5s .4s ease both">
+    <div class="card i">
+      <div class="ctag">Inbound — SMB / Mid-Market</div><div class="cmet">21–45 days</div><div class="ctitle">Sales cycle · BANT</div>
+      <div class="rows">
+        <div class="row"><span class="rl">SMB win rate</span><span class="rv">20–25%</span></div><div class="bar"><div class="fill" style="width:22%"></div></div>
+        <div class="row"><span class="rl">Mid-Market win rate</span><span class="rv">22–30%</span></div><div class="bar"><div class="fill" style="width:26%"></div></div>
+        <div class="row"><span class="rl">Opp → Close (SMB)</span><span class="rv">39%</span></div><div class="bar"><div class="fill" style="width:39%"></div></div>
+      </div>
+      <div class="cdesc">Closes 1.6× faster than outbound. Proposal stalling &gt;21 days = 70% lower close rate. Deal Velocity = (Opps × ACV × Win%) / Days.</div>
+      <div class="tags"><span class="tag">BANT</span><span class="tag">Deal Velocity</span><span class="tag">Self-serve</span></div>
+    </div>
+  </div>
+  <div class="cc"><div class="node">🔥</div><div class="seg"></div></div>
+  <div class="cr" style="animation:up .5s .45s ease both">
+    <div class="card o">
+      <div class="ctag">Outbound — Enterprise</div><div class="cmet">90–180 days</div><div class="ctitle">Sales cycle · MEDDIC</div>
+      <div class="rows">
+        <div class="row"><span class="rl">Enterprise win rate</span><span class="rv">18–25%</span></div><div class="bar"><div class="fill" style="width:21%"></div></div>
+        <div class="row"><span class="rl">Opp → Close (Ent.)</span><span class="rv">31%</span></div><div class="bar"><div class="fill" style="width:31%"></div></div>
+        <div class="row"><span class="rl">Multi-thread lift</span><span class="rv">2.4×</span></div><div class="bar"><div class="fill" style="width:80%"></div></div>
+      </div>
+      <div class="cdesc">50% larger ACV. 3+ contacts = 2.4× close rate. 6.8 stakeholders avg. Weekly reviews = 26% more revenue.</div>
+      <div class="tags"><span class="tag">MEDDIC</span><span class="tag">Multi-thread</span><span class="tag">Champion</span></div>
+    </div>
+  </div>
+
+  <!-- CONVERGE → CLOSED WON -->
+  <div class="convlabel"><div class="sl-line"></div><div class="sl-txt">tracks converge at Closed Won</div><div class="sl-line"></div></div>
+  <div class="fanwrap">
+    <svg viewBox="0 0 1000 44" preserveAspectRatio="none">
+      <path d="M 250 0 C 250 30 500 44 500 44" fill="none" stroke="rgba(59,130,246,0.4)" stroke-width="2"/>
+      <path d="M 750 0 C 750 30 500 44 500 44" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+    </svg>
+  </div>
+  <div class="mw" style="animation:up .5s .5s ease both">
+    <div class="mnode"><span class="mi">🎉</span><div><div>Closed Won</div><div class="ms">Median win rate: 19% (2024 Gong) · down from 23% in 2022</div></div></div>
+    <div style="margin:8px 0"><div class="cpill">LTV = ARPA × GM% / Churn &nbsp;·&nbsp; LTV:CAC <b>3:1</b> target &nbsp;·&nbsp; Payback <b>&lt;18 mo</b></div></div>
+    <div class="arr"><div class="arr-seg"></div><div class="arr-head"></div></div>
+    <div class="mc">
+      <div class="mc-title">Revenue Analytics</div>
+      <div class="mc-sub">Post-conversion — retention, expansion, efficiency</div>
+      <div class="mgrid">
+        <div><div class="mg-l">SMB / Mid-Market</div><div class="mg-v">97–108%</div><div class="mg-d">NRR. LTV $15K–$200K. Churn 1.5–5%/mo.</div></div>
+        <div><div class="mg-l">Enterprise</div><div class="mg-v">118%</div><div class="mg-d">NRR median. LTV $300K–$1M+. Top quartile &gt;130%.</div></div>
+        <div><div class="mg-l">Rule of 40</div><div class="mg-v">≥ 40</div><div class="mg-d">Growth% + EBITDA%. Quick Ratio &gt;4. Expansion ARR = half CAC of new logo.</div></div>
+      </div>
+    </div>
+    <div class="arr"><div class="arr-seg"></div><div class="arr-head"></div></div>
+  </div>
+
+  <!-- SPLIT → ATTRIBUTION -->
+  <div class="fanwrap">
+    <svg viewBox="0 0 1000 44" preserveAspectRatio="none">
+      <path d="M 500 0 C 500 30 250 44 250 44" fill="none" stroke="rgba(59,130,246,0.4)" stroke-width="2"/>
+      <path d="M 500 0 C 500 30 750 44 750 44" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <!-- S7: ATTRIBUTION -->
+  <div class="sl"><div class="sl-line"></div><div class="sl-txt">07 · Attribution & Closed-Loop Analytics</div><div class="sl-line"></div></div>
+  <div class="cl" style="animation:up .5s .55s ease both">
+    <div class="card i">
+      <div class="ctag">Inbound Attribution</div><div class="cmet">W-Shaped</div><div class="ctitle">Multi-touch model</div>
+      <div class="rows">
+        <div class="row"><span class="rl">First touch</span><span class="rv">30%</span></div><div class="bar"><div class="fill" style="width:30%"></div></div>
+        <div class="row"><span class="rl">Lead creation</span><span class="rv">30%</span></div><div class="bar"><div class="fill" style="width:30%"></div></div>
+        <div class="row"><span class="rl">Opp creation</span><span class="rv">30%</span></div><div class="bar"><div class="fill" style="width:30%"></div></div>
+        <div class="row"><span class="rl">All other touches</span><span class="rv">10%</span></div><div class="bar"><div class="fill" style="width:10%"></div></div>
+      </div>
+      <div class="cdesc">Algorithmic (Markov/Shapley via GA4). Last-click → algorithmic = 34% more leads, 18% lower CPL.</div>
+      <div class="tags"><span class="tag">GA4</span><span class="tag">Markov</span><span class="tag">Shapley</span></div>
+    </div>
+  </div>
+  <div class="cc"><div class="node">🔁</div></div>
+  <div class="cr" style="animation:up .5s .6s ease both">
+    <div class="card o">
+      <div class="ctag">Outbound Attribution</div><div class="cmet">MMM</div><div class="ctitle">Marketing Mix Modeling</div>
+      <div class="rows">
+        <div class="row"><span class="rl">Meta Robyn (R)</span><span class="rv">Open source</span></div><div class="bar"><div class="fill" style="width:70%"></div></div>
+        <div class="row"><span class="rl">Google Meridian (Py)</span><span class="rv">Open source</span></div><div class="bar"><div class="fill" style="width:70%"></div></div>
+        <div class="row"><span class="rl">Offline / events</span><span class="rv">Handled</span></div><div class="bar"><div class="fill" style="width:95%"></div></div>
+      </div>
+      <div class="cdesc">Top-down aggregate model. Privacy-safe. Captures brand-building effects multi-touch misses.</div>
+      <div class="tags"><span class="tag">Robyn</span><span class="tag">Meridian</span><span class="tag">Budget Opt.</span></div>
+    </div>
+  </div>
+
+</div><!-- /funnel -->
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kst">// North Star Benchmarks · B2B SaaS 2025</div>
+  <div class="kg">
+    <div><div class="kv">8%</div><div class="kn">Marketing / ARR</div><div class="kno">Median spend ratio</div></div>
+    <div><div class="kv">$237</div><div class="kn">Blended CPL</div><div class="kno">B2B SaaS average</div></div>
+    <div><div class="kv">39–41%</div><div class="kn">Lead → MQL</div><div class="kno">Conversion rate</div></div>
+    <div><div class="kv">51%</div><div class="kn">SEO MQL→SQL</div><div class="kno">Highest by channel</div></div>
+    <div><div class="kv">19%</div><div class="kn">Median Win Rate</div><div class="kno">2024 Gong data</div></div>
+    <div><div class="kv">3:1</div><div class="kn">LTV : CAC</div><div class="kno">Minimum target</div></div>
+    <div><div class="kv">118%</div><div class="kn">Enterprise NRR</div><div class="kno">Median 2025</div></div>
+    <div><div class="kv">18 mo</div><div class="kn">CAC Payback</div><div class="kno">Median 2024</div></div>
+  </div>
+</div>
+<div class="footer">aloktheanalyst.com · SaaS Marketing Funnel · 2025 Benchmarks</div>
+</div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">© 2025 aloktheanalyst.com — Built with 🔥</div>
+    <ul class="footer-links">
+      <li><a href="https://www.youtube.com/@aloktheanalyst">YouTube</a></li>
+      <li><a href="https://www.linkedin.com/in/aloktheanalyst/">LinkedIn</a></li>
+      <li><a href="/domain-knowledge/">Domain Knowledge</a></li>
+      <li><a href="/#casestudy">Practice</a></li>
+    </ul>
+  </div>
+</footer>
+
+</body>
+</html>
