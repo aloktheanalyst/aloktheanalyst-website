@@ -511,14 +511,18 @@ function renderShorts(items) {
       published: e.querySelector('published')?.textContent || ''
     })).filter(v => v.id);
 
-    // Detect Shorts via YouTube oEmbed — returns 200 for real Shorts, 4xx for regular videos.
-    // YouTube's oEmbed endpoint is CORS-enabled so no proxy needed.
+    // Detect Shorts via YouTube oEmbed — portrait videos (height > width) are Shorts.
+    // Regular videos return width:200,height:113; Shorts return width:113,height:200.
     // Fast-path: if title already contains #shorts skip the fetch.
     const checkShort = (v) => {
       if (/#shorts?\b/i.test(v.title)) return Promise.resolve(true);
       return fetch(
         `https://www.youtube.com/oembed?url=${encodeURIComponent('https://www.youtube.com/shorts/' + v.id)}&format=json`
-      ).then(r => r.ok).catch(() => false);
+      ).then(async r => {
+        if (!r.ok) return false;
+        const data = await r.json();
+        return data.height > data.width; // portrait = Short
+      }).catch(() => false);
     };
 
     const shortFlags = await Promise.all(entries.map(checkShort));
