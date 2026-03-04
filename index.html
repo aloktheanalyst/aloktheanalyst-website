@@ -446,39 +446,36 @@ function timeAgo(dateStr) {
   return Math.floor(diff / 31536000) + ' years ago';
 }
 
-function videoIdFrom(url) {
-  const m = url.match(/[?&]v=([^&]+)/);
-  return m ? m[1] : null;
-}
-
 function renderVideos(items) {
   const videoGrid = document.getElementById('videoGrid');
-  videoGrid.innerHTML = items.slice(0, 6).map(v => {
-    const id = videoIdFrom(v.link) || videoIdFrom(v.guid);
-    const thumb = id
-      ? `https://img.youtube.com/vi/${id}/mqdefault.jpg`
-      : (v.thumbnail || '');
-    return `
-  <a href="${v.link}" target="_blank" rel="noopener noreferrer" class="video-card" style="text-decoration:none">
+  videoGrid.innerHTML = items.slice(0, 6).map(v => `
+  <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener noreferrer" class="video-card" style="text-decoration:none">
     <div class="video-thumb">
-      <img src="${thumb}" alt="${v.title.replace(/"/g,'&quot;')}" loading="lazy" width="320" height="180" onerror="this.parentElement.style.background='var(--bg3)';this.style.display='none'">
+      <img src="${v.thumb}" alt="${v.title.replace(/"/g,'&quot;')}" loading="lazy" width="320" height="180" onerror="this.parentElement.style.background='var(--bg3)';this.style.display='none'">
       <div class="play-btn"><svg viewBox="0 0 24 24" width="52" height="52"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.65)"/><path d="M10 8l6 4-6 4V8z" fill="#fff"/></svg></div>
     </div>
-    <div class="video-info"><h3>${v.title}</h3><div class="video-meta">${timeAgo(v.pubDate)}</div></div>
-  </a>`;
-  }).join('');
+    <div class="video-info"><h3>${v.title}</h3><div class="video-meta">${timeAgo(v.published)}</div></div>
+  </a>`).join('');
 }
 
 (async () => {
   const channelId = 'UCn4jxGfKSB5JR3aas48iI1Q';
-  const rss = encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
+  const rssUrl = encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
   try {
-    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rss}&count=6`);
-    const data = await res.json();
-    if (data.status === 'ok' && data.items?.length) {
-      renderVideos(data.items);
+    const res = await fetch(`https://corsproxy.io/?${rssUrl}`);
+    const xml = await res.text();
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    const entries = [...doc.querySelectorAll('entry')];
+    const items = entries.slice(0, 6).map(e => ({
+      id:        e.querySelector('videoId')?.textContent || '',
+      title:     e.querySelector('title')?.textContent || '',
+      thumb:     e.querySelector('thumbnail')?.getAttribute('url') || '',
+      published: e.querySelector('published')?.textContent || ''
+    })).filter(v => v.id);
+    if (items.length) {
+      renderVideos(items);
     } else {
-      document.getElementById('videoGrid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load videos. <a href="https://www.youtube.com/@aloktheanalyst" target="_blank" style="color:var(--accent)">Watch on YouTube →</a></p>';
+      throw new Error('empty');
     }
   } catch {
     document.getElementById('videoGrid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load videos. <a href="https://www.youtube.com/@aloktheanalyst" target="_blank" style="color:var(--accent)">Watch on YouTube →</a></p>';
