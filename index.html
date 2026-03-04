@@ -88,6 +88,7 @@
   .short-info .video-meta { font-size: 0.7rem; }
   #linkedin { background: var(--bg2); }
   .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+  .li-embed { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
   .post-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.8rem; transition: all 0.3s; position: relative; overflow: hidden; }
   .post-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 0; background: var(--accent); transition: height 0.3s; border-radius: 3px 0 0 3px; }
   .post-card:hover::before { height: 100%; }
@@ -336,13 +337,8 @@
   <div class="section-label">// Thoughts & Insights</div>
   <div class="section-title">LINKEDIN POSTS</div>
   <p class="section-sub">Tips, career advice, SQL snippets, and data analytics breakdowns — straight from my LinkedIn feed.</p>
-  <div class="posts-grid">
-    <div class="post-card fade-in"><div class="post-tag">SQL Tips</div><p>Most analysts don't know this SQL trick: Use window functions instead of subqueries for 10x faster performance. Here's a breakdown of RANK(), DENSE_RANK() and ROW_NUMBER() with real-world examples...</p><div class="post-footer"><span>🔥 2.4K reactions</span><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="post-link">Read on LinkedIn →</a></div></div>
-    <div class="post-card fade-in"><div class="post-tag">Career</div><p>I got rejected from 12 data analyst roles before landing my first one. Here's what I changed in month 3 that flipped everything: portfolio projects, SQL case studies, and communicating business impact...</p><div class="post-footer"><span>🔥 5.1K reactions</span><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="post-link">Read on LinkedIn →</a></div></div>
-    <div class="post-card fade-in"><div class="post-tag">Python</div><p>Pandas vs SQL — which one should you learn first as a data analyst? My hot take after 5 years: SQL first, always. Here's a side-by-side comparison of the same operations in both languages...</p><div class="post-footer"><span>🔥 3.8K reactions</span><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="post-link">Read on LinkedIn →</a></div></div>
-    <div class="post-card fade-in"><div class="post-tag">Interview Prep</div><p>The #1 SQL interview question I've seen asked at Google, Amazon, and Meta: "Find the second highest salary in each department." Here's 3 different ways to solve it, from basic to advanced...</p><div class="post-footer"><span>🔥 7.2K reactions</span><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="post-link">Read on LinkedIn →</a></div></div>
-    <div class="post-card fade-in"><div class="post-tag">Tools</div><p>The data analytics stack I use daily as a Lead Analyst: BigQuery for storage, dbt for transforms, Looker for dashboards, Python for automation. Each tool, why I chose it, and what I'd replace...</p><div class="post-footer"><span>🔥 4.5K reactions</span><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="post-link">Read on LinkedIn →</a></div></div>
-    <div class="post-card fade-in"><div class="post-tag">Mindset</div><p>Data analytics is 20% technical and 80% communication. Fight me. The analysts getting promoted aren't the best coders — they're the ones who can explain a chart to a CEO in 30 seconds...</p><div class="post-footer"><span>🔥 9.1K reactions</span><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="post-link">Read on LinkedIn →</a></div></div>
+  <div id="linkedinGrid" class="posts-grid">
+    <p style="color:var(--muted);grid-column:1/-1">Loading posts…</p>
   </div>
   <div class="yt-cta" style="margin-top:2.5rem"><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="btn-secondary">Follow on LinkedIn →</a></div>
 </section>
@@ -789,6 +785,27 @@ function updateKeyStatuses(){
   const btn=document.getElementById('arenaKeyBtn');
   if(btn) btn.className=any?'arena-key-btn ok':'arena-key-btn';
 }
+
+// LinkedIn posts — fetched from KV via /api/linkedin-posts, rendered as native iframes.
+(async () => {
+  const grid = document.getElementById('linkedinGrid');
+  if (!grid) return;
+  try {
+    const res   = await fetch('/api/linkedin-posts');
+    const posts = res.ok ? await res.json() : [];
+    if (!posts.length) {
+      grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1">No posts yet. <a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" style="color:var(--accent)">Follow on LinkedIn →</a></p>';
+      return;
+    }
+    grid.innerHTML = posts.map(url => `
+      <div class="li-embed fade-in">
+        <iframe src="${url}" height="570" width="100%" frameborder="0" allowfullscreen="" title="LinkedIn post" loading="lazy"></iframe>
+      </div>`).join('');
+    grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  } catch {
+    grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load posts. <a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" style="color:var(--accent)">View on LinkedIn →</a></p>';
+  }
+})();
 
 // Years experience: auto-calculated from 2019, updates every Jan 1st.
 (function() {
