@@ -9,12 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0a0f;--surf:#111118;--surf2:#16161f;--border:#1e1e2e;--blue:#4f9cf9;--blue-d:#2563eb;--blue-g:rgba(79,156,249,0.12);--white:#f0f4ff;--muted:#6b7280;--text:#d1d5db}
+:root{--bg:#f8faff;--surf:#ffffff;--surf2:#f0f5ff;--border:#e2e8f2;--blue:#2563eb;--blue-d:#1d4ed8;--blue-g:rgba(37,99,235,0.07);--white:#0f172a;--muted:#64748b;--text:#334155}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1.6;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,156,249,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(79,156,249,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(37,99,235,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.06) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
 
-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(248,250,255,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);box-shadow:0 1px 12px rgba(37,99,235,0.07);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
 .nav-brand{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--white);text-decoration:none;letter-spacing:.05em}
 .nav-brand span{color:var(--blue)}
 .nav-links{display:flex;align-items:center;gap:24px;list-style:none}
@@ -44,16 +44,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.9
 
 .dcard{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:24px;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:border-color .2s,transform .2s,box-shadow .2s;position:relative;overflow:hidden}
 .dcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue-d),var(--blue));opacity:0;transition:opacity .2s}
-.dcard:hover{border-color:rgba(79,156,249,0.3);transform:translateY(-3px);box-shadow:0 8px 28px rgba(79,156,249,0.09)}
+.dcard:hover{border-color:rgba(37,99,235,0.3);transform:translateY(-3px);box-shadow:0 8px 28px rgba(37,99,235,0.1)}
 .dcard:hover::before{opacity:1}
 .dcard.cs{opacity:.5;cursor:not-allowed;pointer-events:none}
 .cs-badge{position:absolute;top:14px;right:14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--surf2);border:1px solid var(--border);padding:2px 8px;border-radius:99px}
-.cicon{width:42px;height:42px;border-radius:10px;background:var(--blue-g);border:1px solid rgba(79,156,249,0.18);display:flex;align-items:center;justify-content:center;font-size:18px}
+.cicon{width:42px;height:42px;border-radius:10px;background:var(--blue-g);border:1px solid rgba(37,99,235,0.18);display:flex;align-items:center;justify-content:center;font-size:18px}
 .ctopic{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:5px}
 .ctitle{font-size:16px;font-weight:600;color:var(--white);line-height:1.3;margin-bottom:4px}
 .cdesc{font-size:12.5px;color:var(--muted);line-height:1.65}
 .cmeta{display:flex;align-items:center;gap:7px;margin-top:auto;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap}
-.cpill{font-size:9.5px;font-weight:500;padding:2px 8px;border-radius:99px;background:rgba(79,156,249,0.07);border:1px solid rgba(79,156,249,0.16);color:rgba(79,156,249,.75)}
+.cpill{font-size:9.5px;font-weight:500;padding:2px 8px;border-radius:99px;background:rgba(37,99,235,0.07);border:1px solid rgba(37,99,235,0.18);color:rgba(37,99,235,.85)}
 .carr{margin-left:auto;color:var(--muted);font-size:15px;transition:transform .2s,color .2s}
 .dcard:hover .carr{transform:translateX(4px);color:var(--blue)}
 
