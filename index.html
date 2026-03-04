@@ -499,9 +499,18 @@ function renderShorts(items) {
 
 (async () => {
   const channelId = 'UCn4jxGfKSB5JR3aas48iI1Q';
-  const rssUrl = encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
+  const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+  // Try allorigins.win first (corsproxy.io returns 403 on some production domains)
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`
+  ];
   try {
-    const res = await fetch(`https://corsproxy.io/?${rssUrl}`);
+    let res;
+    for (const proxy of proxies) {
+      try { res = await fetch(proxy); if (res.ok) break; } catch {}
+    }
+    if (!res?.ok) throw new Error('All proxies failed');
     const xml = await res.text();
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     const entries = [...doc.querySelectorAll('entry')].map(e => ({
