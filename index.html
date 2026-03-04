@@ -498,19 +498,15 @@ function renderShorts(items) {
 }
 
 (async () => {
-  const channelId = 'UCn4jxGfKSB5JR3aas48iI1Q';
-  const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-  // Try allorigins.win first (corsproxy.io returns 403 on some production domains)
-  const proxies = [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
-    `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`
-  ];
+  // /api/feed is a Cloudflare Pages Function — fetches YouTube RSS server-side, no CORS issues.
+  // Falls back to corsproxy.io for local dev (Pages Functions don't run on localhost).
   try {
-    let res;
-    for (const proxy of proxies) {
-      try { res = await fetch(proxy); if (res.ok) break; } catch {}
+    let res = await fetch('/api/feed').catch(() => null);
+    if (!res?.ok) {
+      const rssUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCn4jxGfKSB5JR3aas48iI1Q');
+      res = await fetch(`https://corsproxy.io/?${rssUrl}`);
     }
-    if (!res?.ok) throw new Error('All proxies failed');
+    if (!res.ok) throw new Error('Feed unavailable');
     const xml = await res.text();
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     const entries = [...doc.querySelectorAll('entry')].map(e => ({
