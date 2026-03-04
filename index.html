@@ -805,10 +805,9 @@ function updateKeyStatuses(){
   };
   try {
     const res = await fetch('/api/stats');
-    if (!res.ok) { console.warn('[stats] fetch failed', res.status); return; }
+    if (!res.ok) return;
     const d = await res.json();
-    console.log('[stats]', d);
-    if (d.error) { console.warn('[stats] API error', d.error); return; }
+    if (d.error) return;
     const subEl   = document.getElementById('stat-subscribers');
     const viewsEl = document.getElementById('stat-views');
     const videoEl = document.getElementById('stat-videos');
