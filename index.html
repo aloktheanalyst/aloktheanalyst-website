@@ -297,12 +297,9 @@
   <div class="section-title">YOUTUBE VIDEOS</div>
   <p class="section-sub">SQL tutorials, Python for analysts, interview prep, and real-world case studies. New videos every week.</p>
   <div class="videos-grid" id="videoGrid">
-    <div class="video-card">
-      <div class="video-thumb">
-        <img src="https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg" alt="Video" onerror="this.src='https://via.placeholder.com/320x180/111827/f97316?text=Video'">
-        <div class="play-btn"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M8 5v14l11-7z"/></svg></div>
-      </div>
-      <div class="video-info"><h3>Loading latest videos from YouTube...</h3><div class="video-meta">@aloktheanalyst</div></div>
+    <div class="video-card" style="opacity:.5;pointer-events:none" aria-hidden="true">
+      <div class="video-thumb" style="background:var(--bg3)"></div>
+      <div class="video-info"><h3 style="color:var(--muted)">Loading latest videos…</h3></div>
     </div>
   </div>
   <div class="yt-cta"><a href="https://www.youtube.com/@aloktheanalyst" target="_blank" class="btn-primary">View All Videos on YouTube →</a></div>
@@ -439,23 +436,54 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-const videos = [
-  { id: "VIDEO_ID_1", title: "SQL Window Functions Explained in 10 Minutes", views: "45K views", date: "2 weeks ago" },
-  { id: "VIDEO_ID_2", title: "Python Pandas Tutorial for Data Analysts (2024)", views: "32K views", date: "1 month ago" },
-  { id: "VIDEO_ID_3", title: "Top 10 SQL Interview Questions at FAANG", views: "78K views", date: "2 months ago" },
-  { id: "VIDEO_ID_4", title: "How I Built My Data Analytics Portfolio", views: "21K views", date: "3 months ago" },
-  { id: "VIDEO_ID_5", title: "CTEs vs Subqueries: Which is Better?", views: "18K views", date: "3 months ago" },
-  { id: "VIDEO_ID_6", title: "Data Analyst Day in My Life (Lead Level)", views: "55K views", date: "4 months ago" },
-];
-const videoGrid = document.getElementById('videoGrid');
-videoGrid.innerHTML = videos.map(v => `
-  <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" class="video-card" style="text-decoration:none">
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  if (diff < 3600)   return Math.floor(diff / 60) + ' minutes ago';
+  if (diff < 86400)  return Math.floor(diff / 3600) + ' hours ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
+  if (diff < 2592000) return Math.floor(diff / 604800) + ' weeks ago';
+  if (diff < 31536000) return Math.floor(diff / 2592000) + ' months ago';
+  return Math.floor(diff / 31536000) + ' years ago';
+}
+
+function videoIdFrom(url) {
+  const m = url.match(/[?&]v=([^&]+)/);
+  return m ? m[1] : null;
+}
+
+function renderVideos(items) {
+  const videoGrid = document.getElementById('videoGrid');
+  videoGrid.innerHTML = items.slice(0, 6).map(v => {
+    const id = videoIdFrom(v.link) || videoIdFrom(v.guid);
+    const thumb = id
+      ? `https://img.youtube.com/vi/${id}/mqdefault.jpg`
+      : (v.thumbnail || '');
+    return `
+  <a href="${v.link}" target="_blank" rel="noopener noreferrer" class="video-card" style="text-decoration:none">
     <div class="video-thumb">
-      <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" onerror="this.parentElement.style.background='#1e2d42'; this.style.display='none'">
-      <div class="play-btn"><svg viewBox="0 0 24 24" fill="#f97316" width="52" height="52"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.7)"/><path d="M10 8l6 4-6 4V8z" fill="#f97316"/></svg></div>
+      <img src="${thumb}" alt="${v.title.replace(/"/g,'&quot;')}" loading="lazy" width="320" height="180" onerror="this.parentElement.style.background='var(--bg3)';this.style.display='none'">
+      <div class="play-btn"><svg viewBox="0 0 24 24" width="52" height="52"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.65)"/><path d="M10 8l6 4-6 4V8z" fill="#fff"/></svg></div>
     </div>
-    <div class="video-info"><h3>${v.title}</h3><div class="video-meta">${v.views} · ${v.date}</div></div>
-  </a>`).join('');
+    <div class="video-info"><h3>${v.title}</h3><div class="video-meta">${timeAgo(v.pubDate)}</div></div>
+  </a>`;
+  }).join('');
+}
+
+(async () => {
+  const channelId = 'UCn4jxGfKSB5JR3aas48iI1Q';
+  const rss = encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
+  try {
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rss}&count=6`);
+    const data = await res.json();
+    if (data.status === 'ok' && data.items?.length) {
+      renderVideos(data.items);
+    } else {
+      document.getElementById('videoGrid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load videos. <a href="https://www.youtube.com/@aloktheanalyst" target="_blank" style="color:var(--accent)">Watch on YouTube →</a></p>';
+    }
+  } catch {
+    document.getElementById('videoGrid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load videos. <a href="https://www.youtube.com/@aloktheanalyst" target="_blank" style="color:var(--accent)">Watch on YouTube →</a></p>';
+  }
+})();
 
 const ARENA_PROMPTS = [
   { id: 'sql_window',    title: 'Window Functions Deep Dive',        topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
