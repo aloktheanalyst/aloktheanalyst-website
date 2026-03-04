@@ -289,9 +289,9 @@
         </a>
       </div>
       <div class="hero-stats">
-        <div><div class="stat-num">50<span>K+</span></div><div class="stat-label">YouTube Subscribers</div></div>
-        <div><div class="stat-num">100<span>+</span></div><div class="stat-label">Videos Published</div></div>
-        <div><div class="stat-num">5<span>+</span></div><div class="stat-label">Years Experience</div></div>
+        <div><div class="stat-num" id="stat-subscribers">45<span>K+</span></div><div class="stat-label">Total Followers</div></div>
+        <div><div class="stat-num" id="stat-videos">100<span>+</span></div><div class="stat-label">Videos Published</div></div>
+        <div><div class="stat-num" id="stat-experience">5<span>+</span></div><div class="stat-label">Years Experience</div></div>
       </div>
     </div>
     <div class="hero-photo-col">
@@ -770,6 +770,31 @@ function updateKeyStatuses(){
   const btn=document.getElementById('arenaKeyBtn');
   if(btn) btn.className=any?'arena-key-btn ok':'arena-key-btn';
 }
+
+// Years experience: auto-calculated from 2019, updates every Jan 1st.
+(function() {
+  const el = document.getElementById('stat-experience');
+  if (el) el.innerHTML = `${new Date().getFullYear() - 2019}<span>+</span>`;
+})();
+
+// Live YouTube stats from /api/stats — falls back to static values if unavailable.
+(async () => {
+  const fmt = n => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (n >= 1_000)     return `${Math.floor(n / 1_000)}K`;
+    return String(n);
+  };
+  try {
+    const res = await fetch('/api/stats');
+    if (!res.ok) return;
+    const d = await res.json();
+    if (d.error) return;
+    const subEl   = document.getElementById('stat-subscribers');
+    const videoEl = document.getElementById('stat-videos');
+    if (subEl   && d.totalFollowers) subEl.innerHTML   = `${fmt(d.totalFollowers)}<span>+</span>`;
+    if (videoEl && d.videoCount)         videoEl.innerHTML = `${fmt(d.videoCount)}<span>+</span>`;
+  } catch { /* keep static fallback */ }
+})();
 </script>
 </body>
 </html>
