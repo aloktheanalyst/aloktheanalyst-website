@@ -30,6 +30,7 @@ export async function onRequest(context) {
 
     const youtubeSubscribers = parseInt(channel.statistics.subscriberCount || '0', 10);
     const videoCount         = parseInt(channel.statistics.videoCount       || '0', 10);
+    const totalViews         = parseInt(channel.statistics.viewCount        || '0', 10);
     const uploadsPlaylistId  = channel.contentDetails.relatedPlaylists.uploads;
 
     // 2. Page through uploads playlist to collect all video IDs.
@@ -63,6 +64,7 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({
       youtubeSubscribers,
       videoCount,
+      totalViews,
       linkedinFollowers,
       totalFollowers: youtubeSubscribers + linkedinFollowers,
       contentHours,

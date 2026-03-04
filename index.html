@@ -290,6 +290,7 @@
       </div>
       <div class="hero-stats">
         <div><div class="stat-num" id="stat-subscribers">45<span>K+</span></div><div class="stat-label">Total Followers</div></div>
+        <div><div class="stat-num" id="stat-views">2<span>M+</span></div><div class="stat-label">Total Views</div></div>
         <div><div class="stat-num" id="stat-videos">100<span>+</span></div><div class="stat-label">Videos Published</div></div>
         <div><div class="stat-num" id="stat-hours">20<span>+</span></div><div class="stat-label">Hours of Content</div></div>
         <div><div class="stat-num" id="stat-experience">5<span>+</span></div><div class="stat-label">Years Experience</div></div>
@@ -461,6 +462,12 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
+function fmtNum(n) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1_000)     return `${Math.floor(n / 1_000)}K`;
+  return String(n);
+}
+
 function timeAgo(dateStr) {
   const diff = (Date.now() - new Date(dateStr)) / 1000;
   if (diff < 3600)   return Math.floor(diff / 60) + ' minutes ago';
@@ -479,7 +486,7 @@ function renderVideos(items) {
       <img src="${v.thumb}" alt="${v.title.replace(/"/g,'&quot;')}" loading="lazy" width="320" height="180" onerror="this.parentElement.style.background='var(--bg3)';this.style.display='none'">
       <div class="play-btn"><svg viewBox="0 0 24 24" width="52" height="52"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.65)"/><path d="M10 8l6 4-6 4V8z" fill="#fff"/></svg></div>
     </div>
-    <div class="video-info"><h3>${v.title}</h3><div class="video-meta">${timeAgo(v.published)}</div></div>
+    <div class="video-info"><h3>${v.title}</h3><div class="video-meta">${v.views ? fmtNum(v.views) + ' views · ' : ''}${timeAgo(v.published)}</div></div>
   </a>`).join('');
 }
 
@@ -493,7 +500,7 @@ function renderShorts(items) {
       <span class="short-badge">SHORT</span>
       <div class="play-btn"><svg viewBox="0 0 24 24" width="36" height="36"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.65)"/><path d="M10 8l6 4-6 4V8z" fill="#fff"/></svg></div>
     </div>
-    <div class="short-info"><h3>${v.title}</h3><div class="video-meta">${timeAgo(v.published)}</div></div>
+    <div class="short-info"><h3>${v.title}</h3><div class="video-meta">${v.views ? fmtNum(v.views) + ' views · ' : ''}${timeAgo(v.published)}</div></div>
   </a>`).join('');
   shortsSection.style.display = '';
 }
@@ -543,6 +550,17 @@ function renderShorts(items) {
     }
     const videos = entries.filter((_, i) => !shortFlags[i]);
     const shorts = entries.filter((_, i) => shortFlags[i]);
+
+    // Fetch view counts for all entries via /api/video-stats, then merge into objects.
+    try {
+      const ids = entries.map(v => v.id).join(',');
+      const vRes = await fetch(`/api/video-stats?ids=${ids}`);
+      if (vRes.ok) {
+        const viewMap = await vRes.json();
+        videos.forEach(v => { v.views = viewMap[v.id] || 0; });
+        shorts.forEach(v => { v.views = viewMap[v.id] || 0; });
+      }
+    } catch { /* view counts are optional — render without them */ }
 
     if (videos.length) renderVideos(videos);
     else throw new Error('empty');
@@ -791,9 +809,11 @@ function updateKeyStatuses(){
     const d = await res.json();
     if (d.error) return;
     const subEl   = document.getElementById('stat-subscribers');
+    const viewsEl = document.getElementById('stat-views');
     const videoEl = document.getElementById('stat-videos');
     const hoursEl = document.getElementById('stat-hours');
     if (subEl   && d.totalFollowers) subEl.innerHTML   = `${fmt(d.totalFollowers)}<span>+</span>`;
+    if (viewsEl && d.totalViews)     viewsEl.innerHTML = `${fmt(d.totalViews)}<span>+</span>`;
     if (videoEl && d.videoCount)     videoEl.innerHTML = `${fmt(d.videoCount)}<span>+</span>`;
     if (hoursEl && d.contentHours)   hoursEl.innerHTML = `${fmt(d.contentHours)}<span>+</span>`;
   } catch { /* keep static fallback */ }
