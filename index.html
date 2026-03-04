@@ -504,15 +504,27 @@ function renderShorts(items) {
     const res = await fetch(`https://corsproxy.io/?${rssUrl}`);
     const xml = await res.text();
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
-    const all = [...doc.querySelectorAll('entry')].map(e => ({
+    const entries = [...doc.querySelectorAll('entry')].map(e => ({
       id:        e.querySelector('videoId')?.textContent || '',
       title:     e.querySelector('title')?.textContent || '',
       thumb:     e.querySelector('thumbnail')?.getAttribute('url') || '',
       published: e.querySelector('published')?.textContent || ''
     })).filter(v => v.id);
-    const isShort = v => /#short/i.test(v.title);
-    const videos = all.filter(v => !isShort(v));
-    const shorts = all.filter(v => isShort(v));
+
+    // Detect Shorts via YouTube oEmbed — returns 200 for real Shorts, 4xx for regular videos.
+    // YouTube's oEmbed endpoint is CORS-enabled so no proxy needed.
+    // Fast-path: if title already contains #shorts skip the fetch.
+    const checkShort = (v) => {
+      if (/#shorts?\b/i.test(v.title)) return Promise.resolve(true);
+      return fetch(
+        `https://www.youtube.com/oembed?url=${encodeURIComponent('https://www.youtube.com/shorts/' + v.id)}&format=json`
+      ).then(r => r.ok).catch(() => false);
+    };
+
+    const shortFlags = await Promise.all(entries.map(checkShort));
+    const videos = entries.filter((_, i) => !shortFlags[i]);
+    const shorts = entries.filter((_, i) => shortFlags[i]);
+
     if (videos.length) renderVideos(videos);
     else throw new Error('empty');
     if (shorts.length) renderShorts(shorts);
