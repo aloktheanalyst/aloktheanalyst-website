@@ -30,7 +30,7 @@ export async function onRequest(context) {
   // ── GET: return stored post embed URLs ──────────────────────────────────────
   if (method === 'GET') {
     const raw   = await env.LINKEDIN_POSTS_KV.get(KV_KEY);
-    const posts = raw ? JSON.parse(raw) : [];
+    const posts = raw ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : [];
     return new Response(JSON.stringify(posts), {
       headers: {
         'Content-Type':                'application/json',
@@ -63,7 +63,7 @@ export async function onRequest(context) {
 
     // Prepend new post, deduplicate, keep latest MAX_POSTS
     const raw   = await env.LINKEDIN_POSTS_KV.get(KV_KEY);
-    const posts = raw ? JSON.parse(raw) : [];
+    const posts = raw ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : [];
     const updated = [embedUrl, ...posts.filter(p => p !== embedUrl)].slice(0, MAX_POSTS);
     await env.LINKEDIN_POSTS_KV.put(KV_KEY, JSON.stringify(updated));
 
