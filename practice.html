@@ -1297,7 +1297,7 @@ function appendMessage(role, content) {
         <div class="provider-dot ${meta.dotClass}"></div>
       </div>
       <div class="msg-content">
-        <div class="msg-meta">${meta.label.split(' · ')[0]}</div>
+        <div class="msg-meta">${getProviderLabel(currentProvider).split(' · ')[0]}</div>
         <div class="bubble">${formattedContent}</div>
       </div>`;
   }
