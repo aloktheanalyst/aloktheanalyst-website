@@ -1338,7 +1338,7 @@ function showTyping() {
       <div class="provider-dot ${meta.dotClass}"></div>
     </div>
     <div class="msg-content">
-      <div class="msg-meta">${meta.label.split(' · ')[0]}</div>
+      <div class="msg-meta">${getProviderLabel(currentProvider).split(' · ')[0]}</div>
       <div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
     </div>`;
   container.appendChild(div);

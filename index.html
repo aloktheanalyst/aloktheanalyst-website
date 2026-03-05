@@ -265,7 +265,7 @@
     <li><a href="#linkedin">Posts</a></li>
     <li><a href="#courses">Courses</a></li>
     <li><a href="/domain-knowledge/">Domain Knowledge</a></li>
-    <li><a href="#casestudy">Practice</a></li>
+    <li><a href="https://aloktheanalyst.com/practice">Practice</a></li>
     <li><a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" target="_blank" class="nav-cta">Subscribe</a></li>
   </ul>
 </nav>
@@ -361,7 +361,12 @@
   <div class="section-label">// Practice Arena</div>
   <div class="section-title">CASE STUDY PRACTICE</div>
   <p class="section-sub">Real interview-style analytics case studies with instant AI feedback. Pick your AI model and start practicing.</p>
-  <div class="arena-wrap">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;padding:3rem 0;">
+    <div style="font-size:3rem;">📊</div>
+    <p style="color:var(--muted);font-size:1rem;max-width:460px;text-align:center;line-height:1.7;">SQL, A/B testing, funnel analysis, Python, and more — with instant AI feedback from Claude, ChatGPT, or Gemini.</p>
+    <a href="https://aloktheanalyst.com/practice" class="btn-primary" style="font-size:1rem;padding:0.85rem 2.2rem;">Launch Practice Arena →</a>
+  </div>
+  <div class="arena-wrap" style="display:none">
     <aside class="arena-sidebar">
       <div class="arena-sidebar-head">
         <div class="arena-sidebar-label">Filter by Topic</div>
@@ -414,31 +419,6 @@
   </div>
 </section>
 
-<!-- API KEY MODAL -->
-<div class="modal-overlay" id="arenaModal" onclick="closeModalOutside(event)">
-  <div class="modal">
-    <div class="modal-title">API KEYS</div>
-    <div class="modal-sub">Keys are saved in your browser only — never sent to any server except the AI provider's API directly.</div>
-    <div class="modal-section">
-      <div class="modal-label"><span class="pbadge bc">CLAUDE</span> Anthropic API Key</div>
-      <div class="key-row"><input type="password" class="key-input" id="mk_claude" placeholder="sk-ant-api03-..." /><button class="save-btn" onclick="saveArenaKey('claude')">Save</button></div>
-      <div class="key-status ks-miss" id="ks_claude">⬡ Not configured</div>
-    </div>
-    <div class="modal-section">
-      <div class="modal-label"><span class="pbadge bo">CHATGPT</span> OpenAI API Key</div>
-      <div class="key-row"><input type="password" class="key-input" id="mk_openai" placeholder="sk-..." /><button class="save-btn" onclick="saveArenaKey('openai')">Save</button></div>
-      <div class="key-status ks-miss" id="ks_openai">⬡ Not configured</div>
-    </div>
-    <div class="modal-section">
-      <div class="modal-label"><span class="pbadge bg">GEMINI</span> Google AI API Key</div>
-      <div class="key-row"><input type="password" class="key-input" id="mk_gemini" placeholder="AIza..." /><button class="save-btn" onclick="saveArenaKey('gemini')">Save</button></div>
-      <div class="key-status ks-miss" id="ks_gemini">⬡ Not configured</div>
-    </div>
-    <div class="modal-note">🔒 Get keys from: <strong style="color:var(--accent2)">Claude:</strong> console.anthropic.com &nbsp;·&nbsp; <strong style="color:#10a37f">ChatGPT:</strong> platform.openai.com &nbsp;·&nbsp; <strong style="color:#4285f4">Gemini:</strong> aistudio.google.com</div>
-    <div class="modal-footer"><button class="close-modal" onclick="closeKeyModal()">Done</button></div>
-  </div>
-</div>
-
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">ALOK<span>.</span>ANALYST</div>
@@ -446,7 +426,7 @@
     <li><a href="https://www.youtube.com/@aloktheanalyst" target="_blank">YouTube</a></li>
     <li><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank">LinkedIn</a></li>
     <li><a href="#courses">Courses</a></li>
-    <li><a href="#casestudy">Practice</a></li>
+    <li><a href="https://aloktheanalyst.com/practice">Practice</a></li>
     <li><a href="mailto:hello@aloktheanalyst.com">Contact</a></li>
   </ul>
   <div class="footer-copy">© 2025 aloktheanalyst.com — Built with 🔥</div>
