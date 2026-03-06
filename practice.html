@@ -163,7 +163,62 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transition: width 0.25s ease;
   }
+
+  .sidebar--collapsed { width: 44px; }
+  .sidebar--collapsed .sidebar-label,
+  .sidebar--collapsed .topic-filters,
+  .sidebar--collapsed .sidebar-scroll { display: none; }
+  .sidebar--collapsed .sidebar-header { justify-content: center; padding: 0.85rem 0; }
+  .sidebar--collapsed .sidebar-hdr-top { margin-bottom: 0; }
+
+  /* Sidebar toggle button */
+  .sidebar-hdr-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+  .sidebar-toggle-btn {
+    width: 24px; height: 24px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .sidebar-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .sidebar-toggle-btn svg { width: 12px; height: 12px; transition: transform 0.25s ease; }
+
+  /* Input area toggle */
+  .input-toggle-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.2s;
+    margin-bottom: 2px;
+  }
+  .input-toggle-bar:hover { color: var(--accent); }
+  .input-toggle-bar svg { width: 14px; height: 14px; transition: transform 0.25s ease; }
+
+  .input-area-body {
+    overflow: hidden;
+    max-height: 300px;
+    opacity: 1;
+    transition: max-height 0.3s ease, opacity 0.2s;
+  }
+  .input-area--collapsed .input-area-body { max-height: 0; opacity: 0; }
 
   .sidebar-header {
     padding: 1rem 1.2rem 0.75rem;
@@ -176,7 +231,7 @@
     letter-spacing: 2.5px;
     color: var(--muted);
     text-transform: uppercase;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0;
   }
 
   /* TOPIC FILTERS */
@@ -766,7 +821,12 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-label">Filter by Topic</div>
+      <div class="sidebar-hdr-top">
+        <div class="sidebar-label">Filter by Topic</div>
+        <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Collapse sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
       <div class="topic-filters" id="topicFilters">
         <span class="topic-chip active" data-topic="all" onclick="filterTopic('all', this)">All</span>
         <span class="topic-chip" data-topic="sql" onclick="filterTopic('sql', this)">SQL</span>
@@ -836,21 +896,26 @@
     </div>
 
     <!-- INPUT AREA -->
-    <div class="input-area">
-      <div class="input-box">
-        <textarea class="chat-input" id="chatInput" placeholder="Type your answer, ask for a hint, or request a new case study..." rows="1"
-          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        <div class="input-actions">
-          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-          </button>
+    <div class="input-area" id="inputArea">
+      <button class="input-toggle-bar" id="inputToggleBtn" onclick="toggleInput()" title="Toggle input bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+      </button>
+      <div class="input-area-body">
+        <div class="input-box">
+          <textarea class="chat-input" id="chatInput" placeholder="Type your answer, ask for a hint, or request a new case study..." rows="1"
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <div class="input-actions">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="input-hint">
-        <span>↵ Enter to send · Shift+Enter for new line</span>
-        <div class="provider-indicator">
-          <div class="pi-dot" id="piDot" style="background:var(--claude-color)"></div>
-          <span id="piLabel">Claude · claude-sonnet-4-20250514</span>
+        <div class="input-hint">
+          <span>↵ Enter to send · Shift+Enter for new line</span>
+          <div class="provider-indicator">
+            <div class="pi-dot" id="piDot" style="background:var(--claude-color)"></div>
+            <span id="piLabel">Claude · claude-sonnet-4-20250514</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1438,6 +1503,36 @@ function updateKeyStatuses() {
   });
   if (anyConfigured) document.getElementById('apiKeyBtn').classList.add('configured');
 }
+
+// ═══════════════════════════════
+// PANEL TOGGLES
+// ═══════════════════════════════
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const icon = document.getElementById('sidebarToggleBtn').querySelector('svg');
+  const collapsed = sidebar.classList.toggle('sidebar--collapsed');
+  icon.style.transform = collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+  localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+}
+
+function toggleInput() {
+  const inputArea = document.getElementById('inputArea');
+  const icon = document.getElementById('inputToggleBtn').querySelector('svg');
+  const collapsed = inputArea.classList.toggle('input-area--collapsed');
+  icon.style.transform = collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+  localStorage.setItem('inputCollapsed', collapsed ? '1' : '0');
+}
+
+(function restorePanelStates() {
+  if (localStorage.getItem('sidebarCollapsed') === '1') {
+    document.querySelector('.sidebar').classList.add('sidebar--collapsed');
+    document.getElementById('sidebarToggleBtn').querySelector('svg').style.transform = 'rotate(180deg)';
+  }
+  if (localStorage.getItem('inputCollapsed') === '1') {
+    document.getElementById('inputArea').classList.add('input-area--collapsed');
+    document.getElementById('inputToggleBtn').querySelector('svg').style.transform = 'rotate(180deg)';
+  }
+})();
 </script>
 
 <script src="/components/footer.js"></script>
