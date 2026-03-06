@@ -25,14 +25,6 @@
   html { scroll-behavior: smooth; }
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
   body::before { content: none; }
-  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.2rem 5%; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(20px); background: rgba(248,250,255,0.92); border-bottom: 1px solid var(--border); box-shadow: 0 1px 12px rgba(37,99,235,0.07); }
-  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 2px; color: var(--white); }
-  .logo span { color: var(--accent2); }
-  .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px; transition: color 0.2s; }
-  .nav-links a:hover { color: var(--white); }
-  .nav-cta { background: var(--accent); color: #fff !important; padding: 0.5rem 1.2rem; border-radius: 4px; font-weight: 600 !important; transition: background 0.2s, transform 0.2s !important; }
-  .nav-cta:hover { background: var(--accent2) !important; transform: translateY(-1px); }
   #hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 8rem 5% 4rem; position: relative; overflow: hidden; }
   .hero-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(37,99,235,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.09) 1px, transparent 1px); background-size: 60px 60px; }
   .hero-glow { position: absolute; width: 700px; height: 700px; background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%); top: -100px; right: -100px; pointer-events: none; }
@@ -260,7 +252,7 @@
   @media (max-width: 900px) { .hero-inner { flex-direction: column; gap: 2.5rem; text-align: center; } .hero-photo-wrap { width: 220px; height: 220px; } .hero-stats { justify-content: center; } .hero-actions { justify-content: center; } }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  @media (max-width: 768px) { .hero-stats { gap: 1.5rem; flex-wrap: wrap; } .nav-links { display: none; } footer { flex-direction: column; text-align: center; } .footer-links { flex-wrap: wrap; justify-content: center; } }
+  @media (max-width: 768px) { .hero-stats { gap: 1.5rem; flex-wrap: wrap; } footer { flex-direction: column; text-align: center; } .footer-links { flex-wrap: wrap; justify-content: center; } }
   .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
   .fade-in.visible { opacity: 1; transform: translateY(0); }
 </style>
@@ -268,18 +260,7 @@
 <body>
 
 <!-- NAV -->
-<nav>
-  <div class="logo">ALOK<span>.</span>ANALYST</div>
-  <ul class="nav-links">
-    <li><a href="#youtube">Videos</a></li>
-    <li><a href="#linkedin">Posts</a></li>
-    <li><a href="#courses">Courses</a></li>
-    <li><a href="/domain-knowledge/">Domain Knowledge</a></li>
-    <li><a href="https://aloktheanalyst.com/practice">Practice</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" target="_blank" class="nav-cta">Subscribe</a></li>
-  </ul>
-</nav>
+<script src="/components/nav.js"></script>
 
 <!-- HERO -->
 <section id="hero">
@@ -452,17 +433,7 @@
 </section>
 
 <!-- FOOTER -->
-<footer>
-  <div class="footer-logo">ALOK<span>.</span>ANALYST</div>
-  <ul class="footer-links">
-    <li><a href="https://www.youtube.com/@aloktheanalyst" target="_blank">YouTube</a></li>
-    <li><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank">LinkedIn</a></li>
-    <li><a href="#courses">Courses</a></li>
-    <li><a href="https://aloktheanalyst.com/practice">Practice</a></li>
-    <li><a href="mailto:hello@aloktheanalyst.com">Contact</a></li>
-  </ul>
-  <div class="footer-copy">© 2025 aloktheanalyst.com — Built with 🔥</div>
-</footer>
+<script src="/components/footer.js"></script>
 
 <script>
 const observer = new IntersectionObserver((entries) => {
