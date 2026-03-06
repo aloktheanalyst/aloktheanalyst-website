@@ -812,6 +812,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
       API Keys
     </button>
+
+    <!-- Fullscreen -->
+    <button class="apikey-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Toggle fullscreen">
+      <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+    </button>
   </div>
 </div>
 
@@ -1522,6 +1527,25 @@ function toggleInput() {
   icon.style.transform = collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
   localStorage.setItem('inputCollapsed', collapsed ? '1' : '0');
 }
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const icon = document.getElementById('fsIcon');
+  if (document.fullscreenElement) {
+    // compress icon
+    icon.innerHTML = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>';
+  } else {
+    // expand icon
+    icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+  }
+});
 
 (function restorePanelStates() {
   if (localStorage.getItem('sidebarCollapsed') === '1') {
