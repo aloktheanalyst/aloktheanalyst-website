@@ -21,16 +21,20 @@ export async function onRequest(context) {
 
   try {
     const res  = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails&id=${ids}&key=${env.YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails,snippet&id=${ids}&key=${env.YOUTUBE_API_KEY}`
     );
     const data = await res.json();
 
     const result = {};
     for (const item of data.items || []) {
       const duration = parseDuration(item.contentDetails?.duration || 'PT0S');
+      // Shorts have portrait thumbnails (height > width); regular videos are landscape.
+      const thumbs = item.snippet?.thumbnails;
+      const thumb  = thumbs?.maxres || thumbs?.high || thumbs?.medium || thumbs?.default;
+      const isPortrait = thumb ? (thumb.height || 0) > (thumb.width || 0) : false;
       result[item.id] = {
         views:   parseInt(item.statistics.viewCount || '0', 10),
-        isShort: duration > 0 && duration <= 300,
+        isShort: isPortrait || (duration > 0 && duration <= 300),
       };
     }
 
