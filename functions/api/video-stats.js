@@ -30,7 +30,7 @@ export async function onRequest(context) {
       const duration = parseDuration(item.contentDetails?.duration || 'PT0S');
       result[item.id] = {
         views:   parseInt(item.statistics.viewCount || '0', 10),
-        isShort: duration > 0 && duration <= 60,
+        isShort: duration > 0 && duration <= 180,
       };
     }
 
