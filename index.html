@@ -522,8 +522,8 @@ function renderShorts(items) {
         const viewMap = await vRes.json();
         entries.forEach((v, i) => {
           v.views = viewMap[v.id]?.views || 0;
-          // isShort from backend (duration ≤180s) OR #shorts in title
-          shortFlags[i] = viewMap[v.id]?.isShort ?? /#shorts?\b/i.test(v.title);
+          // Videos >5 min go to Videos section; everything else to Shorts
+          shortFlags[i] = viewMap[v.id]?.isShort ?? false;
         });
       }
     } catch { /* view counts optional — render without them */ }
