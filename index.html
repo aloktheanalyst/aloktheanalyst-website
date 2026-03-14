@@ -520,9 +520,10 @@ function renderShorts(items) {
       const vRes = await fetch(`/api/video-stats?ids=${ids}`);
       if (vRes.ok) {
         const viewMap = await vRes.json();
-        entries.forEach(v => {
+        entries.forEach((v, i) => {
           v.views = viewMap[v.id]?.views || 0;
-          shortFlags[entries.indexOf(v)] = viewMap[v.id]?.isShort ?? false;
+          // isShort from backend (duration ≤180s) OR #shorts in title
+          shortFlags[i] = viewMap[v.id]?.isShort ?? /#shorts?\b/i.test(v.title);
         });
       }
     } catch { /* view counts optional — render without them */ }
