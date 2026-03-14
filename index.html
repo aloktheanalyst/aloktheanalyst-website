@@ -316,15 +316,6 @@
   <div class="yt-cta"><a href="https://www.youtube.com/@aloktheanalyst" target="_blank" class="btn-primary">View All Videos on YouTube →</a></div>
 </section>
 
-<!-- SHORTS -->
-<section id="shorts" style="display:none">
-  <div class="section-label">// Quick Takes</div>
-  <div class="section-title">SHORTS</div>
-  <p class="section-sub">Bite-sized analytics tips, career advice, and SQL tricks — under 60 seconds.</p>
-  <div class="shorts-row" id="shortsRow"></div>
-  <div class="yt-cta"><a href="https://www.youtube.com/@aloktheanalyst/shorts" target="_blank" class="btn-secondary">View All Shorts →</a></div>
-</section>
-
 <!-- LINKEDIN -->
 <section id="linkedin">
   <div class="section-label">// Thoughts & Insights</div>
@@ -473,20 +464,6 @@ function renderVideos(items) {
   </a>`).join('');
 }
 
-function renderShorts(items) {
-  const shortsSection = document.getElementById('shorts');
-  const shortsRow = document.getElementById('shortsRow');
-  shortsRow.innerHTML = items.slice(0, 8).map(v => `
-  <a href="https://www.youtube.com/shorts/${v.id}" target="_blank" rel="noopener noreferrer" class="short-card">
-    <div class="short-thumb">
-      <img src="${v.thumb}" alt="${v.title.replace(/"/g,'&quot;')}" loading="lazy" width="175" height="311" onerror="this.parentElement.style.background='var(--bg3)';this.style.display='none'">
-      <span class="short-badge">SHORT</span>
-      <div class="play-btn"><svg viewBox="0 0 24 24" width="36" height="36"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.65)"/><path d="M10 8l6 4-6 4V8z" fill="#fff"/></svg></div>
-    </div>
-    <div class="short-info"><h3>${v.title}</h3><div class="video-meta">${v.views ? fmtNum(v.views) + ' views · ' : ''}${timeAgo(v.published)}</div></div>
-  </a>`).join('');
-  shortsSection.style.display = '';
-}
 
 (async () => {
   // /api/feed — Cloudflare Pages Function proxies YouTube RSS (no CORS, no API key).
@@ -512,28 +489,20 @@ function renderShorts(items) {
       published: e.querySelector('published')?.textContent || ''
     })).filter(v => v.id);
 
-    // Fetch view counts + isShort flag from backend in one request.
-    // isShort is determined server-side by duration (≤60s) — no oEmbed browser requests needed.
-    let shortFlags = entries.map(() => false);
+    // Fetch view counts + duration from backend, only show long-form videos (>5 min).
+    let videos = entries;
     try {
       const ids = entries.map(v => v.id).join(',');
       const vRes = await fetch(`/api/video-stats?ids=${ids}`);
       if (vRes.ok) {
         const viewMap = await vRes.json();
-        entries.forEach((v, i) => {
-          v.views = viewMap[v.id]?.views || 0;
-          // Videos >5 min go to Videos section; everything else to Shorts
-          shortFlags[i] = viewMap[v.id]?.isShort ?? false;
-        });
+        entries.forEach(v => { v.views = viewMap[v.id]?.views || 0; });
+        videos = entries.filter(v => !viewMap[v.id] || !viewMap[v.id].isShort);
       }
-    } catch { /* view counts optional — render without them */ }
-
-    const videos = entries.filter((_, i) => !shortFlags[i]);
-    const shorts = entries.filter((_, i) => shortFlags[i]);
+    } catch { /* view counts optional — show all if API fails */ }
 
     if (videos.length) renderVideos(videos);
     else throw new Error('empty');
-    if (shorts.length) renderShorts(shorts);
   } catch {
     document.getElementById('videoGrid').innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load videos. <a href="https://www.youtube.com/@aloktheanalyst" target="_blank" style="color:var(--accent)">Watch on YouTube →</a></p>';
   }
