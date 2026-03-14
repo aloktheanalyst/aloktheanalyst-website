@@ -497,7 +497,7 @@ function renderVideos(items) {
       if (vRes.ok) {
         const viewMap = await vRes.json();
         entries.forEach(v => { v.views = viewMap[v.id]?.views || 0; });
-        videos = entries.filter(v => !viewMap[v.id] || !viewMap[v.id].isShort);
+        videos = entries.filter(v => viewMap[v.id] && !viewMap[v.id].isShort);
       }
     } catch { /* view counts optional — show all if API fails */ }
 
