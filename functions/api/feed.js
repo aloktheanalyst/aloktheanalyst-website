@@ -5,7 +5,10 @@ export async function onRequest() {
   const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
 
   try {
-    const res = await fetch(rssUrl);
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 8000);
+    const res = await fetch(rssUrl, { signal: abort.signal });
+    clearTimeout(timer);
     const xml = await res.text();
     return new Response(xml, {
       headers: {

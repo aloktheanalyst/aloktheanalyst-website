@@ -489,15 +489,20 @@ function renderShorts(items) {
 }
 
 (async () => {
-  // /api/feed is a Cloudflare Pages Function — fetches YouTube RSS server-side, no CORS issues.
-  // Falls back to corsproxy.io for local dev (Pages Functions don't run on localhost).
+  // /api/feed — Cloudflare Pages Function proxies YouTube RSS (no CORS, no API key).
+  // Falls back to corsproxy.io for local dev only.
   try {
-    let res = await fetch('/api/feed').catch(() => null);
+    const feedAbort = new AbortController();
+    const feedTimer = setTimeout(() => feedAbort.abort(), 10000);
+    let res = await fetch('/api/feed', { signal: feedAbort.signal }).catch(() => null);
+    clearTimeout(feedTimer);
+
     if (!res?.ok) {
       const rssUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UCn4jxGfKSB5JR3aas48iI1Q');
       res = await fetch(`https://corsproxy.io/?${rssUrl}`);
     }
     if (!res.ok) throw new Error('Feed unavailable');
+
     const xml = await res.text();
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     const entries = [...doc.querySelectorAll('entry')].map(e => ({
@@ -507,43 +512,23 @@ function renderShorts(items) {
       published: e.querySelector('published')?.textContent || ''
     })).filter(v => v.id);
 
-    // Detect Shorts via YouTube oEmbed — portrait videos (height > width) are Shorts.
-    // Regular videos return width:200,height:113; Shorts return width:113,height:200.
-    // Fast-path: if title already contains #shorts skip the fetch.
-    // Each check races against a 5 s timeout so a hanging request never blocks the page.
-    const checkShort = (v) => {
-      if (/#shorts?\b/i.test(v.title)) return Promise.resolve(true);
-      const timeout = new Promise(resolve => setTimeout(() => resolve(false), 5000));
-      const check = fetch(
-        `https://www.youtube.com/oembed?url=${encodeURIComponent('https://www.youtube.com/shorts/' + v.id)}&format=json`
-      ).then(async r => {
-        if (!r.ok) return false;
-        const data = await r.json();
-        return data.height > data.width; // portrait = Short
-      }).catch(() => false);
-      return Promise.race([check, timeout]);
-    };
-
-    // If oEmbed detection itself fails for any reason, fall back to showing all as videos.
-    let shortFlags;
-    try {
-      shortFlags = await Promise.all(entries.map(checkShort));
-    } catch {
-      shortFlags = entries.map(() => false);
-    }
-    const videos = entries.filter((_, i) => !shortFlags[i]);
-    const shorts = entries.filter((_, i) => shortFlags[i]);
-
-    // Fetch view counts for all entries via /api/video-stats, then merge into objects.
+    // Fetch view counts + isShort flag from backend in one request.
+    // isShort is determined server-side by duration (≤60s) — no oEmbed browser requests needed.
+    let shortFlags = entries.map(() => false);
     try {
       const ids = entries.map(v => v.id).join(',');
       const vRes = await fetch(`/api/video-stats?ids=${ids}`);
       if (vRes.ok) {
         const viewMap = await vRes.json();
-        videos.forEach(v => { v.views = viewMap[v.id] || 0; });
-        shorts.forEach(v => { v.views = viewMap[v.id] || 0; });
+        entries.forEach(v => {
+          v.views = viewMap[v.id]?.views || 0;
+          shortFlags[entries.indexOf(v)] = viewMap[v.id]?.isShort ?? false;
+        });
       }
-    } catch { /* view counts are optional — render without them */ }
+    } catch { /* view counts optional — render without them */ }
+
+    const videos = entries.filter((_, i) => !shortFlags[i]);
+    const shorts = entries.filter((_, i) => shortFlags[i]);
 
     if (videos.length) renderVideos(videos);
     else throw new Error('empty');
