@@ -82,7 +82,8 @@
   .short-info .video-meta { font-size: 0.7rem; }
   #linkedin { background: var(--bg2); }
   .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-  .li-embed { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+  .li-embed { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); position: relative; }
+  .li-embed-overlay { display: none; }
   #contact { background: var(--bg2); text-align: center; }
   .social-icons { display: flex; justify-content: center; gap: 1.25rem; margin: 2rem 0 1.25rem; flex-wrap: wrap; }
   .social-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
@@ -255,7 +256,70 @@
   @media (max-width: 900px) { .hero-inner { flex-direction: column; gap: 2.5rem; text-align: center; } .hero-photo-wrap { width: 220px; height: 220px; } .hero-stats { justify-content: center; } .hero-actions { justify-content: center; } }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  @media (max-width: 768px) { .hero-stats { gap: 1.5rem; flex-wrap: wrap; } footer { flex-direction: column; text-align: center; } .footer-links { flex-wrap: wrap; justify-content: center; } }
+  @media (max-width: 768px) {
+    .hero-stats { gap: 1.5rem; flex-wrap: wrap; }
+    footer { flex-direction: column; text-align: center; }
+    .footer-links { flex-wrap: wrap; justify-content: center; }
+
+    /* Section padding */
+    section { padding: 3rem 5%; }
+    #hero { padding: 6rem 5% 3rem; min-height: auto; }
+    h1 { font-size: clamp(2.8rem, 12vw, 4.5rem); }
+    .hero-desc { font-size: 1rem; }
+    .hero-actions { flex-direction: column; align-items: stretch; }
+    .hero-actions .btn-primary,
+    .hero-actions .btn-topmate,
+    .hero-actions .btn-secondary { text-align: center; justify-content: center; min-height: 48px; }
+
+    /* Stats */
+    .stat-num { font-size: 1.6rem; }
+    .stat-label { font-size: 0.72rem; }
+
+    /* Section headings */
+    .section-title { font-size: clamp(2rem, 8vw, 3rem); }
+    .section-sub { font-size: 0.92rem; margin-bottom: 2rem; }
+
+    /* Grids: single column */
+    .videos-grid { grid-template-columns: 1fr; }
+    .posts-grid { grid-template-columns: 1fr; }
+    .courses-grid { grid-template-columns: 1fr; }
+
+    /* LinkedIn iframe scroll fix */
+    .li-embed iframe { pointer-events: none; height: 480px; }
+    .li-embed-overlay {
+      display: flex; position: absolute; inset: 0;
+      align-items: center; justify-content: center;
+      background: rgba(248,250,255,0.05); z-index: 2; cursor: pointer;
+    }
+    .li-embed-overlay span {
+      background: rgba(0,0,0,0.6); color: #fff;
+      font-size: 0.78rem; font-weight: 600;
+      padding: 0.5rem 1.2rem; border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      pointer-events: auto; backdrop-filter: blur(4px);
+    }
+    .li-embed.li-active iframe { pointer-events: auto; }
+    .li-embed.li-active .li-embed-overlay { display: none; }
+
+    /* Touch targets */
+    .btn-primary, .btn-secondary, .btn-topmate { min-height: 48px; font-size: 0.9rem; padding: 0.75rem 1.5rem; }
+    .social-icon { width: 48px; height: 48px; }
+    .social-icon svg { width: 22px; height: 22px; }
+
+    /* Arena case study */
+    .arena-wrap { height: auto; flex-direction: column; }
+    .arena-sidebar { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    section { padding: 2.5rem 4%; }
+    #hero { padding: 5rem 4% 2.5rem; }
+    .hero-stats { gap: 1rem; }
+    .stat-num { font-size: 1.4rem; }
+    .hero-photo-wrap { width: 180px; height: 180px; }
+    .hero-badge { font-size: 0.68rem; padding: 0.35rem 0.7rem; }
+  }
+
   .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
   .fade-in.visible { opacity: 1; transform: translateY(0); }
 </style>
@@ -527,6 +591,7 @@ function renderVideos(items) {
     grid.innerHTML = posts.map(url => `
       <div class="li-embed fade-in">
         <iframe src="${url}" height="570" width="100%" frameborder="0" allowfullscreen="" title="LinkedIn post" loading="lazy"></iframe>
+        <div class="li-embed-overlay" onclick="this.parentElement.classList.add('li-active');this.remove();"><span>Tap to interact</span></div>
       </div>`).join('');
     grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
   } catch {
