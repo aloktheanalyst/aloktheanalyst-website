@@ -40,7 +40,15 @@
         font-size: 12px; color: #64748b; text-decoration: none; transition: color .2s;
       }
       #sfooter .sft-links a:hover { color: #0f172a; }
-      @media (max-width: 620px) { #sfooter .sft-inner { justify-content: center; text-align: center; } }
+      @media (max-width: 620px) {
+        #sfooter { padding: 24px 16px; }
+        #sfooter .sft-inner { flex-direction: column; justify-content: center; text-align: center; gap: 16px; }
+        #sfooter .sft-icon { width: 44px; height: 44px; }
+        #sfooter .sft-icon svg { width: 18px; height: 18px; }
+        #sfooter .sft-socials { gap: 14px; }
+        #sfooter .sft-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+        #sfooter .sft-links a { font-size: 0.82rem; min-height: 44px; display: flex; align-items: center; }
+      }
     `;
     document.head.appendChild(s);
   }
