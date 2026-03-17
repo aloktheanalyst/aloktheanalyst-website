@@ -37,7 +37,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 .dcard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:border-color .2s,transform .2s,box-shadow .2s;position:relative;overflow:hidden}
 .dcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));opacity:0;transition:opacity .2s}
-.dcard:hover{border-color:rgba(37,99,235,0.3);transform:translateY(-3px);box-shadow:0 8px 28px rgba(37,99,235,0.1)}
+.dcard:hover{border-color:rgba(37,99,235,0.3);transform:translateY(-3px);box-shadow:0 10px 30px rgba(37,99,235,0.1)}
 .dcard:hover::before{opacity:1}
 .dcard.cs{opacity:.5;cursor:not-allowed;pointer-events:none}
 .cs-badge{position:absolute;top:14px;right:14px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:99px}
@@ -50,7 +50,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .carr{margin-left:auto;color:var(--muted);font-size:15px;transition:transform .2s,color .2s}
 .dcard:hover .carr{transform:translateX(4px);color:var(--accent)}
 
-@media(max-width:620px){.footer-inner{justify-content:center}}
 </style>
 </head>
 <body>
