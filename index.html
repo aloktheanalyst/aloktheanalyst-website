@@ -597,20 +597,36 @@ function renderVideos(items) {
         <iframe src="${url}" height="570" width="100%" frameborder="0" allowfullscreen="" title="LinkedIn post" loading="lazy"></iframe>
         <div class="li-embed-overlay"><span>${cta}</span></div>
       </div>`).join('');
+
+    function activateEmbed(card) {
+      // Deactivate any previously active embed first
+      const prev = grid.querySelector('.li-embed.li-active');
+      if (prev && prev !== card) prev.classList.remove('li-active');
+      card.classList.add('li-active');
+    }
+
     // Activate overlay only on deliberate taps (not scroll gestures)
     grid.querySelectorAll('.li-embed-overlay').forEach(ov => {
       let startY = 0;
       ov.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
       ov.addEventListener('touchend', e => {
-        if (Math.abs(e.changedTouches[0].clientY - startY) < 10) {
-          ov.parentElement.classList.add('li-active');
-          ov.remove();
-        }
+        if (Math.abs(e.changedTouches[0].clientY - startY) < 10) activateEmbed(ov.parentElement);
       });
       ov.addEventListener('click', e => {
-        if (!isTouch) { ov.parentElement.classList.add('li-active'); ov.remove(); }
+        if (!isTouch) activateEmbed(ov.parentElement);
       });
     });
+
+    // Auto-reset when an activated post scrolls out of view
+    const liObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting && e.target.classList.contains('li-active')) {
+          e.target.classList.remove('li-active');
+        }
+      });
+    }, { threshold: 0.1 });
+    grid.querySelectorAll('.li-embed').forEach(el => liObserver.observe(el));
+
     grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
   } catch {
     grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load posts. <a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" style="color:var(--accent)">View on LinkedIn →</a></p>';
