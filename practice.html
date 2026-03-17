@@ -23,6 +23,7 @@
     --white:    #0f172a;
 
     /* AI provider colors */
+    --free-color:    #f97316;
     --claude-color:  #2563eb;
     --openai-color:  #059669;
     --gemini-color:  #2563eb;
@@ -117,11 +118,13 @@
 
   .ptab .picon { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
+  .ptab[data-provider="free"] .picon { background: var(--free-color); border-radius: 50%; }
   .ptab[data-provider="claude"] .picon { background: var(--claude-color); }
   .ptab[data-provider="openai"] .picon { background: var(--openai-color); border-radius: 50%; }
   .ptab[data-provider="gemini"] .picon { background: linear-gradient(135deg, var(--gemini-color), #ea4335, #fbbc04, var(--gemini-color)); border-radius: 50%; }
 
   .ptab.active { background: var(--surface2); color: var(--white); }
+  .ptab[data-provider="free"].active { color: var(--free-color); }
   .ptab[data-provider="claude"].active { color: var(--claude-color); }
   .ptab[data-provider="openai"].active { color: var(--openai-color); }
   .ptab[data-provider="gemini"].active { color: var(--gemini-color); }
@@ -462,6 +465,7 @@
     border-radius: 50%;
     border: 1.5px solid var(--bg);
   }
+  .dot-free   { background: var(--free-color); }
   .dot-claude { background: var(--claude-color); }
   .dot-openai { background: var(--openai-color); }
   .dot-gemini { background: var(--gemini-color); }
@@ -675,6 +679,7 @@
     font-family: 'DM Sans', sans-serif;
     font-weight: 500;
   }
+  .badge-free    { background: rgba(249,115,22,0.1); color: var(--free-color); }
   .badge-claude  { background: rgba(37,99,235,0.1); color: var(--accent); }
   .badge-openai  { background: rgba(16,163,127,0.15);  color: var(--openai-color); }
   .badge-gemini  { background: rgba(66,133,244,0.15);  color: var(--gemini-color); }
@@ -813,7 +818,10 @@
   <div class="topbar-right">
     <!-- Provider Tabs -->
     <div class="provider-tabs" id="providerTabs">
-      <button class="ptab active" data-provider="claude" onclick="setProvider('claude', this)">
+      <button class="ptab active" data-provider="free" onclick="setProvider('free', this)">
+        <div class="picon"></div> Free
+      </button>
+      <button class="ptab" data-provider="claude" onclick="setProvider('claude', this)">
         <div class="picon"></div> Claude
       </button>
       <button class="ptab" data-provider="openai" onclick="setProvider('openai', this)">
@@ -935,8 +943,8 @@
         <div class="input-hint">
           <span>↵ Enter to send · Shift+Enter for new line</span>
           <div class="provider-indicator">
-            <div class="pi-dot" id="piDot" style="background:var(--claude-color)"></div>
-            <span id="piLabel">Claude · claude-sonnet-4-20250514</span>
+            <div class="pi-dot" id="piDot" style="background:var(--free-color)"></div>
+            <span id="piLabel">Llama · @cf/meta/llama-3.1-8b-instruct-fp8-fast</span>
           </div>
         </div>
       </div>
@@ -949,6 +957,19 @@
   <div class="modal">
     <div class="modal-title">API KEYS</div>
     <div class="modal-sub">Add your API keys to use different AI models. Keys are stored only in your browser's localStorage — never sent to any server except the AI provider's API.</div>
+
+    <!-- Free (Workers AI) -->
+    <div class="modal-section">
+      <div class="modal-label">
+        <span class="provider-badge badge-free">FREE</span>
+        Workers AI (Llama)
+      </div>
+      <div class="key-status ok" style="margin-bottom:0.5rem">✓ No API key needed — works immediately</div>
+      <div class="model-select-row">
+        <span class="model-select-label">Model:</span>
+        <select class="model-select" id="freeModel" onchange="saveModel('free', this.value)"></select>
+      </div>
+    </div>
 
     <!-- Claude -->
     <div class="modal-section">
@@ -1065,19 +1086,24 @@ RULES:
 // ═══════════════════════════════
 // STATE
 // ═══════════════════════════════
-let currentProvider = 'claude';
+let currentProvider = 'free';
 let conversationHistory = [];
 let isLoading = false;
 let activeFilter = 'all';
 let activeCaseId = null;
 
 const apiKeys = {
+  free:   '__free__',
   claude: localStorage.getItem('ak_claude') || '',
   openai: localStorage.getItem('ak_openai') || '',
   gemini: localStorage.getItem('ak_gemini') || '',
 };
 
 const modelOptions = {
+  free: [
+    { value: '@cf/meta/llama-3.1-8b-instruct-fp8-fast',  label: 'Llama 3.1 8B (fast)' },
+    { value: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',  label: 'Llama 3.3 70B (quality)' },
+  ],
   claude: [
     { value: 'claude-sonnet-4-20250514',  label: 'Claude Sonnet 4 (latest)' },
     { value: 'claude-opus-4-5',           label: 'Claude Opus 4.5' },
@@ -1099,19 +1125,21 @@ const modelOptions = {
 };
 
 const modelSelections = {
+  free:   localStorage.getItem('model_free') || '@cf/meta/llama-3.1-8b-instruct-fp8-fast',
   claude: localStorage.getItem('model_claude') || 'claude-sonnet-4-20250514',
   openai: localStorage.getItem('model_openai') || 'gpt-4o',
   gemini: localStorage.getItem('model_gemini') || 'gemini-2.0-flash',
 };
 
 const providerMeta = {
+  free:   { color: 'var(--free-color)',   dotClass: 'dot-free',   avatarText: '🦙' },
   claude: { color: 'var(--claude-color)', dotClass: 'dot-claude', avatarText: '✦' },
   openai: { color: 'var(--openai-color)', dotClass: 'dot-openai', avatarText: '⊕' },
   gemini: { color: 'var(--gemini-color)', dotClass: 'dot-gemini', avatarText: '◈' },
 };
 
 function getProviderLabel(provider) {
-  const names = { claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini' };
+  const names = { free: 'Llama', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini' };
   return `${names[provider]} · ${modelSelections[provider]}`;
 }
 
@@ -1172,7 +1200,7 @@ function saveModel(provider, value) {
 }
 
 function populateModelSelects() {
-  ['claude', 'openai', 'gemini'].forEach(p => {
+  ['free', 'claude', 'openai', 'gemini'].forEach(p => {
     const sel = document.getElementById(`${p}Model`);
     if (!sel) return;
     sel.innerHTML = '';
@@ -1254,7 +1282,9 @@ async function sendToAI(userText, isSystemTrigger) {
   try {
     let reply = '';
 
-    if (currentProvider === 'claude') {
+    if (currentProvider === 'free') {
+      reply = await callFree();
+    } else if (currentProvider === 'claude') {
       reply = await callClaude();
     } else if (currentProvider === 'openai') {
       reply = await callOpenAI();
@@ -1268,7 +1298,11 @@ async function sendToAI(userText, isSystemTrigger) {
   } catch (err) {
     removeTyping();
     const errMsg = err.message || 'Unknown error';
-    appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nMake sure your API key for **${currentProvider}** is configured. Click **API Keys** in the top bar.`);
+    if (currentProvider === 'free') {
+      appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nThe free AI service may be temporarily unavailable. Try again in a moment, or switch to another provider with your own API key.`);
+    } else {
+      appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nMake sure your API key for **${currentProvider}** is configured. Click **API Keys** in the top bar.`);
+    }
   }
 
   isLoading = false;
@@ -1276,6 +1310,24 @@ async function sendToAI(userText, isSystemTrigger) {
 }
 
 // ── API CALLERS ──
+async function callFree() {
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: conversationHistory,
+      system: SYSTEM_PROMPT,
+      model: modelSelections.free,
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Free AI error ${res.status}`);
+  }
+  const data = await res.json();
+  return data.reply || '';
+}
+
 async function callClaude() {
   const key = apiKeys.claude;
   if (!key) throw new Error('No Claude API key found. Please add it via the API Keys button.');
