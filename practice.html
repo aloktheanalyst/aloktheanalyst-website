@@ -859,6 +859,7 @@
       </div>
       <div class="topic-filters" id="topicFilters">
         <span class="topic-chip active" data-topic="all" onclick="filterTopic('all', this)">All</span>
+        <span class="topic-chip" data-topic="rca" onclick="filterTopic('rca', this)">RCA</span>
         <span class="topic-chip" data-topic="sql" onclick="filterTopic('sql', this)">SQL</span>
         <span class="topic-chip" data-topic="python" onclick="filterTopic('python', this)">Python</span>
         <span class="topic-chip" data-topic="product" onclick="filterTopic('product', this)">Product</span>
@@ -1040,31 +1041,65 @@
 // DATA
 // ═══════════════════════════════
 const PROMPTS = [
+  // ── RCA Case Studies ──
+  { id: 'rca_orders',       title: 'Weekly Orders Dropped 25%',              topic: 'rca', difficulty: 'hard',   tag: 'RCA' },
+  { id: 'rca_dau',          title: 'DAU Down 15% — What Happened?',          topic: 'rca', difficulty: 'medium', tag: 'RCA' },
+  { id: 'rca_signup',       title: 'Signup Conversion Rate Crashed',         topic: 'rca', difficulty: 'hard',   tag: 'RCA' },
+  { id: 'rca_revenue',      title: 'SaaS Revenue Dropped After Launch',      topic: 'rca', difficulty: 'hard',   tag: 'RCA' },
+  { id: 'rca_cart',         title: 'Cart Abandonment Spiked Overnight',      topic: 'rca', difficulty: 'medium', tag: 'RCA' },
+  { id: 'rca_engagement',   title: 'Feature Engagement Fell 40%',            topic: 'rca', difficulty: 'medium', tag: 'RCA' },
+
+  // ── SQL ──
   { id: 'sql_window',    title: 'Window Functions Deep Dive',         topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_retention', title: 'User Retention Cohort Analysis',      topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_dedup',     title: 'Deduplication & Data Quality',        topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
+
+  // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
   { id: 'ab_sample',     title: 'Sample Size & Power Calculation',      topic: 'ab',      difficulty: 'medium', tag: 'A/B' },
+
+  // ── Product ──
   { id: 'funnel',        title: 'E-commerce Funnel Drop-off',           topic: 'product', difficulty: 'medium', tag: 'Product' },
   { id: 'metric_drop',   title: 'Revenue Metric Drop Investigation',    topic: 'product', difficulty: 'hard',   tag: 'Product' },
   { id: 'kpi_design',    title: 'KPI Design for a New Feature',         topic: 'product', difficulty: 'medium', tag: 'Product' },
+
+  // ── Python ──
   { id: 'python_clean',  title: 'Messy Dataset Cleaning (Pandas)',      topic: 'python',  difficulty: 'easy',   tag: 'Python' },
   { id: 'python_agg',    title: 'Aggregation & GroupBy Patterns',       topic: 'python',  difficulty: 'medium', tag: 'Python' },
+
+  // ── Visualization ──
   { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'viz',     difficulty: 'easy',   tag: 'Viz' },
   { id: 'storytelling',  title: 'Data Storytelling for Stakeholders',   topic: 'viz',     difficulty: 'medium', tag: 'Viz' },
 ];
 
 const CASE_PROMPTS = {
+  // ── RCA prompts ──
+  rca_orders:     'You are the lead analyst at a mid-size e-commerce company. The VP of Operations pings you: "Weekly orders are down 25% compared to last week." No other context is given. Walk me through this RCA investigation. Start by setting the scene — give me a realistic company context (product type, user base, platforms) — then ask me: "Where would you start your investigation?" Guide me through the full External vs Internal factor tree step by step. Push me to think about data validation, seasonality, technical issues, and marketing changes. Ask me to write SQL queries to validate each hypothesis.',
+  rca_dau:        'You are a product analyst at a social media app with 5M DAU. The product director flags that DAU is down 15% over the past 3 days compared to the prior week. It is not a holiday period. Set the scene with realistic app context (features, platforms, user segments), then ask me: "Walk me through how you would diagnose this." Guide me through the RCA framework — push me to consider platform-specific issues (iOS vs Android vs Web), version upgrades, A/B experiments, and external factors like competitor launches. Make me write the SQL to segment DAU by platform and user cohort.',
+  rca_signup:     'You are the growth analyst at a B2B SaaS company. The Head of Growth tells you: "Our signup-to-activation conversion rate dropped from 32% to 19% this week." Set the scene with a realistic SaaS product (what the product does, pricing tiers, signup flow stages). Then ask me: "What is the first thing you would check?" Guide me through the RCA framework with emphasis on funnel breakage — check each step in the signup flow, look for UI/UX changes, broken forms, A/B tests on onboarding, marketing channel mix shifts, and bot traffic. Push me to segment by acquisition channel and device type. Ask for SQL.',
+  rca_revenue:    'You are a senior data analyst at a SaaS company ($20M ARR). The CFO flags that monthly recurring revenue (MRR) dropped 8% this month — the first decline in 2 years. A major new feature was launched 3 weeks ago. Set the scene with realistic context (product, pricing, customer segments), then ask me: "How would you approach this investigation?" Guide me through the RCA tree — new feature cannibalization, churn spike, expansion revenue slowdown, pricing changes, contract timing, and seasonal effects. Push me to differentiate between gross churn, net churn, expansion, and contraction MRR. Ask for SQL to build a revenue waterfall.',
+  rca_cart:       'You are the analytics lead at an online fashion retailer. The e-commerce team reports that cart abandonment rate jumped from 68% to 82% overnight — a sudden spike. Set the scene with realistic context (product catalog, checkout flow, payment providers, mobile vs desktop split). Then ask me: "This is a sudden change — where do you start?" Guide me through the RCA framework with emphasis on technical factors — checkout flow bugs, payment gateway issues, shipping cost changes, page load time, mobile rendering, and A/B tests. Push me to check platform and device segments. Ask for SQL to compute abandonment rate by step and device.',
+  rca_engagement: 'You are a product analyst at a fintech app (personal budgeting tool). The PM reports that usage of the "Savings Goals" feature dropped 40% over the past 2 weeks, but overall app DAU is flat. Set the scene with realistic context (feature description, user segments, how it fits in the app). Then ask me: "DAU is stable but feature usage crashed — what does that tell you?" Guide me through the RCA framework focusing on feature-level analysis: UI changes, feature discoverability, navigation changes, A/B tests, cannibalization by a new feature, push notification changes, and user segment shifts. Push me to analyze feature adoption funnel and cohort retention.',
+
+  // ── SQL prompts ──
   sql_window:    'Give me a SQL window functions case study. Include a realistic scenario with a table schema and a business question that requires RANK, DENSE_RANK, or running totals.',
   sql_retention: 'Give me a SQL cohort retention analysis case study. Include a user events table and ask me to calculate week-over-week retention.',
   sql_dedup:     'Give me a SQL data quality / deduplication case study. Give me a messy table with duplicates and ask me to write a query to clean it.',
+
+  // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
   ab_sample:     'Give me a sample size and statistical power calculation case study. Give me a scenario with baseline conversion rate and ask me to determine the required sample size.',
+
+  // ── Product prompts ──
   funnel:        'Give me an e-commerce funnel drop-off case study. Provide funnel stage data and ask me to diagnose where users are dropping off and suggest root causes.',
   metric_drop:   'Give me a metric drop investigation case study. Tell me that revenue dropped 20% last week and ask me to walk through my diagnostic framework.',
   kpi_design:    'Give me a KPI design case study. Ask me to define success metrics for a new feature like a recommendation engine or notification system.',
+
+  // ── Python prompts ──
   python_clean:  'Give me a pandas data cleaning case study. Describe a messy dataset with nulls, wrong dtypes, and duplicates. Ask me how I would clean it.',
   python_agg:    'Give me a pandas aggregation case study. Provide a scenario requiring complex groupby operations and ask me to write the solution.',
+
+  // ── Visualization prompts ──
   viz_choose:    'Give me a data visualization case study. Describe a dataset and business question, then ask me to choose the right chart type and justify my choice.',
   storytelling:  'Give me a data storytelling case study. Ask me to present a complex analysis to a non-technical C-suite audience.',
 };
