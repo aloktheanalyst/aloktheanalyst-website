@@ -1,11 +1,12 @@
 // Cloudflare Pages Function — proxies chat requests to Workers AI (open-source Llama models).
 // Deployed automatically by Cloudflare Pages at /api/chat
 //
-// Required binding (Cloudflare Pages → Settings → Functions → AI binding):
-//   Variable name: AI
+// Required bindings:
+//   AI          → Workers AI binding
+//   SESSION_KV  → KV namespace (aloktheanalyst_sessions)
 //
 // Optional KV binding for rate limiting:
-//   Variable name: RATE_LIMIT_KV  →  namespace: aloktheanalyst_rate_limit
+//   RATE_LIMIT_KV  →  KV namespace (aloktheanalyst_sessions) — can reuse same namespace
 
 const RATE_LIMIT = 30;     // max requests per window per IP
 const RATE_WINDOW = 3600;  // window in seconds (1 hour)
@@ -51,6 +52,19 @@ export async function onRequest(context) {
   // ── Check AI binding ──────────────────────────────────────────────────────
   if (!env.AI) {
     return json({ error: 'AI service not configured. Please add the AI binding in Cloudflare dashboard.' }, 503);
+  }
+
+  // ── Authenticate — require valid session ────────────────────────────────
+  if (env.SESSION_KV) {
+    const cookies = parseCookies(request.headers.get('Cookie') || '');
+    const sessionId = cookies.session;
+    if (!sessionId) {
+      return json({ error: 'Please sign in with Google to use the free AI model.', auth_required: true }, 401);
+    }
+    const sessionData = await env.SESSION_KV.get(`sess:${sessionId}`);
+    if (!sessionData) {
+      return json({ error: 'Session expired. Please sign in again.', auth_required: true }, 401);
+    }
   }
 
   // ── Rate limiting (KV-based, approximate — optional) ──────────────────────
@@ -114,4 +128,15 @@ export async function onRequest(context) {
   } catch (err) {
     return json({ error: err.message || 'AI inference failed' }, 502);
   }
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  cookieHeader.split(';').forEach((c) => {
+    const [key, ...val] = c.trim().split('=');
+    if (key) cookies[key.trim()] = val.join('=').trim();
+  });
+  return cookies;
 }
