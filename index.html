@@ -83,7 +83,23 @@
   #linkedin { background: var(--bg2); }
   .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
   .li-embed { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); position: relative; }
-  .li-embed-overlay { display: none; }
+  .li-embed iframe { pointer-events: none; }
+  .li-embed-overlay {
+    display: flex; position: absolute; inset: 0;
+    align-items: flex-end; justify-content: center; padding-bottom: 2rem;
+    background: linear-gradient(to bottom, transparent 70%, rgba(0,0,0,0.15) 100%);
+    z-index: 2; cursor: pointer;
+  }
+  .li-embed-overlay span {
+    background: rgba(0,0,0,0.65); color: #fff;
+    font-size: 0.78rem; font-weight: 600;
+    padding: 0.5rem 1.2rem; border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    backdrop-filter: blur(4px); transition: background 0.2s;
+  }
+  .li-embed-overlay:hover span { background: rgba(0,0,0,0.85); }
+  .li-embed.li-active iframe { pointer-events: auto; }
+  .li-embed.li-active .li-embed-overlay { display: none; }
   #contact { background: var(--bg2); text-align: center; }
   .social-icons { display: flex; justify-content: center; gap: 1.25rem; margin: 2rem 0 1.25rem; flex-wrap: wrap; }
   .social-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
@@ -284,22 +300,8 @@
     .posts-grid { grid-template-columns: 1fr; }
     .courses-grid { grid-template-columns: 1fr; }
 
-    /* LinkedIn iframe scroll fix */
-    .li-embed iframe { pointer-events: none; height: 480px; }
-    .li-embed-overlay {
-      display: flex; position: absolute; inset: 0;
-      align-items: center; justify-content: center;
-      background: rgba(248,250,255,0.05); z-index: 2; cursor: pointer;
-    }
-    .li-embed-overlay span {
-      background: rgba(0,0,0,0.6); color: #fff;
-      font-size: 0.78rem; font-weight: 600;
-      padding: 0.5rem 1.2rem; border-radius: 50px;
-      font-family: 'DM Sans', sans-serif;
-      pointer-events: auto; backdrop-filter: blur(4px);
-    }
-    .li-embed.li-active iframe { pointer-events: auto; }
-    .li-embed.li-active .li-embed-overlay { display: none; }
+    /* LinkedIn iframe smaller on mobile */
+    .li-embed iframe { height: 480px; }
 
     /* Touch targets */
     .btn-primary, .btn-secondary, .btn-topmate { min-height: 48px; font-size: 0.9rem; padding: 0.75rem 1.5rem; }
@@ -588,10 +590,11 @@ function renderVideos(items) {
       grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1">No posts yet. <a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" style="color:var(--accent)">Follow on LinkedIn →</a></p>';
       return;
     }
+    const cta = 'ontouchstart' in window ? 'Tap to interact' : 'Click to interact';
     grid.innerHTML = posts.map(url => `
       <div class="li-embed fade-in">
         <iframe src="${url}" height="570" width="100%" frameborder="0" allowfullscreen="" title="LinkedIn post" loading="lazy"></iframe>
-        <div class="li-embed-overlay" onclick="this.parentElement.classList.add('li-active');this.remove();"><span>Tap to interact</span></div>
+        <div class="li-embed-overlay" onclick="this.parentElement.classList.add('li-active');this.remove();"><span>${cta}</span></div>
       </div>`).join('');
     grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
   } catch {
