@@ -16,7 +16,6 @@
     --border: #e2e8f2;
     --accent: #2563eb;
     --accent2: #1d4ed8;
-    --blue: #1d4ed8;
     --text: #334155;
     --muted: #64748b;
     --white: #0f172a;
@@ -115,7 +114,7 @@
   .post-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 0; background: var(--accent); transition: height 0.3s; border-radius: 3px 0 0 3px; }
   .post-card:hover::before { height: 100%; }
   .post-card:hover { border-color: rgba(37,99,235,0.35); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(37,99,235,0.1); }
-  .post-tag { display: inline-block; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--blue); font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; padding: 0.25rem 0.7rem; border-radius: 50px; margin-bottom: 1rem; letter-spacing: 0.5px; text-transform: uppercase; }
+  .post-tag { display: inline-block; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--accent2); font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; padding: 0.25rem 0.7rem; border-radius: 50px; margin-bottom: 1rem; letter-spacing: 0.5px; text-transform: uppercase; }
   .post-card p { font-size: 0.92rem; line-height: 1.7; color: var(--text); margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .post-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--muted); }
   .post-link { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.82rem; transition: gap 0.2s; display: flex; align-items: center; gap: 0.3rem; }
@@ -225,9 +224,9 @@
   .arena-hint { font-size: 0.62rem; color: var(--muted); margin-top: 0.4rem; font-family: 'JetBrains Mono', monospace; display: flex; justify-content: space-between; }
   .pi-wrap { display: flex; align-items: center; gap: 0.35rem; }
   .pi-dot { width: 5px; height: 5px; border-radius: 50%; }
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(15,23,42,0.15); transform: translateY(10px); transition: transform 0.25s; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(15,23,42,0.15); transform: translateY(10px); transition: transform 0.3s; }
   .modal-overlay.open .modal { transform: translateY(0); }
   .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 2px; color: var(--white); margin-bottom: 0.3rem; }
   .modal-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.55; }

@@ -17,7 +17,6 @@
     --accent:   #2563eb;
     --accent2:  #1d4ed8;
     --green:    #16a34a;
-    --blue:     #1d4ed8;
     --purple:   #7c3aed;
     --text:     #334155;
     --muted:    #64748b;
@@ -163,7 +162,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: width 0.25s ease;
+    transition: width 0.3s ease;
   }
 
   .sidebar--collapsed { width: 44px; }
@@ -193,7 +192,7 @@
     padding: 0;
   }
   .sidebar-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .sidebar-toggle-btn svg { width: 12px; height: 12px; transition: transform 0.25s ease; }
+  .sidebar-toggle-btn svg { width: 12px; height: 12px; transition: transform 0.3s ease; }
 
   /* Input area toggle */
   .input-toggle-bar {
@@ -210,7 +209,7 @@
     margin-bottom: 2px;
   }
   .input-toggle-bar:hover { color: var(--accent); }
-  .input-toggle-bar svg { width: 14px; height: 14px; transition: transform 0.25s ease; }
+  .input-toggle-bar svg { width: 14px; height: 14px; transition: transform 0.3s ease; }
 
   .input-area-body {
     overflow: hidden;
@@ -418,7 +417,7 @@
     border-radius: 8px;
     padding: 1rem;
     cursor: pointer;
-    transition: all 0.25s;
+    transition: all 0.3s;
     text-align: left;
   }
   .qs-card:hover { border-color: var(--accent); background: rgba(37,99,235,0.04); transform: translateY(-3px); box-shadow: 0 4px 16px rgba(37,99,235,0.1); }
@@ -453,7 +452,7 @@
   }
 
   .bot-av  { background: var(--surface2); border: 1px solid var(--border2); }
-  .user-av { background: var(--blue); color: #fff; }
+  .user-av { background: var(--accent2); color: #fff; }
 
   /* Provider indicator dot on avatar */
   .provider-dot {
@@ -629,7 +628,7 @@
     z-index: 1000;
     display: flex; align-items: center; justify-content: center;
     opacity: 0; pointer-events: none;
-    transition: opacity 0.25s;
+    transition: opacity 0.3s;
   }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
 
@@ -642,7 +641,7 @@
     max-width: 480px;
     box-shadow: 0 20px 60px rgba(15,23,42,0.15);
     transform: translateY(10px);
-    transition: transform 0.25s;
+    transition: transform 0.3s;
   }
   .modal-overlay.open .modal { transform: translateY(0); }
 
