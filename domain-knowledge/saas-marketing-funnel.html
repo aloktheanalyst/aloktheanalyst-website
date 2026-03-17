@@ -10,7 +10,7 @@
 <style>
 /* ─── SITE CHROME ─── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#f8faff;--surf:#ffffff;--surf2:#f0f5ff;--border:#e2e8f2;--blue:#2563eb;--blue-d:#1d4ed8;--white:#0f172a;--muted:#64748b;--text:#334155}
+:root{--bg:#f8faff;--surface:#ffffff;--surface2:#f0f5ff;--border:#e2e8f2;--accent:#2563eb;--accent2:#1d4ed8;--white:#0f172a;--muted:#64748b;--text:#334155}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.6;min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(37,99,235,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.06) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
@@ -21,11 +21,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 /* breadcrumb */
 .breadcrumb{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
 .breadcrumb a{color:var(--muted);text-decoration:none;transition:color .2s}
-.breadcrumb a:hover{color:var(--blue)}
+.breadcrumb a:hover{color:var(--accent)}
 
 /* page header */
 .pg-header{margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)}
-.pg-eye{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+.pg-eye{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
 .pg-eye::before{content:'// ';opacity:.4}
 .pg-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,4vw,38px);font-weight:700;letter-spacing:2px;color:var(--white);line-height:1.2;margin-bottom:10px}
 .pg-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -37,8 +37,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 /* key concepts */
 .concepts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:48px}
-.concept-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
-.cc-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.concept-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.cc-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
 .cc-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--white);line-height:1;margin-bottom:4px}
 .cc-desc{font-size:11.5px;color:var(--muted);line-height:1.6}
 
