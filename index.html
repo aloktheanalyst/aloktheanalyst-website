@@ -590,12 +590,27 @@ function renderVideos(items) {
       grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1">No posts yet. <a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" style="color:var(--accent)">Follow on LinkedIn →</a></p>';
       return;
     }
-    const cta = 'ontouchstart' in window ? 'Tap to interact' : 'Click to interact';
+    const isTouch = 'ontouchstart' in window;
+    const cta = isTouch ? 'Tap to interact' : 'Click to interact';
     grid.innerHTML = posts.map(url => `
       <div class="li-embed fade-in">
         <iframe src="${url}" height="570" width="100%" frameborder="0" allowfullscreen="" title="LinkedIn post" loading="lazy"></iframe>
-        <div class="li-embed-overlay" onclick="this.parentElement.classList.add('li-active');this.remove();"><span>${cta}</span></div>
+        <div class="li-embed-overlay"><span>${cta}</span></div>
       </div>`).join('');
+    // Activate overlay only on deliberate taps (not scroll gestures)
+    grid.querySelectorAll('.li-embed-overlay').forEach(ov => {
+      let startY = 0;
+      ov.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+      ov.addEventListener('touchend', e => {
+        if (Math.abs(e.changedTouches[0].clientY - startY) < 10) {
+          ov.parentElement.classList.add('li-active');
+          ov.remove();
+        }
+      });
+      ov.addEventListener('click', e => {
+        if (!isTouch) { ov.parentElement.classList.add('li-active'); ov.remove(); }
+      });
+    });
     grid.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
   } catch {
     grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Could not load posts. <a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" style="color:var(--accent)">View on LinkedIn →</a></p>';
