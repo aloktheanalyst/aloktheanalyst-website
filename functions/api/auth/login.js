@@ -3,6 +3,9 @@
 // Required env vars (Cloudflare Pages → Settings → Variables):
 //   GOOGLE_CLIENT_ID
 //
+// Optional query parameter:
+//   ?redirect=/some-path — where to send user after successful auth
+//
 // Flow: Browser → /api/auth/login → Google OAuth → /api/auth/callback
 
 export async function onRequest(context) {
@@ -15,6 +18,12 @@ export async function onRequest(context) {
   // Build the callback URL from the current request origin
   const url = new URL(request.url);
   const redirectUri = `${url.origin}/api/auth/callback`;
+
+  // ── Capture redirect destination ──────────────────────────────────────
+  // Validate: must be a local path starting with / (prevent open redirect)
+  const rawRedirect = url.searchParams.get('redirect') || '/practice';
+  const safeRedirect = isLocalPath(rawRedirect) ? rawRedirect : '/practice';
+  const redirectCookie = `oauth_redirect=${encodeURIComponent(safeRedirect)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=300`;
 
   // Generate a random state token to prevent CSRF
   const state = crypto.randomUUID();
@@ -32,9 +41,22 @@ export async function onRequest(context) {
 
   return new Response(null, {
     status: 302,
-    headers: {
-      Location: googleAuthUrl.toString(),
-      'Set-Cookie': stateCookie,
-    },
+    headers: [
+      ['Location', googleAuthUrl.toString()],
+      ['Set-Cookie', stateCookie],
+      ['Set-Cookie', redirectCookie],
+    ],
   });
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function isLocalPath(path) {
+  // Must start with / and must NOT start with // (protocol-relative)
+  // Must not contain : before the first / (no scheme like http:)
+  if (!path || typeof path !== 'string') return false;
+  if (!path.startsWith('/')) return false;
+  if (path.startsWith('//')) return false;
+  if (/^\/[^/]*:/.test(path)) return false;
+  return true;
 }

@@ -13,7 +13,7 @@
 //   3. Fetch user info from Google
 //   4. Upsert user in D1
 //   5. Create session in KV
-//   6. Set session cookie → redirect to /practice
+//   6. Set session cookie → redirect to original page (from oauth_redirect cookie)
 
 const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days in seconds
 
@@ -117,17 +117,26 @@ export async function onRequest(context) {
     expirationTtl: SESSION_TTL,
   });
 
+  // ── Determine redirect destination ───────────────────────────────────────
+  // Read the oauth_redirect cookie set by login.js, validate it's a safe local path
+  const rawRedirect = cookies.oauth_redirect
+    ? decodeURIComponent(cookies.oauth_redirect)
+    : '/practice';
+  const safeRedirect = isLocalPath(rawRedirect) ? rawRedirect : '/practice';
+
   // ── Set cookie and redirect ───────────────────────────────────────────────
   const sessionCookie = `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL}`;
-  // Clear the oauth_state cookie
+  // Clear temporary auth cookies
   const clearState = 'oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
+  const clearRedirect = 'oauth_redirect=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
 
   return new Response(null, {
     status: 302,
     headers: [
-      ['Location', '/practice'],
+      ['Location', safeRedirect],
       ['Set-Cookie', sessionCookie],
       ['Set-Cookie', clearState],
+      ['Set-Cookie', clearRedirect],
     ],
   });
 }
@@ -149,4 +158,12 @@ function redirect(path) {
 
 function error(msg, status = 400) {
   return new Response(msg, { status });
+}
+
+function isLocalPath(path) {
+  if (!path || typeof path !== 'string') return false;
+  if (!path.startsWith('/')) return false;
+  if (path.startsWith('//')) return false;
+  if (/^\/[^/]*:/.test(path)) return false;
+  return true;
 }
