@@ -6,30 +6,30 @@
 <title>B2B SaaS Marketing Funnel — Domain Knowledge — aloktheanalyst</title>
 <meta name="description" content="The complete B2B SaaS marketing funnel with 2025 benchmarks. Inbound vs outbound, MQL, SQL, pipeline, LTV:CAC, and attribution — interactive parallel-track visualization.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ─── SITE CHROME ─── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#f8faff;--surf:#ffffff;--surf2:#f0f5ff;--border:#e2e8f2;--blue:#2563eb;--blue-d:#1d4ed8;--white:#0f172a;--muted:#64748b;--text:#334155}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;line-height:1.6;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.6;min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(37,99,235,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.06) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
 
 
 .site-wrap{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:80px 24px 80px}
 
 /* breadcrumb */
-.breadcrumb{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
+.breadcrumb{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
 .breadcrumb a{color:var(--muted);text-decoration:none;transition:color .2s}
 .breadcrumb a:hover{color:var(--blue)}
 
 /* page header */
 .pg-header{margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)}
-.pg-eye{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+.pg-eye{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
 .pg-eye::before{content:'// ';opacity:.4}
-.pg-title{font-size:clamp(22px,4vw,38px);font-weight:700;letter-spacing:-.02em;color:var(--white);line-height:1.2;margin-bottom:10px}
+.pg-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,4vw,38px);font-weight:700;letter-spacing:2px;color:var(--white);line-height:1.2;margin-bottom:10px}
 .pg-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.pg-pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);color:rgba(37,99,235,.85);font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.pg-pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);color:rgba(37,99,235,.85);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
 .pg-desc{font-size:13.5px;color:var(--muted);margin-top:10px;max-width:680px;line-height:1.7}
 
 /* embed wrapper — scopes the funnel */
@@ -38,8 +38,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 /* key concepts */
 .concepts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:48px}
 .concept-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
-.cc-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
-.cc-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:500;color:var(--white);line-height:1;margin-bottom:4px}
+.cc-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.cc-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--white);line-height:1;margin-bottom:4px}
 .cc-desc{font-size:11.5px;color:var(--muted);line-height:1.6}
 
 @media(max-width:620px){.footer-inner{justify-content:center}}
@@ -83,7 +83,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--b3),var(--b2));-w
 
 /* card */
 .card{border-radius:12px;padding:16px 18px;transition:transform .2s;position:relative;overflow:hidden;}
-.card:hover{transform:translateY(-2px);}
+.card:hover{transform:translateY(-3px);}
 .card.i{background:var(--ibg);border:1px solid var(--ibd);border-top:2px solid var(--b4);}
 .card.o{background:var(--obg);border:1px solid var(--obd);border-top:2px solid rgba(100,116,139,.4);}
 .ctag{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
