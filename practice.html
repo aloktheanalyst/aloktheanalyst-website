@@ -1729,6 +1729,8 @@ const PROMPTS = [
   { id: 'sql_competition', title: 'Group Competition Winner & Prize',  topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_maxpergroup', title: 'Max per Group & Correlated Lookup', topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
   { id: 'sql_productfilter', title: 'Product Purchase Filtering (Sets)', topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_listings',      title: 'Marketplace Active Listings',        topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_buyersegment',  title: 'Buyer Segmentation (Lifecycle)',     topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
 
   // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
@@ -1769,6 +1771,8 @@ const CASE_PROMPTS = {
   sql_competition: 'You are interviewing a candidate for a data analyst role. This question is from an Ethos interview — it tests business logic in SQL with aggregation and conditional calculations. The candidate has a competitions table with group_id, participant info, bet amounts, and scores. Ask them to find the winner of each group (highest score) and calculate their prize: own bet + 30% of all losers\' bets in their group. Push them to handle ties (what if two players have the same score?), and to think about using window functions vs subqueries.',
   sql_maxpergroup: 'You are interviewing a candidate for a data analyst intern role. This question is from a Blinkit interview. The candidate has a payroll table with employee salaries by pay date. Ask them to return the whole table with two extra columns: (1) the maximum salary drawn in that month, and (2) the employee who drew it. This tests window functions with date extraction. Push them to compare MAX() OVER vs subquery approaches, and discuss how FIRST_VALUE handles ties.',
   sql_productfilter: 'You are interviewing a candidate for a data analyst role. This question is from a Moonfroglabs interview — it tests set-based thinking in SQL. The candidate has customers, products, and purchases tables. Ask them to find customers who bought products A AND B but did NOT buy product C. This is a common recommendation engine pattern. Push them to consider multiple approaches: GROUP BY + HAVING with conditional aggregation, INTERSECT/EXCEPT, or self-joins. Then ask them to extend it: find customers who bought ALL products in a given category.',
+  sql_listings:      'You are interviewing a candidate for a senior data analyst role at a marketplace company. This question is from an eBay interview. The candidate has inventory and calendar tables. Ask them to find the total number of active listings and new listings created for each day. A listing is active if the date falls between its start and end date. This tests the calendar table join pattern. Then ask for a 7-day moving average of unique sellers who started listings. Push them on LEFT JOIN vs INNER JOIN implications and how COUNT(DISTINCT) interacts with window functions.',
+  sql_buyersegment:  'You are interviewing a candidate for a data analyst role at a marketplace. This question is from an eBay interview. The candidate has a transactions table. Ask them to segment each transaction as new_buyer (first ever purchase), regular_buyer (purchased within 30 days of their previous transaction), or reactivated_buyer (gap > 30 days since previous purchase). This tests LAG() for previous purchase dates and CASE WHEN for business rule classification. Push them to also calculate the count and percentage of transactions in each segment.',
 
   // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
@@ -2127,6 +2131,80 @@ INSERT INTO purchases VALUES
 (26,8,5,'2024-02-20'),(27,8,6,'2024-02-25'),(28,8,7,'2024-03-01'),
 (29,9,1,'2024-03-01'),(30,9,2,'2024-03-05'),
 (31,10,1,'2024-03-10'),(32,10,2,'2024-03-12'),(33,10,3,'2024-03-15'),(34,10,4,'2024-03-18'),(35,10,8,'2024-03-20');`
+    }
+  },
+
+  sql_listings: {
+    label: 'Marketplace Active Listings',
+    question: '<em>Asked at eBay.</em><br><br>Using the <strong>inventory</strong> and <strong>calendar</strong> tables:<br><br><strong>1.</strong> For each day in November, find the total number of active listings and the number of new listings created that day. A listing is "active" if the date falls between its start and end date.<br><br><strong>2.</strong> Calculate a 7-day moving average of unique sellers (lister_id) who started a new listing each day.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Use the calendar table as the driving table with LEFT JOIN inventory ON calendar.cal_date BETWEEN listing_start_date AND listing_end_date. This ensures every day appears even if there are no listings. Filter WHERE month = 11.',
+      'For new listings per day: use COUNT(CASE WHEN listing_start_date = cal_date THEN listing_id END) inside the same query. This counts only listings that started on that specific day.',
+      'For the 7-day moving avg of unique listers: first build a CTE with COUNT(DISTINCT lister_id) per day (only where listing_start_date = cal_date). Then apply AVG() OVER (ORDER BY cal_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW).'
+    ],
+    schema: [
+      { name: 'inventory', columns: [
+        { name: 'listing_id', type: 'INTEGER PK' }, { name: 'lister_id', type: 'INTEGER' },
+        { name: 'category', type: 'TEXT' }, { name: 'listing_start_date', type: 'DATE' },
+        { name: 'listing_end_date', type: 'DATE' }
+      ]},
+      { name: 'calendar', columns: [
+        { name: 'cal_date', type: 'DATE PK' }, { name: 'month', type: 'INTEGER' },
+        { name: 'day_of_week', type: 'TEXT' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE inventory (listing_id INTEGER PRIMARY KEY, lister_id INTEGER NOT NULL, category TEXT NOT NULL, listing_start_date DATE NOT NULL, listing_end_date DATE NOT NULL);
+INSERT INTO inventory VALUES
+(1,101,'fashion','2024-10-25','2024-11-10'),(2,102,'fashion','2024-11-01','2024-11-15'),(3,103,'electronics','2024-11-01','2024-11-05'),
+(4,101,'fashion','2024-11-03','2024-11-20'),(5,104,'fashion','2024-11-05','2024-11-12'),(6,105,'electronics','2024-11-05','2024-11-25'),
+(7,102,'fashion','2024-11-08','2024-11-22'),(8,106,'fashion','2024-11-08','2024-11-18'),(9,103,'fashion','2024-11-10','2024-11-30'),
+(10,107,'electronics','2024-11-12','2024-11-28'),(11,101,'fashion','2024-11-15','2024-11-30'),(12,108,'fashion','2024-11-15','2024-11-25'),
+(13,104,'fashion','2024-11-18','2024-11-30'),(14,109,'electronics','2024-11-20','2024-11-30'),(15,102,'fashion','2024-11-22','2024-11-30'),
+(16,110,'fashion','2024-11-25','2024-12-05'),(17,105,'fashion','2024-11-28','2024-12-10');
+
+CREATE TABLE calendar (cal_date DATE PRIMARY KEY, month INTEGER NOT NULL, day_of_week TEXT NOT NULL);
+INSERT INTO calendar VALUES
+('2024-11-01',11,'Fri'),('2024-11-02',11,'Sat'),('2024-11-03',11,'Sun'),('2024-11-04',11,'Mon'),('2024-11-05',11,'Tue'),
+('2024-11-06',11,'Wed'),('2024-11-07',11,'Thu'),('2024-11-08',11,'Fri'),('2024-11-09',11,'Sat'),('2024-11-10',11,'Sun'),
+('2024-11-11',11,'Mon'),('2024-11-12',11,'Tue'),('2024-11-13',11,'Wed'),('2024-11-14',11,'Thu'),('2024-11-15',11,'Fri'),
+('2024-11-16',11,'Sat'),('2024-11-17',11,'Sun'),('2024-11-18',11,'Mon'),('2024-11-19',11,'Tue'),('2024-11-20',11,'Wed'),
+('2024-11-21',11,'Thu'),('2024-11-22',11,'Fri'),('2024-11-23',11,'Sat'),('2024-11-24',11,'Sun'),('2024-11-25',11,'Mon'),
+('2024-11-26',11,'Tue'),('2024-11-27',11,'Wed'),('2024-11-28',11,'Thu'),('2024-11-29',11,'Fri'),('2024-11-30',11,'Sat');`
+    }
+  },
+
+  sql_buyersegment: {
+    label: 'Buyer Segmentation (Lifecycle)',
+    question: '<em>Asked at eBay.</em><br><br>Using the <strong>transactions</strong> table, classify each transaction by buyer lifecycle:<br><br><strong>1.</strong> Segment each transaction as:<br>• <strong>new_buyer</strong> — first-ever purchase<br>• <strong>regular_buyer</strong> — purchased within 30 days of their previous transaction<br>• <strong>reactivated_buyer</strong> — gap of more than 30 days since previous purchase<br><br><strong>2.</strong> Count the total transactions and percentage in each segment.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Use LAG(sold_date) OVER (PARTITION BY buyer_id ORDER BY sold_date) to get each buyer\'s previous purchase date. If LAG returns NULL, it\'s their first purchase (new_buyer).',
+      'Calculate the day gap: in PostgreSQL use sold_date - prev_sold_date, in SQLite use JULIANDAY(sold_date) - JULIANDAY(prev_sold_date). Then CASE: NULL → new_buyer, gap <= 30 → regular_buyer, gap > 30 → reactivated_buyer.',
+      'For percentages: use a CTE with the segmented data, then COUNT(*) per segment divided by the total. In PostgreSQL: COUNT(*)::DECIMAL / SUM(COUNT(*)) OVER() * 100. Or use a subquery for the total.'
+    ],
+    schema: [
+      { name: 'transactions', columns: [
+        { name: 'txn_id', type: 'INTEGER PK' }, { name: 'buyer_id', type: 'INTEGER' },
+        { name: 'sold_date', type: 'DATE' }, { name: 'amount', type: 'DECIMAL' },
+        { name: 'seller_type', type: 'TEXT' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE transactions (txn_id INTEGER PRIMARY KEY, buyer_id INTEGER NOT NULL, sold_date DATE NOT NULL, amount DECIMAL(10,2) NOT NULL, seller_type TEXT NOT NULL);
+INSERT INTO transactions VALUES
+(1,201,'2024-01-05',120.00,'c2c'),(2,202,'2024-01-08',85.00,'b2c'),(3,201,'2024-01-20',200.00,'c2c'),
+(4,203,'2024-01-15',340.00,'b2c'),(5,202,'2024-02-01',150.00,'c2c'),(6,204,'2024-02-05',90.00,'c2c'),
+(7,201,'2024-02-25',175.00,'b2c'),(8,203,'2024-02-10',420.00,'c2c'),(9,205,'2024-02-15',65.00,'b2c'),
+(10,202,'2024-03-15',310.00,'c2c'),(11,204,'2024-02-20',180.00,'b2c'),(12,201,'2024-04-01',95.00,'c2c'),
+(13,203,'2024-03-25',250.00,'b2c'),(14,206,'2024-03-01',520.00,'c2c'),(15,205,'2024-04-10',140.00,'c2c'),
+(16,202,'2024-04-20',275.00,'b2c'),(17,204,'2024-05-01',160.00,'c2c'),(18,207,'2024-03-20',88.00,'b2c'),
+(19,201,'2024-04-05',330.00,'c2c'),(20,206,'2024-05-15',410.00,'b2c'),
+(21,203,'2024-05-20',190.00,'c2c'),(22,208,'2024-04-15',75.00,'c2c'),(23,205,'2024-06-01',220.00,'b2c'),
+(24,202,'2024-05-25',185.00,'c2c'),(25,207,'2024-06-10',300.00,'b2c');`
     }
   }
 };
