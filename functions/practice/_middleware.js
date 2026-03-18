@@ -21,8 +21,14 @@ export async function onRequest(context) {
       }
     }
   } else {
-    // SESSION_KV not bound — allow through (dev/misconfiguration safety net)
-    return next();
+    // SESSION_KV not bound — fail closed (block access until properly configured)
+    const url = new URL(request.url);
+    const redirectPath = url.pathname + url.search;
+    const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(redirectPath)}`;
+    return new Response(renderLoginPage({ title, subtitle, loginUrl }), {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
   }
 
   // ── No valid session — return login page ──────────────────────────────────
