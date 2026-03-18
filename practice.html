@@ -1179,6 +1179,73 @@
     flex-shrink: 0;
   }
 
+  /* ── QUESTION PANEL (above schema) ── */
+  .question-panel {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .question-text {
+    font-size: 0.78rem;
+    line-height: 1.65;
+    color: var(--text);
+    padding: 0 0.3rem;
+  }
+
+  /* ── INLINE AI FEEDBACK ── */
+  .ai-feedback-panel {
+    padding: 1rem 1.25rem;
+    line-height: 1.7;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+  .ai-feedback-panel strong { color: var(--white); }
+  .ai-feedback-panel code {
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+  }
+  .ai-feedback-panel pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+  .ai-feedback-panel pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+  .ai-feedback-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .ai-feedback-loading .dots span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: dotPulse 1.2s ease infinite;
+  }
+  .ai-feedback-loading .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .ai-feedback-loading .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotPulse {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
   /* ── HINT PANEL ── */
   .hint-panel {
     display: none;
@@ -1290,9 +1357,21 @@
   }
   .sql-check-btn:hover { background: rgba(22,163,74,0.06); border-color: var(--green); }
 
+  /* Mobile question bar (hidden on desktop, shown on mobile when sidebar is gone) */
+  .mobile-question {
+    display: none;
+    padding: 0.6rem 0.85rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
   /* ── SQL EDITOR RESPONSIVE ── */
   @media (max-width: 768px) {
     .schema-sidebar { display: none; }
+    .mobile-question:not(:empty) { display: block; }
     .sql-editor-wrapper { height: 160px; }
     .sql-toolbar { flex-wrap: wrap; }
     .sql-result-table { font-size: 0.72rem; }
@@ -1414,8 +1493,8 @@
 
     <!-- CODE EDITOR TAB SWITCHER (hidden until SQL/Python case selected) -->
     <div class="chat-tab-switcher" id="chatTabSwitcher">
-      <button class="chat-tab-btn active" data-tab="chat" onclick="switchTab('chat')">&#x1F4AC; Chat</button>
-      <button class="chat-tab-btn" data-tab="code" onclick="switchTab('code')">&#x1F4DD; Code Editor</button>
+      <button class="chat-tab-btn" data-tab="chat" onclick="switchTab('chat')">&#x1F4AC; AI Coach</button>
+      <button class="chat-tab-btn active" data-tab="code" onclick="switchTab('code')">&#x1F4DD; Code Editor</button>
     </div>
 
     <!-- MESSAGES -->
@@ -1455,11 +1534,17 @@
       <div class="sql-editor-layout">
         <!-- Schema Reference Sidebar -->
         <div class="schema-sidebar" id="schemaSidebar">
+          <div class="question-panel" id="questionPanel">
+            <div class="schema-title">&#x1F3AF; QUESTION</div>
+            <div class="question-text" id="questionText"></div>
+          </div>
           <div class="schema-title">TABLE SCHEMA</div>
           <div id="schemaContent"></div>
         </div>
         <!-- Editor + Results -->
         <div class="sql-main">
+          <!-- Mobile-only question (sidebar hidden on mobile) -->
+          <div class="mobile-question" id="mobileQuestion"></div>
           <div class="sql-toolbar">
             <select class="sql-dialect-select" id="sqlDialectSelect" onchange="switchDialect(this.value)">
               <option value="postgres">PostgreSQL</option>
@@ -1693,6 +1778,7 @@ const CASE_PROMPTS = {
 const SQL_DATASETS = {
   sql_window: {
     label: 'Window Functions Deep Dive',
+    question: 'Using the customers and transactions tables, write queries to: (1) Rank customers by total spending using RANK(). (2) Calculate a running total of transaction amounts per region ordered by date. (3) Find the top spender in each region using a window function.',
     defaultQuery: '-- Rank customers by total spending\nSELECT \n  c.name,\n  c.region,\n  SUM(t.amount) AS total_spent,\n  RANK() OVER (ORDER BY SUM(t.amount) DESC) AS spending_rank\nFROM transactions t\nJOIN customers c ON t.customer_id = c.id\nGROUP BY c.id, c.name, c.region;',
     hints: [
       'Start by JOINing customers with transactions on customer_id. Use GROUP BY to aggregate per customer before applying any window function.',
@@ -1722,6 +1808,7 @@ INSERT INTO transactions VALUES (1,1,120.50,'Electronics','2023-06-01'),(2,1,45.
 
   sql_retention: {
     label: 'User Retention Cohort Analysis',
+    question: 'Using the users and user_events tables, write a query to calculate weekly retention by signup cohort. Show cohort_week, cohort_size, and the count of users who returned in week 0, week 1, and week 2. Bonus: segment retention by acquisition source.',
     hints: [
       'Group users by their signup_date to form cohorts. Then check if each user had activity (events) in week 0, week 1, week 2, etc. after their signup.',
       'Use COUNT(DISTINCT CASE WHEN event_date is within the week range THEN user_id END) to count how many users from each cohort were active in that week.',
@@ -1751,6 +1838,7 @@ INSERT INTO user_events VALUES (1,'login','2024-01-01'),(1,'purchase','2024-01-0
 
   sql_dedup: {
     label: 'Deduplication & Data Quality',
+    question: 'The raw_orders table has duplicate entries, NULL values, and inconsistent email casing. Write queries to: (1) Identify and remove duplicates, keeping the most recent entry per order_id. (2) Handle NULL order_ids and empty emails. (3) Standardize email casing and count unique clean orders.',
     hints: [
       'Use ROW_NUMBER() with PARTITION BY order_id to assign a unique row number within each group of duplicates. ORDER BY determines which row gets rn = 1.',
       'ORDER BY created_at DESC inside the window function so the most recent entry gets rn = 1. Then wrap this in a subquery and filter WHERE rn = 1.',
@@ -1778,6 +1866,7 @@ INSERT INTO raw_orders VALUES (1,'ORD-001','alice@example.com',99.99,'completed'
 const PYTHON_DATASETS = {
   python_clean: {
     label: 'Messy Dataset Cleaning (Pandas)',
+    question: 'The DataFrame df contains messy e-commerce order data. Clean it by: (1) Fixing the amount column (remove $, handle N/A and NaN). (2) Standardizing category casing and date formats. (3) Removing duplicate orders. (4) Handling missing customer names and emails. Print a summary of your cleaned data.',
     hints: [
       'Start with df.info(), df.isnull().sum(), and df.duplicated().sum() to identify the scope of data quality issues.',
       'The \'amount\' column has dollar signs, \'N/A\' strings, and \'NaN\' text. Use str.replace() to clean, then pd.to_numeric(errors=\'coerce\') to convert. Category has mixed case — use str.title() or str.capitalize().',
@@ -1823,6 +1912,7 @@ df = pd.DataFrame(data)
 
   python_agg: {
     label: 'Aggregation & GroupBy Patterns',
+    question: 'Using the sales DataFrame, answer these questions with pandas: (1) Total revenue and units sold by region — which region is the most profitable? (2) Which product category has the highest profit margin? (3) Create a pivot table of revenue by region and category. (4) Find the top salesperson by total revenue.',
     hints: [
       'Use sales.groupby(\'region\')[\'revenue\'].sum() for basic aggregation. Chain .sort_values(ascending=False) to rank results.',
       'For multi-column groupby with multiple aggregates: sales.groupby([\'region\', \'category\']).agg({\'revenue\': \'sum\', \'units_sold\': \'sum\', \'cost\': \'sum\'}).',
@@ -2647,6 +2737,20 @@ function initCodeMirrorEditor() {
 
 // ── Database/environment setup per case ──
 async function setupCodeEnvironment(caseId) {
+  // Render question in sidebar + mobile
+  const dataset = SQL_DATASETS[caseId] || PYTHON_DATASETS[caseId];
+  const qPanel = document.getElementById('questionPanel');
+  const qText = document.getElementById('questionText');
+  const mobileQ = document.getElementById('mobileQuestion');
+  if (dataset && dataset.question) {
+    qText.textContent = dataset.question;
+    qPanel.style.display = '';
+    mobileQ.textContent = '\uD83C\uDFAF ' + dataset.question;
+  } else {
+    qPanel.style.display = 'none';
+    mobileQ.textContent = '';
+  }
+
   if (isSQLCase(caseId)) {
     await setupSQLDatabase(caseId);
   } else if (isPythonCase(caseId)) {
@@ -2922,13 +3026,24 @@ function resetHints() {
   closeHintPanel();
 }
 
-// ── Check My Answer (scoring) ──
+// ── Check My Answer (scoring — renders inline in results area) ──
 async function checkMyAnswer() {
   if (!sqlEditor) return;
   const code = sqlEditor.getValue().trim();
   if (!code) return;
 
-  // First run the code to capture output/results
+  const resultsEl = document.getElementById('sqlResults');
+  const footerEl = document.getElementById('sqlResultFooter');
+
+  // Show loading state in results area
+  resultsEl.innerHTML = `<div class="ai-feedback-loading">
+    <div class="dots"><span></span><span></span><span></span></div>
+    Analyzing your code&hellip;
+  </div>`;
+  footerEl.style.display = 'none';
+  document.getElementById('sqlExecInfo').textContent = 'Checking...';
+
+  // Run the code to capture output/results
   let resultsText = '';
   if (sqlDialect === 'python') {
     if (pyodideInstance) {
@@ -2977,12 +3092,31 @@ Please provide your feedback in this exact format:
 3. **What could improve** — specific suggestions
 4. **Suggested approach** — if my score is below 8, show an optimized solution`;
 
-  switchTab('chat');
-  const ws = document.getElementById('welcomeState');
-  if (ws) ws.remove();
-  appendMessage('user', message);
+  // Add to conversation history (for AI Coach continuity)
   conversationHistory.push({ role: 'user', content: message });
-  sendToAI(message, false);
+
+  try {
+    let reply = '';
+    if (currentProvider === 'free') {
+      reply = await callFree();
+    } else if (currentProvider === 'claude') {
+      reply = await callClaude();
+    } else if (currentProvider === 'openai') {
+      reply = await callOpenAI();
+    } else if (currentProvider === 'gemini') {
+      reply = await callGemini();
+    }
+
+    conversationHistory.push({ role: 'assistant', content: reply });
+
+    // Render feedback inline in results area
+    resultsEl.innerHTML = `<div class="ai-feedback-panel">${formatMessage(reply)}</div>`;
+    document.getElementById('sqlExecInfo').textContent = 'Feedback ready';
+  } catch (err) {
+    const errMsg = err.message || 'Unknown error';
+    resultsEl.innerHTML = `<div class="sql-error"><strong>AI Coach Error:</strong> ${escapeHtml(errMsg)}</div>`;
+    document.getElementById('sqlExecInfo').textContent = 'Error';
+  }
 }
 
 // ── Tab switching ──
