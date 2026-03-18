@@ -7,10 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-<!-- CodeMirror 5 — SQL editor -->
+<!-- CodeMirror 5 — Code editor -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+
+<!-- Pyodide — CPython compiled to WebAssembly (lazy load) -->
+<script defer src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
 
 <!-- sql.js — SQLite compiled to WebAssembly (lazy WASM download) -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
@@ -1295,10 +1299,10 @@
       </div>
     </div>
 
-    <!-- SQL EDITOR TAB SWITCHER (hidden until SQL case selected) -->
+    <!-- CODE EDITOR TAB SWITCHER (hidden until SQL/Python case selected) -->
     <div class="chat-tab-switcher" id="chatTabSwitcher">
       <button class="chat-tab-btn active" data-tab="chat" onclick="switchTab('chat')">&#x1F4AC; Chat</button>
-      <button class="chat-tab-btn" data-tab="sql" onclick="switchTab('sql')">&#x1F4DD; SQL Editor</button>
+      <button class="chat-tab-btn" data-tab="code" onclick="switchTab('code')">&#x1F4DD; Code Editor</button>
     </div>
 
     <!-- MESSAGES -->
@@ -1347,8 +1351,9 @@
             <select class="sql-dialect-select" id="sqlDialectSelect" onchange="switchDialect(this.value)">
               <option value="postgres">PostgreSQL</option>
               <option value="sqlite">SQLite</option>
+              <option value="python">Python (Pandas)</option>
             </select>
-            <button class="sql-run-btn" onclick="runSQL()" title="Run query (Ctrl+Enter)">
+            <button class="sql-run-btn" onclick="runCode()" title="Run code (Ctrl+Enter)">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
               Run
             </button>
@@ -1627,7 +1632,111 @@ INSERT INTO raw_orders VALUES (1,'ORD-001','alice@example.com',99.99,'completed'
   }
 };
 
+// ═══════════════════════════════
+// PYTHON EDITOR — DATASET DEFINITIONS
+// ═══════════════════════════════
+const PYTHON_DATASETS = {
+  python_clean: {
+    label: 'Messy Dataset Cleaning (Pandas)',
+    defaultQuery: `import pandas as pd
+import numpy as np
+
+# The 'df' variable is pre-loaded with messy data
+print("Shape:", df.shape)
+print("\\nFirst 5 rows:")
+print(df.head())
+print("\\nData types:")
+print(df.dtypes)
+print("\\nMissing values:")
+print(df.isnull().sum())
+print("\\nDuplicate rows:", df.duplicated().sum())`,
+    schema: [
+      { name: 'df (DataFrame)', columns: [
+        { name: 'order_id', type: 'object' }, { name: 'customer_name', type: 'object' },
+        { name: 'email', type: 'object' }, { name: 'amount', type: 'object (messy)' },
+        { name: 'quantity', type: 'float64' }, { name: 'order_date', type: 'object' },
+        { name: 'category', type: 'object' }, { name: 'status', type: 'object' }
+      ]}
+    ],
+    setupCode: `
+import pandas as pd
+import numpy as np
+
+data = {
+    'order_id': ['ORD001','ORD002','ORD003','ORD004','ORD005','ORD006','ORD007','ORD008','ORD009','ORD010','ORD011','ORD012','ORD013','ORD014','ORD015','ORD002','ORD016','ORD017','ORD018','ORD019','ORD020','ORD021','ORD022','ORD023','ORD024','ORD025'],
+    'customer_name': ['Alice','Bob','Charlie','  David ','Eva','Frank',None,'Helen','Ivan','Julia','Kevin','Bob','Lisa','Mike','Nancy','Bob','Oscar','Patty','Quinn','Rachel','Sam','Tina','Uma','Victor',None,'Wendy'],
+    'email': ['alice@mail.com','bob@mail.com','charlie@mail.com','david@mail.com','eva@mail.com','frank@mail.com','grace@mail.com',None,'ivan@mail.com','julia@mail.com','kevin@mail.com','bob@mail.com','lisa@mail.com','MIKE@mail.com','nancy@mail.com','bob@mail.com','oscar@mail.com','patty@mail.com',None,'rachel@mail.com','sam@mail.com','tina@mail.com','uma@mail.com','victor@mail.com','unknown','wendy@mail.com'],
+    'amount': ['99.99','149.50','75.00','200','55.00','$320.00','89.99',None,'150.00','NaN','425.00','149.50','62.50','185.00','99.00','149.50','73.50','410.00','58.00','267.50','88.00','195.00','142.00','330.00','30.00','N/A'],
+    'quantity': [1,2,1,3,1,4,2,None,2,1,5,2,1,3,1,2,1,4,1,3,2,2,1,3,None,1],
+    'order_date': ['2024-01-15','2024-01-16','01/17/2024','2024-01-18','2024-01-19','2024-01-20','2024-01-21','2024-01-22','Jan 23, 2024','2024-01-24','2024-01-25','2024-01-16','2024-01-27','2024-01-28','2024-01-29','2024-01-16','2024-01-31','2024-02-01','2024-02-02','2024-02-03','2024-02-04','2024-02-05','2024-02-06','2024-02-07',None,'2024-02-09'],
+    'category': ['Electronics','Clothing','Groceries','Electronics','Groceries','electronics','Clothing','Groceries','Electronics',None,'Clothing','Clothing','Groceries','Electronics','clothing','Clothing','Groceries','Electronics','Clothing','Groceries','Electronics','Clothing','Groceries','Electronics','Groceries','Clothing'],
+    'status': ['completed','pending','completed','completed','cancelled','completed','completed','pending',None,'completed','completed','pending','completed','completed','completed','pending','cancelled','completed','completed','completed','pending','completed','completed','completed','pending','completed']
+}
+df = pd.DataFrame(data)
+`
+  },
+
+  python_agg: {
+    label: 'Aggregation & GroupBy Patterns',
+    defaultQuery: `import pandas as pd
+import numpy as np
+
+# The 'sales' DataFrame is pre-loaded
+print("Shape:", sales.shape)
+print("\\nFirst 5 rows:")
+print(sales.head())
+print("\\nColumns:", list(sales.columns))
+
+# Try: Total revenue by region
+print("\\nRevenue by Region:")
+print(sales.groupby('region')['revenue'].sum().sort_values(ascending=False))`,
+    schema: [
+      { name: 'sales (DataFrame)', columns: [
+        { name: 'date', type: 'datetime64' }, { name: 'region', type: 'object' },
+        { name: 'product', type: 'object' }, { name: 'category', type: 'object' },
+        { name: 'units_sold', type: 'int64' }, { name: 'revenue', type: 'float64' },
+        { name: 'cost', type: 'float64' }, { name: 'salesperson', type: 'object' }
+      ]}
+    ],
+    setupCode: `
+import pandas as pd
+import numpy as np
+
+np.random.seed(42)
+n = 60
+regions = ['North','South','East','West']
+products = ['Widget A','Widget B','Gadget X','Gadget Y','Premium Z']
+categories = ['Widgets','Widgets','Gadgets','Gadgets','Premium']
+prod_cat = dict(zip(products, categories))
+salespeople = ['Alice','Bob','Carol','David','Eva','Frank']
+
+dates = pd.date_range('2024-01-01', periods=90, freq='D')
+rows = []
+for i in range(n):
+    product = np.random.choice(products)
+    region = np.random.choice(regions)
+    units = np.random.randint(1, 20)
+    base_price = {'Widget A':25,'Widget B':35,'Gadget X':75,'Gadget Y':95,'Premium Z':200}[product]
+    revenue = round(units * base_price * np.random.uniform(0.9, 1.1), 2)
+    cost = round(revenue * np.random.uniform(0.4, 0.7), 2)
+    rows.append({
+        'date': np.random.choice(dates),
+        'region': region,
+        'product': product,
+        'category': prod_cat[product],
+        'units_sold': units,
+        'revenue': revenue,
+        'cost': cost,
+        'salesperson': np.random.choice(salespeople)
+    })
+sales = pd.DataFrame(rows).sort_values('date').reset_index(drop=True)
+`
+  }
+};
+
 function isSQLCase(id) { return SQL_DATASETS.hasOwnProperty(id); }
+function isPythonCase(id) { return PYTHON_DATASETS.hasOwnProperty(id); }
+function isCodeCase(id) { return isSQLCase(id) || isPythonCase(id); }
 
 const SYSTEM_PROMPT = `You are a world-class data analytics interview coach and case study tutor on aloktheanalyst.com — built by Alok, a Lead Data Analyst and YouTube content creator.
 
@@ -1787,13 +1896,16 @@ let isLoading = false;
 let activeFilter = 'all';
 let activeCaseId = null;
 
-// SQL Editor state
+// Code Editor state
 let sqlDB = null;             // Active DB instance (sql.js Database or PGlite)
 let sqlEditor = null;         // CodeMirror instance
-let sqlDialect = 'postgres';  // 'postgres' or 'sqlite'
+let sqlDialect = 'postgres';  // 'postgres' | 'sqlite' | 'python'
 let sqlJsReady = false;
 let sqlJsSQL = null;          // sql.js constructor
 let pgliteReady = false;
+let pyodideInstance = null;    // Pyodide runtime
+let pyodideReady = false;
+let pyodideLoading = false;
 
 const apiKeys = {
   free:   '__free__',
@@ -1934,15 +2046,16 @@ function loadCase(id) {
   msgs.innerHTML = '';
   conversationHistory = [];
 
-  // Show/hide SQL tab switcher
+  // Show/hide code editor tab switcher
   updateTabVisibility(id);
 
-  // If SQL case, initialize the editor and database
-  if (isSQLCase(id)) {
+  // If SQL or Python case, initialize the editor and environment
+  if (isCodeCase(id)) {
     if (!sqlEditor) initCodeMirrorEditor();
-    setupSQLDatabase(id).catch(err => {
-      console.error('SQL setup failed:', err);
-      renderSQLError(err.message || 'Failed to initialize SQL engine.');
+    setDialectForCase(id); // Auto-set Python for python cases, PostgreSQL for SQL cases
+    setupCodeEnvironment(id).catch(err => {
+      console.error('Code setup failed:', err);
+      renderCodeError(err.message || 'Failed to initialize code engine.');
     });
     switchTab('chat'); // Start on chat — AI intro plays first
   }
@@ -2304,7 +2417,7 @@ function updateKeyStatuses() {
 }
 
 // ═══════════════════════════════
-// SQL EDITOR ENGINE
+// CODE EDITOR ENGINE
 // ═══════════════════════════════
 
 // ── Lazy initialization ──
@@ -2323,13 +2436,38 @@ async function initSqlJsEngine() {
 
 async function initPGliteEngine() {
   if (pgliteReady) return;
-  // PGlite may already be loaded by the ESM module script
   if (window.PGlite) { pgliteReady = true; return; }
-  // Wait for the pglite-ready event (up to 10s)
   await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('PGlite failed to load. Please refresh.')), 10000);
     window.addEventListener('pglite-ready', () => { clearTimeout(timeout); pgliteReady = true; resolve(); }, { once: true });
   });
+}
+
+async function initPyodideEngine() {
+  if (pyodideReady) return;
+  if (pyodideLoading) {
+    // Wait for the other call to finish
+    await new Promise(resolve => {
+      const check = setInterval(() => { if (pyodideReady) { clearInterval(check); resolve(); } }, 200);
+    });
+    return;
+  }
+  pyodideLoading = true;
+  document.getElementById('sqlExecInfo').textContent = 'Loading Python...';
+  try {
+    pyodideInstance = await loadPyodide({
+      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.5/full/'
+    });
+    // Pre-load pandas and numpy
+    document.getElementById('sqlExecInfo').textContent = 'Loading pandas & numpy...';
+    await pyodideInstance.loadPackage(['pandas', 'numpy']);
+    pyodideReady = true;
+    document.getElementById('sqlExecInfo').textContent = 'Python ready';
+  } catch (err) {
+    console.error('Pyodide init failed:', err);
+    pyodideLoading = false;
+    throw new Error('Could not load Python engine. Please refresh.');
+  }
 }
 
 function initCodeMirrorEditor() {
@@ -2338,29 +2476,36 @@ function initCodeMirrorEditor() {
     console.warn('CodeMirror not loaded yet');
     return;
   }
+  const mode = sqlDialect === 'python' ? 'python' : (sqlDialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
   const textarea = document.getElementById('sqlEditorTextarea');
   sqlEditor = CodeMirror.fromTextArea(textarea, {
-    mode: sqlDialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql',
+    mode: mode,
     lineNumbers: true,
     lineWrapping: true,
     indentWithTabs: false,
-    tabSize: 2,
+    tabSize: 4,
     autofocus: false,
     extraKeys: {
-      'Ctrl-Enter': function() { runSQL(); },
-      'Cmd-Enter': function() { runSQL(); },
+      'Ctrl-Enter': function() { runCode(); },
+      'Cmd-Enter': function() { runCode(); },
     }
   });
 }
 
-// ── Database setup per case ──
+// ── Database/environment setup per case ──
+async function setupCodeEnvironment(caseId) {
+  if (isSQLCase(caseId)) {
+    await setupSQLDatabase(caseId);
+  } else if (isPythonCase(caseId)) {
+    await setupPythonEnvironment(caseId);
+  }
+}
+
 async function setupSQLDatabase(caseId) {
   const dataset = SQL_DATASETS[caseId];
   if (!dataset) return;
 
-  // Tear down previous DB
   await destroySQLDB();
-
   const setupSQL = dataset.setup.shared;
 
   if (sqlDialect === 'sqlite') {
@@ -2373,27 +2518,40 @@ async function setupSQLDatabase(caseId) {
     try { await sqlDB.exec(setupSQL); } catch (err) { console.error('PGlite setup error:', err); }
   }
 
-  // Render schema sidebar
   renderSchema(dataset.schema);
-
-  // Set default query
   if (sqlEditor) {
-    const defaultQ = (sqlDialect === 'postgres' && dataset.defaultQueryPostgres)
-      ? dataset.defaultQueryPostgres
-      : dataset.defaultQuery;
+    const defaultQ = (sqlDialect === 'postgres' && dataset.defaultQueryPostgres) ? dataset.defaultQueryPostgres : dataset.defaultQuery;
     sqlEditor.setValue(defaultQ);
     setTimeout(() => sqlEditor.refresh(), 50);
   }
+  resetCodeResults();
+}
 
-  // Clear results
-  resetSQLResults();
+async function setupPythonEnvironment(caseId) {
+  const dataset = PYTHON_DATASETS[caseId];
+  if (!dataset) return;
+
+  await initPyodideEngine();
+
+  // Run setup code to create DataFrames
+  try {
+    await pyodideInstance.runPythonAsync(dataset.setupCode);
+  } catch (err) {
+    console.error('Python setup error:', err);
+  }
+
+  renderSchema(dataset.schema);
+  if (sqlEditor) {
+    sqlEditor.setValue(dataset.defaultQuery);
+    setTimeout(() => sqlEditor.refresh(), 50);
+  }
+  resetCodeResults();
 }
 
 async function destroySQLDB() {
   if (!sqlDB) return;
   try {
     if (typeof sqlDB.close === 'function') sqlDB.close();
-    else if (typeof sqlDB.close === 'function') await sqlDB.close();
   } catch (e) { /* ignore */ }
   sqlDB = null;
 }
@@ -2403,7 +2561,7 @@ function renderSchema(schema) {
   const container = document.getElementById('schemaContent');
   container.innerHTML = schema.map(table => `
     <div class="schema-table">
-      <div class="schema-table-name" onclick="copyTableName('${table.name}')" title="Click to copy">
+      <div class="schema-table-name" onclick="copyTableName('${table.name.split(' ')[0]}')" title="Click to copy">
         ${table.name}
         <span class="copy-icon">&#x1F4CB;</span>
       </div>
@@ -2423,10 +2581,18 @@ function copyTableName(name) {
   navigator.clipboard.writeText(name).catch(() => {});
 }
 
-// ── Query execution ──
+// ── Code execution (unified) ──
+async function runCode() {
+  if (sqlDialect === 'python') {
+    await runPython();
+  } else {
+    await runSQL();
+  }
+}
+
 async function runSQL() {
   if (!sqlDB) {
-    renderSQLError('No database loaded. Please select a SQL case study first.');
+    renderCodeError('No database loaded. Please select a case study first.');
     return;
   }
   const query = sqlEditor ? sqlEditor.getValue().trim() : '';
@@ -2437,44 +2603,74 @@ async function runSQL() {
     let columns, rows;
     if (sqlDialect === 'sqlite') {
       const results = sqlDB.exec(query);
-      if (results.length === 0) {
-        showSQLSuccess(startTime);
-        return;
-      }
+      if (results.length === 0) { showCodeSuccess(startTime); return; }
       const r = results[results.length - 1];
-      columns = r.columns;
-      rows = r.values;
+      columns = r.columns; rows = r.values;
     } else {
       const result = await sqlDB.query(query);
       if (!result.rows || result.rows.length === 0) {
-        // Check if it returned fields (SELECT with no rows) vs statement (INSERT/CREATE)
         if (result.fields && result.fields.length > 0) {
-          columns = result.fields.map(f => f.name);
-          rows = [];
-        } else {
-          showSQLSuccess(startTime);
-          return;
-        }
+          columns = result.fields.map(f => f.name); rows = [];
+        } else { showCodeSuccess(startTime); return; }
       } else {
         columns = result.fields.map(f => f.name);
         rows = result.rows.map(row => columns.map(col => row[col]));
       }
     }
-
     const elapsed = (performance.now() - startTime).toFixed(1);
     renderSQLResults(columns, rows, elapsed);
   } catch (err) {
-    renderSQLError(err.message);
+    renderCodeError(err.message);
   }
 }
 
-function showSQLSuccess(startTime) {
+async function runPython() {
+  if (!pyodideInstance) {
+    renderCodeError('Python engine not loaded. Please wait or refresh.');
+    return;
+  }
+  const code = sqlEditor ? sqlEditor.getValue().trim() : '';
+  if (!code) return;
+
+  const startTime = performance.now();
+  // Capture stdout
+  let output = '';
+  pyodideInstance.setStdout({ batched: (line) => { output += line + '\n'; } });
+  pyodideInstance.setStderr({ batched: (line) => { output += '[stderr] ' + line + '\n'; } });
+
+  try {
+    await pyodideInstance.runPythonAsync(code);
+    const elapsed = (performance.now() - startTime).toFixed(1);
+    if (output.trim()) {
+      renderPythonOutput(output.trim(), elapsed);
+    } else {
+      showCodeSuccess(startTime);
+    }
+  } catch (err) {
+    // Extract the Python traceback
+    const errMsg = err.message || String(err);
+    renderCodeError(errMsg);
+  }
+}
+
+function renderPythonOutput(output, elapsed) {
+  const escaped = escapeHtml(output);
+  document.getElementById('sqlResults').innerHTML = `
+    <pre style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--text);white-space:pre-wrap;word-wrap:break-word;line-height:1.6;margin:0;padding:0.5rem;">${escaped}</pre>`;
+  document.getElementById('sqlResultFooter').style.display = 'flex';
+  const lines = output.split('\n').length;
+  document.getElementById('sqlRowCount').textContent = `${lines} line${lines !== 1 ? 's' : ''}`;
+  document.getElementById('sqlExecTime').textContent = elapsed + 'ms';
+  document.getElementById('sqlExecInfo').textContent = `${elapsed}ms`;
+}
+
+function showCodeSuccess(startTime) {
   const elapsed = (performance.now() - startTime).toFixed(1);
   document.getElementById('sqlResults').innerHTML = `
     <div class="sql-results-empty">
       <div class="empty-icon">&#x2705;</div>
-      <div>Statement executed successfully</div>
-      <div style="font-size:0.75rem">No rows returned</div>
+      <div>Executed successfully</div>
+      <div style="font-size:0.75rem">No output</div>
     </div>`;
   document.getElementById('sqlExecInfo').textContent = elapsed + 'ms';
   document.getElementById('sqlResultFooter').style.display = 'none';
@@ -2484,23 +2680,17 @@ function renderSQLResults(columns, rows, elapsed) {
   let html = '<table class="sql-result-table"><thead><tr>';
   columns.forEach(col => { html += `<th>${escapeHtml(String(col))}</th>`; });
   html += '</tr></thead><tbody>';
-
   const displayRows = rows.slice(0, 500);
   displayRows.forEach(row => {
     html += '<tr>';
     row.forEach(val => {
-      if (val === null || val === undefined) {
-        html += '<td><span class="sql-null">NULL</span></td>';
-      } else {
-        html += `<td>${escapeHtml(String(val))}</td>`;
-      }
+      if (val === null || val === undefined) html += '<td><span class="sql-null">NULL</span></td>';
+      else html += `<td>${escapeHtml(String(val))}</td>`;
     });
     html += '</tr>';
   });
   html += '</tbody></table>';
-  if (rows.length > 500) {
-    html += `<div style="padding:0.5rem;color:var(--muted);font-size:0.75rem;text-align:center;">Showing first 500 of ${rows.length} rows</div>`;
-  }
+  if (rows.length > 500) html += `<div style="padding:0.5rem;color:var(--muted);font-size:0.75rem;text-align:center;">Showing first 500 of ${rows.length} rows</div>`;
 
   document.getElementById('sqlResults').innerHTML = html;
   document.getElementById('sqlResultFooter').style.display = 'flex';
@@ -2509,18 +2699,19 @@ function renderSQLResults(columns, rows, elapsed) {
   document.getElementById('sqlExecInfo').textContent = `${rows.length} rows \u00B7 ${elapsed}ms`;
 }
 
-function renderSQLError(message) {
+function renderCodeError(message) {
   document.getElementById('sqlResults').innerHTML = `
     <div class="sql-error"><strong>Error:</strong> ${escapeHtml(message)}</div>`;
   document.getElementById('sqlResultFooter').style.display = 'none';
   document.getElementById('sqlExecInfo').textContent = 'Error';
 }
 
-function resetSQLResults() {
+function resetCodeResults() {
+  const lang = sqlDialect === 'python' ? 'code' : 'a query';
   document.getElementById('sqlResults').innerHTML = `
     <div class="sql-results-empty">
       <div class="empty-icon">&#x1F50D;</div>
-      <div>Write a query above and click <strong>Run Query</strong></div>
+      <div>Write ${lang} above and click <strong>Run</strong></div>
       <div style="font-size: 0.75rem;">Ctrl+Enter to execute</div>
     </div>`;
   document.getElementById('sqlResultFooter').style.display = 'none';
@@ -2529,7 +2720,7 @@ function resetSQLResults() {
 
 function clearSQL() {
   if (sqlEditor) { sqlEditor.setValue(''); sqlEditor.focus(); }
-  resetSQLResults();
+  resetCodeResults();
 }
 
 // ── Tab switching ──
@@ -2539,22 +2730,22 @@ function switchTab(tab) {
   });
   const messages = document.getElementById('messages');
   const inputArea = document.getElementById('inputArea');
-  const sqlPanel = document.getElementById('sqlEditorPanel');
+  const codePanel = document.getElementById('sqlEditorPanel');
   if (tab === 'chat') {
     messages.style.display = 'flex';
     inputArea.style.display = '';
-    sqlPanel.classList.remove('active');
+    codePanel.classList.remove('active');
   } else {
     messages.style.display = 'none';
     inputArea.style.display = 'none';
-    sqlPanel.classList.add('active');
+    codePanel.classList.add('active');
     if (sqlEditor) setTimeout(() => sqlEditor.refresh(), 10);
   }
 }
 
 function updateTabVisibility(caseId) {
   const tabSwitcher = document.getElementById('chatTabSwitcher');
-  if (caseId && isSQLCase(caseId)) {
+  if (caseId && isCodeCase(caseId)) {
     tabSwitcher.classList.add('visible');
   } else {
     tabSwitcher.classList.remove('visible');
@@ -2565,55 +2756,75 @@ function updateTabVisibility(caseId) {
 // ── Dialect switching ──
 async function switchDialect(dialect) {
   sqlDialect = dialect;
-  // Update CodeMirror mode
   if (sqlEditor) {
-    sqlEditor.setOption('mode', dialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
+    const mode = dialect === 'python' ? 'python' : (dialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
+    sqlEditor.setOption('mode', mode);
+    sqlEditor.setOption('tabSize', dialect === 'python' ? 4 : 2);
   }
-  // Re-setup database if a case is active
-  if (activeCaseId && isSQLCase(activeCaseId)) {
-    await setupSQLDatabase(activeCaseId);
+  // Re-setup if a case is active
+  if (activeCaseId && isCodeCase(activeCaseId)) {
+    await setupCodeEnvironment(activeCaseId);
+  }
+}
+
+// ── Auto-set dialect based on case type ──
+function setDialectForCase(caseId) {
+  const select = document.getElementById('sqlDialectSelect');
+  if (isPythonCase(caseId)) {
+    sqlDialect = 'python';
+    select.value = 'python';
+  } else if (isSQLCase(caseId)) {
+    if (sqlDialect === 'python') {
+      sqlDialect = 'postgres';
+      select.value = 'postgres';
+    }
+  }
+  if (sqlEditor) {
+    const mode = sqlDialect === 'python' ? 'python' : (sqlDialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
+    sqlEditor.setOption('mode', mode);
+    sqlEditor.setOption('tabSize', sqlDialect === 'python' ? 4 : 2);
   }
 }
 
 // ── Ask AI Coach ──
 async function sendQueryToAI() {
-  if (!sqlEditor || !sqlDB) return;
-  const query = sqlEditor.getValue().trim();
-  if (!query) return;
+  if (!sqlEditor) return;
+  const code = sqlEditor.getValue().trim();
+  if (!code) return;
 
-  // Get results text
   let resultsText = '';
-  try {
-    let columns, rows;
-    if (sqlDialect === 'sqlite') {
-      const results = sqlDB.exec(query);
-      if (results.length > 0) {
-        const r = results[results.length - 1];
-        columns = r.columns;
-        rows = r.values;
-      }
-    } else {
-      const result = await sqlDB.query(query);
-      if (result.rows && result.rows.length > 0) {
-        columns = result.fields.map(f => f.name);
-        rows = result.rows.map(row => columns.map(col => row[col]));
-      }
+  if (sqlDialect === 'python') {
+    // Run python and capture output
+    if (pyodideInstance) {
+      let output = '';
+      pyodideInstance.setStdout({ batched: (line) => { output += line + '\n'; } });
+      pyodideInstance.setStderr({ batched: (line) => { output += line + '\n'; } });
+      try { await pyodideInstance.runPythonAsync(code); resultsText = output.trim(); }
+      catch (err) { resultsText = 'Error: ' + err.message; }
     }
-    if (columns && rows) {
-      resultsText = columns.join(' | ') + '\n';
-      resultsText += columns.map(() => '---').join(' | ') + '\n';
-      rows.slice(0, 20).forEach(row => {
-        resultsText += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n';
-      });
-      if (rows.length > 20) resultsText += `... (${rows.length - 20} more rows)\n`;
-    }
-  } catch (err) {
-    resultsText = 'Error: ' + err.message;
+  } else if (sqlDB) {
+    try {
+      let columns, rows;
+      if (sqlDialect === 'sqlite') {
+        const results = sqlDB.exec(code);
+        if (results.length > 0) { const r = results[results.length - 1]; columns = r.columns; rows = r.values; }
+      } else {
+        const result = await sqlDB.query(code);
+        if (result.rows && result.rows.length > 0) { columns = result.fields.map(f => f.name); rows = result.rows.map(row => columns.map(col => row[col])); }
+      }
+      if (columns && rows) {
+        resultsText = columns.join(' | ') + '\n' + columns.map(() => '---').join(' | ') + '\n';
+        rows.slice(0, 20).forEach(row => { resultsText += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n'; });
+        if (rows.length > 20) resultsText += `... (${rows.length - 20} more rows)\n`;
+      }
+    } catch (err) { resultsText = 'Error: ' + err.message; }
   }
 
-  const dataset = SQL_DATASETS[activeCaseId];
-  const dialectLabel = sqlDialect === 'postgres' ? 'PostgreSQL' : 'SQLite';
-  const message = `I wrote this ${dialectLabel} query for the "${dataset.label}" exercise. Can you review it and give me feedback?\n\n\`\`\`sql\n${query}\n\`\`\`\n\nResults:\n\`\`\`\n${resultsText}\`\`\``;
+  const isPy = sqlDialect === 'python';
+  const dataset = isPy ? PYTHON_DATASETS[activeCaseId] : SQL_DATASETS[activeCaseId];
+  const langLabel = isPy ? 'Python' : (sqlDialect === 'postgres' ? 'PostgreSQL' : 'SQLite');
+  const codeBlock = isPy ? 'python' : 'sql';
+  const message = `I wrote this ${langLabel} code for the "${dataset.label}" exercise. Can you review it and give me feedback?\n\n\`\`\`${codeBlock}\n${code}\n\`\`\`\n\nOutput:\n\`\`\`\n${resultsText}\`\`\``;
 
   switchTab('chat');
   const ws = document.getElementById('welcomeState');
