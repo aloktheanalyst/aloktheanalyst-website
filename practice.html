@@ -1731,6 +1731,7 @@ const PROMPTS = [
   { id: 'sql_productfilter', title: 'Product Purchase Filtering (Sets)', topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_listings',      title: 'Marketplace Active Listings',        topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_buyersegment',  title: 'Buyer Segmentation (Lifecycle)',     topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_shipping',      title: 'Shipping OTIF & Delivery SLA',      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
 
   // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
@@ -1773,6 +1774,7 @@ const CASE_PROMPTS = {
   sql_productfilter: 'You are interviewing a candidate for a data analyst role. This question is from a Moonfroglabs interview — it tests set-based thinking in SQL. The candidate has customers, products, and purchases tables. Ask them to find customers who bought products A AND B but did NOT buy product C. This is a common recommendation engine pattern. Push them to consider multiple approaches: GROUP BY + HAVING with conditional aggregation, INTERSECT/EXCEPT, or self-joins. Then ask them to extend it: find customers who bought ALL products in a given category.',
   sql_listings:      'You are interviewing a candidate for a senior data analyst role at a marketplace company. This question is from an eBay interview. The candidate has inventory and calendar tables. Ask them to find the total number of active listings and new listings created for each day. A listing is active if the date falls between its start and end date. This tests the calendar table join pattern. Then ask for a 7-day moving average of unique sellers who started listings. Push them on LEFT JOIN vs INNER JOIN implications and how COUNT(DISTINCT) interacts with window functions.',
   sql_buyersegment:  'You are interviewing a candidate for a data analyst role at a marketplace. This question is from an eBay interview. The candidate has a transactions table. Ask them to segment each transaction as new_buyer (first ever purchase), regular_buyer (purchased within 30 days of their previous transaction), or reactivated_buyer (gap > 30 days since previous purchase). This tests LAG() for previous purchase dates and CASE WHEN for business rule classification. Push them to also calculate the count and percentage of transactions in each segment.',
+  sql_shipping:      'You are giving a take-home SQL assignment from Medbikri. The candidate has order_timeline and order_shipment tables. The order_timeline table has the expected dispatch date for each order, and order_shipment has the actual dispatch date. Ask them to calculate OTIF (On-Time In-Full) delivery metrics: % orders shipped on or before the expected date (OTIF), % shipped 1 day late (OTIF+1), % shipped 2 days late (OTIF+2), and % shipped more than 2 days late. This tests date arithmetic, JOIN logic, conditional aggregation with CASE, and percentage calculations. Push them to handle orders that have multiple timeline entries (take the earliest expected date).',
 
   // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
@@ -2205,6 +2207,48 @@ INSERT INTO transactions VALUES
 (19,201,'2024-04-05',330.00,'c2c'),(20,206,'2024-05-15',410.00,'b2c'),
 (21,203,'2024-05-20',190.00,'c2c'),(22,208,'2024-04-15',75.00,'c2c'),(23,205,'2024-06-01',220.00,'b2c'),
 (24,202,'2024-05-25',185.00,'c2c'),(25,207,'2024-06-10',300.00,'b2c');`
+    }
+  },
+
+  sql_shipping: {
+    label: 'Shipping OTIF & Delivery SLA',
+    question: '<em>Asked at Medbikri.</em><br><br>Using the <strong>order_timeline</strong> and <strong>order_shipment</strong> tables:<br><br>The order_timeline table has expected dispatch dates for each order. The order_shipment table has actual dispatch dates.<br><br><strong>1.</strong> Calculate the delivery SLA breakdown:<br>• <strong>OTIF</strong> — % orders shipped on or before expected date<br>• <strong>OTIF+1</strong> — % orders shipped 1 day late<br>• <strong>OTIF+2</strong> — % orders shipped 2 days late<br>• <strong>Late</strong> — % orders shipped more than 2 days late<br><br><strong>2.</strong> Some orders have multiple timeline entries (updated expected dates). Use the <strong>earliest</strong> expected date per order.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'First, find the earliest expected dispatch date per order: MIN(expected_dispatch_date) grouped by order_id from order_timeline. Use this as a CTE.',
+      'JOIN the CTE with order_shipment on order_id. Calculate the day difference: actual_dispatch_date - expected_dispatch_date. In PostgreSQL use date subtraction, in SQLite use JULIANDAY() difference.',
+      'Use CASE to bucket: diff <= 0 → OTIF, diff = 1 → OTIF+1, diff = 2 → OTIF+2, diff > 2 → Late. Then COUNT per bucket divided by total COUNT * 100 for percentages. Use SUM(CASE...) or COUNT(CASE...) for conditional aggregation.'
+    ],
+    schema: [
+      { name: 'order_timeline', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'order_id', type: 'INTEGER' },
+        { name: 'expected_dispatch_date', type: 'DATE' }, { name: 'created', type: 'DATETIME' }
+      ]},
+      { name: 'order_shipment', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'order_id', type: 'INTEGER' },
+        { name: 'actual_dispatch_date', type: 'DATE' }, { name: 'created', type: 'DATETIME' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE order_timeline (id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL, expected_dispatch_date DATE NOT NULL, created DATETIME NOT NULL);
+INSERT INTO order_timeline VALUES
+(1,101,'2024-01-10','2024-01-05 09:00:00'),(2,102,'2024-01-12','2024-01-06 10:30:00'),(3,103,'2024-01-11','2024-01-05 14:00:00'),
+(4,104,'2024-01-13','2024-01-07 08:00:00'),(5,105,'2024-01-15','2024-01-08 11:00:00'),(6,106,'2024-01-14','2024-01-09 09:30:00'),
+(7,107,'2024-01-16','2024-01-10 13:00:00'),(8,108,'2024-01-17','2024-01-11 10:00:00'),(9,109,'2024-01-18','2024-01-12 15:00:00'),
+(10,110,'2024-01-20','2024-01-13 08:30:00'),(11,111,'2024-01-19','2024-01-14 09:00:00'),(12,112,'2024-01-21','2024-01-15 12:00:00'),
+(13,101,'2024-01-12','2024-01-08 16:00:00'),(14,103,'2024-01-13','2024-01-07 10:00:00'),
+(15,113,'2024-01-22','2024-01-16 08:00:00'),(16,114,'2024-01-23','2024-01-17 14:00:00'),(17,115,'2024-01-24','2024-01-18 09:00:00'),
+(18,116,'2024-01-25','2024-01-19 11:00:00'),(19,117,'2024-01-26','2024-01-20 10:00:00'),(20,118,'2024-01-27','2024-01-21 13:00:00');
+
+CREATE TABLE order_shipment (id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL, actual_dispatch_date DATE NOT NULL, created DATETIME NOT NULL);
+INSERT INTO order_shipment VALUES
+(1,101,'2024-01-09','2024-01-09 14:00:00'),(2,102,'2024-01-12','2024-01-12 16:00:00'),(3,103,'2024-01-12','2024-01-12 10:00:00'),
+(4,104,'2024-01-14','2024-01-14 09:00:00'),(5,105,'2024-01-15','2024-01-15 11:00:00'),(6,106,'2024-01-16','2024-01-16 15:00:00'),
+(7,107,'2024-01-16','2024-01-16 08:00:00'),(8,108,'2024-01-20','2024-01-20 12:00:00'),(9,109,'2024-01-19','2024-01-19 09:00:00'),
+(10,110,'2024-01-20','2024-01-20 14:00:00'),(11,111,'2024-01-22','2024-01-22 10:00:00'),(12,112,'2024-01-21','2024-01-21 11:00:00'),
+(13,113,'2024-01-22','2024-01-22 13:00:00'),(14,114,'2024-01-24','2024-01-24 08:00:00'),(15,115,'2024-01-24','2024-01-24 16:00:00'),
+(16,116,'2024-01-25','2024-01-25 09:00:00'),(17,117,'2024-01-29','2024-01-29 10:00:00'),(18,118,'2024-01-28','2024-01-28 14:00:00');`
     }
   }
 };
