@@ -2209,7 +2209,7 @@ function loadCase(id) {
       console.error('Code setup failed:', err);
       renderCodeError(err.message || 'Failed to initialize code engine.');
     });
-    switchTab('chat'); // Start on chat — AI intro plays first
+    switchTab('code'); // Start on Code Editor for SQL/Python cases
   }
 
   // Auto send the case prompt
