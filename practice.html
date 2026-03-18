@@ -1788,7 +1788,7 @@ const CASE_PROMPTS = {
 const SQL_DATASETS = {
   sql_window: {
     label: 'Window Functions Deep Dive',
-    question: 'Using the customers and transactions tables, write queries to: (1) Rank customers by total spending using RANK(). (2) Calculate a running total of transaction amounts per region ordered by date. (3) Find the top spender in each region using a window function.',
+    question: 'Using the <strong>customers</strong> and <strong>transactions</strong> tables, write queries to:<br><br><strong>1.</strong> Rank customers by total spending using RANK().<br><br><strong>2.</strong> Calculate a running total of transaction amounts per region ordered by date.<br><br><strong>3.</strong> Find the top spender in each region using a window function.',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'Start by JOINing customers with transactions on customer_id. Use GROUP BY to aggregate per customer before applying any window function.',
@@ -1818,7 +1818,7 @@ INSERT INTO transactions VALUES (1,1,120.50,'Electronics','2023-06-01'),(2,1,45.
 
   sql_retention: {
     label: 'User Retention Cohort Analysis',
-    question: 'Using the users and user_events tables, write a query to calculate weekly retention by signup cohort. Show cohort_week, cohort_size, and the count of users who returned in week 0, week 1, and week 2. Bonus: segment retention by acquisition source.',
+    question: 'Using the <strong>users</strong> and <strong>user_events</strong> tables:<br><br><strong>1.</strong> Write a query to calculate weekly retention by signup cohort. Show cohort_week, cohort_size, and the count of users who returned in week 0, week 1, and week 2.<br><br><strong>Bonus:</strong> Segment retention by acquisition source.',
     hints: [
       'Group users by their signup_date to form cohorts. Then check if each user had activity (events) in week 0, week 1, week 2, etc. after their signup.',
       'Use COUNT(DISTINCT CASE WHEN event_date is within the week range THEN user_id END) to count how many users from each cohort were active in that week.',
@@ -1847,7 +1847,7 @@ INSERT INTO user_events VALUES (1,'login','2024-01-01'),(1,'purchase','2024-01-0
 
   sql_dedup: {
     label: 'Deduplication & Data Quality',
-    question: 'The raw_orders table has duplicate entries, NULL values, and inconsistent email casing. Write queries to: (1) Identify and remove duplicates, keeping the most recent entry per order_id. (2) Handle NULL order_ids and empty emails. (3) Standardize email casing and count unique clean orders.',
+    question: 'The <strong>raw_orders</strong> table has duplicate entries, NULL values, and inconsistent email casing. Write queries to:<br><br><strong>1.</strong> Identify and remove duplicates, keeping the most recent entry per order_id.<br><br><strong>2.</strong> Handle NULL order_ids and empty emails.<br><br><strong>3.</strong> Standardize email casing and count unique clean orders.',
     hints: [
       'Use ROW_NUMBER() with PARTITION BY order_id to assign a unique row number within each group of duplicates. ORDER BY determines which row gets rn = 1.',
       'ORDER BY created_at DESC inside the window function so the most recent entry gets rn = 1. Then wrap this in a subquery and filter WHERE rn = 1.',
@@ -1872,7 +1872,7 @@ INSERT INTO raw_orders VALUES (1,'ORD-001','alice@example.com',99.99,'completed'
 
   sql_streak: {
     label: 'Consecutive Streaks & Gap Analysis',
-    question: 'Asked at eBay, Mpockett, Prescience. Using the visits table: (1) Calculate the gap in days between each visit and the previous visit per visitor. (2) Find visitors who visited for at least 3 consecutive days. (3) Find the longest streak of consecutive days visited per visitor.',
+    question: '<em>Asked at eBay, Mpockett, Prescience.</em><br><br>Using the <strong>visits</strong> table:<br><br><strong>1.</strong> Calculate the gap in days between each visit and the previous visit per visitor.<br><br><strong>2.</strong> Find visitors who visited for at least 3 consecutive days.<br><br><strong>3.</strong> Find the longest streak of consecutive days visited per visitor.',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'Use LAG(visit_date) OVER (PARTITION BY visitor_id ORDER BY visit_date) to get the previous visit date. Then subtract to find the gap in days. In PostgreSQL: visit_date - LAG(...), in SQLite: JULIANDAY(visit_date) - JULIANDAY(LAG(...)).',
@@ -1908,7 +1908,7 @@ INSERT INTO visits VALUES
 
   sql_topn: {
     label: 'Top-N Ranking per Group',
-    question: 'Asked at Cargil, Prescience/Movate, Moonfroglabs, Blinkit. Using the employees table: (1) Find the second-highest salary (without using LIMIT or OFFSET). (2) Find the top 3 highest-paid employees in each department. Display department, emp_name, and salary. Handle ties correctly.',
+    question: '<em>Asked at Cargil, Prescience/Movate, Moonfroglabs, Blinkit.</em><br><br>Using the <strong>employees</strong> table:<br><br><strong>1.</strong> Find the second-highest salary (without using LIMIT or OFFSET).<br><br><strong>2.</strong> Find the top 3 highest-paid employees in each department. Display department, emp_name, and salary. Handle ties correctly.',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'For second-highest salary: use MAX(salary) with a WHERE clause that excludes the maximum, OR use DENSE_RANK() and filter for rank = 2. Think about what happens if there are ties at the top.',
@@ -1934,7 +1934,7 @@ INSERT INTO employees VALUES
 
   sql_dayover: {
     label: 'Day-over-Day Comparison (LAG)',
-    question: 'Asked at Blinkit, Moonfroglabs. Using the daily_temperatures table: (1) Find all days where the temperature was higher than the previous day. Display the date, temperature, and the previous day\'s temperature. (2) Calculate the temperature change from the previous day for every record. Which day had the biggest single-day increase?',
+    question: '<em>Asked at Blinkit, Moonfroglabs.</em><br><br>Using the <strong>daily_temperatures</strong> table:<br><br><strong>1.</strong> Find all days where the temperature was higher than the previous day. Display the date, temperature, and the previous day\'s temperature.<br><br><strong>2.</strong> Calculate the temperature change from the previous day for every record. Which day had the biggest single-day increase?',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'Use LAG(temperature) OVER (ORDER BY record_date) to get the previous day\'s temperature. The first row will have NULL for the previous value — handle that with a WHERE clause or COALESCE.',
@@ -1960,7 +1960,7 @@ INSERT INTO daily_temperatures VALUES
 
   sql_customer: {
     label: 'Customer Purchase Analytics',
-    question: 'Asked at Tredence, Prescience/Movate, eBay. Using the orders table: (1) Find the first and second purchase date per customer and the days between them — WITHOUT using window functions (use self-joins). (2) Categorize each customer as \'online_only\', \'store_only\', or \'omni\' based on their channel history. (3) Calculate the average gap in days between consecutive purchases per customer.',
+    question: '<em>Asked at Tredence, Prescience/Movate, eBay.</em><br><br>Using the <strong>orders</strong> table:<br><br><strong>1.</strong> Find the first and second purchase date per customer and the days between them — WITHOUT using window functions (use self-joins).<br><br><strong>2.</strong> Categorize each customer as \'online_only\', \'store_only\', or \'omni\' based on their channel history.<br><br><strong>3.</strong> Calculate the average gap in days between consecutive purchases per customer.',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'For first/second purchase without window functions: first find MIN(order_date) per customer in a subquery, then JOIN back to orders where order_date > first_purchase_date and take MIN() again to get the second purchase.',
@@ -1993,7 +1993,7 @@ INSERT INTO orders VALUES
 
   sql_monthly: {
     label: 'Monthly Reports & MOM Growth',
-    question: 'Asked at Mpockett, eBay. Using the loans table: (1) Create a monthly report showing year_month, total loan amount, month-over-month % change, and 3-month rolling average of total loan amount. (2) For each day, find the user(s) with the highest number of loans on that day. (3) Calculate a 7-day moving average of total daily loan amounts.',
+    question: '<em>Asked at Mpockett, eBay.</em><br><br>Using the <strong>loans</strong> table:<br><br><strong>1.</strong> Create a monthly report showing year_month, total loan amount, month-over-month % change, and 3-month rolling average of total loan amount.<br><br><strong>2.</strong> For each day, find the user(s) with the highest number of loans on that day.<br><br><strong>3.</strong> Calculate a 7-day moving average of total daily loan amounts.',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'For the monthly report: first aggregate by month (PostgreSQL: DATE_TRUNC(\'month\', loan_date), SQLite: STRFTIME(\'%Y-%m\', loan_date)). Then use LAG() to get the previous month\'s total for MOM% calculation.',
@@ -2031,7 +2031,7 @@ INSERT INTO loans VALUES
 const PYTHON_DATASETS = {
   python_clean: {
     label: 'Messy Dataset Cleaning (Pandas)',
-    question: 'The DataFrame df contains messy e-commerce order data. Clean it by: (1) Fixing the amount column (remove $, handle N/A and NaN). (2) Standardizing category casing and date formats. (3) Removing duplicate orders. (4) Handling missing customer names and emails. Print a summary of your cleaned data.',
+    question: 'The DataFrame <strong>df</strong> contains messy e-commerce order data. Clean it by:<br><br><strong>1.</strong> Fixing the amount column (remove $, handle N/A and NaN).<br><br><strong>2.</strong> Standardizing category casing and date formats.<br><br><strong>3.</strong> Removing duplicate orders.<br><br><strong>4.</strong> Handling missing customer names and emails.<br><br>Print a summary of your cleaned data.',
     hints: [
       'Start with df.info(), df.isnull().sum(), and df.duplicated().sum() to identify the scope of data quality issues.',
       'The \'amount\' column has dollar signs, \'N/A\' strings, and \'NaN\' text. Use str.replace() to clean, then pd.to_numeric(errors=\'coerce\') to convert. Category has mixed case — use str.title() or str.capitalize().',
@@ -2066,7 +2066,7 @@ df = pd.DataFrame(data)
 
   python_agg: {
     label: 'Aggregation & GroupBy Patterns',
-    question: 'Using the sales DataFrame, answer these questions with pandas: (1) Total revenue and units sold by region — which region is the most profitable? (2) Which product category has the highest profit margin? (3) Create a pivot table of revenue by region and category. (4) Find the top salesperson by total revenue.',
+    question: 'Using the <strong>sales</strong> DataFrame, answer these questions with pandas:<br><br><strong>1.</strong> Total revenue and units sold by region — which region is the most profitable?<br><br><strong>2.</strong> Which product category has the highest profit margin?<br><br><strong>3.</strong> Create a pivot table of revenue by region and category.<br><br><strong>4.</strong> Find the top salesperson by total revenue.',
     hints: [
       'Use sales.groupby(\'region\')[\'revenue\'].sum() for basic aggregation. Chain .sort_values(ascending=False) to rank results.',
       'For multi-column groupby with multiple aggregates: sales.groupby([\'region\', \'category\']).agg({\'revenue\': \'sum\', \'units_sold\': \'sum\', \'cost\': \'sum\'}).',
@@ -2954,9 +2954,9 @@ async function setupCodeEnvironment(caseId) {
   const qText = document.getElementById('questionText');
   const mobileQ = document.getElementById('mobileQuestion');
   if (dataset && dataset.question) {
-    qText.textContent = dataset.question;
+    qText.innerHTML = dataset.question;
     qPanel.style.display = '';
-    mobileQ.textContent = '\uD83C\uDFAF ' + dataset.question;
+    mobileQ.innerHTML = '\uD83C\uDFAF ' + dataset.question;
   } else {
     qPanel.style.display = 'none';
     mobileQ.textContent = '';
