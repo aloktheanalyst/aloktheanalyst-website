@@ -19,9 +19,9 @@
 <!-- sql.js — SQLite compiled to WebAssembly (lazy WASM download) -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
 
-<!-- PGlite — PostgreSQL compiled to WebAssembly (ESM module, exposed to global) -->
+<!-- PGlite — PostgreSQL compiled to WebAssembly (ESM module, pinned version) -->
 <script type="module">
-  import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js';
+  import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite@0.2.5/dist/index.js';
   window.PGlite = PGlite;
   window.dispatchEvent(new Event('pglite-ready'));
 </script>
