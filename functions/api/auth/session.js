@@ -37,7 +37,9 @@ export async function onRequest(context) {
   }
 
   try {
-    const user = JSON.parse(raw);
+    const session = JSON.parse(raw);
+    // Only expose necessary fields (not internal google_id)
+    const user = { email: session.email, name: session.name, picture: session.picture };
     return json({ authenticated: true, user });
   } catch {
     return json({ authenticated: false });

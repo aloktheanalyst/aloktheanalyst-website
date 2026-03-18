@@ -2125,6 +2125,21 @@ let pyodideReady = false;
 let pyodideLoading = false;
 let currentHintIndex = -1;    // -1 = no hint shown yet
 
+// ── Analytics (fire-and-forget, never blocks UI) ──
+function trackEvent(event, caseId, metadata) {
+  try {
+    fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event,
+        case_id: caseId || activeCaseId || null,
+        metadata: metadata || null
+      })
+    }).catch(() => {}); // silently ignore failures
+  } catch { /* never block UI */ }
+}
+
 const apiKeys = {
   free:   '__free__',
   claude: localStorage.getItem('ak_claude') || '',
@@ -2254,6 +2269,7 @@ function loadCase(id) {
   activeCaseId = id;
   renderPromptList(activeFilter);
   const p = PROMPTS.find(x => x.id === id);
+  trackEvent('case_load', id, { tag: p.tag, difficulty: p.difficulty });
   document.getElementById('activeCaseTitle').textContent = p.title;
   document.getElementById('activeCaseMeta').textContent = `${p.tag.toUpperCase()} · ${p.difficulty.toUpperCase()} · aloktheanalyst.com`;
 
@@ -2498,9 +2514,11 @@ function appendMessage(role, content) {
 }
 
 function formatMessage(text) {
-  // Code blocks
+  // SECURITY: Escape ALL HTML first to prevent XSS from AI responses
+  text = escapeHtml(text);
+  // Code blocks (already escaped, so no double-escape needed inside)
   text = text.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) =>
-    `<pre><code>${escapeHtml(code.trim())}</code></pre>`
+    `<pre><code>${code.trim()}</code></pre>`
   );
   // Inline code
   text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -2817,6 +2835,7 @@ function copyTableName(name) {
 
 // ── Code execution (unified) ──
 async function runCode() {
+  trackEvent('code_run', null, { dialect: sqlDialect });
   if (sqlDialect === 'python') {
     await runPython();
   } else {
@@ -2968,6 +2987,7 @@ function showNextHint() {
   const hints = getActiveHints();
   if (hints.length === 0) return;
   currentHintIndex = Math.min(currentHintIndex + 1, hints.length - 1);
+  trackEvent('hint_used', null, { hint_number: currentHintIndex + 1, total_hints: hints.length });
   renderHint();
 }
 
@@ -3008,6 +3028,7 @@ async function checkMyAnswer() {
   if (!sqlEditor) return;
   const code = sqlEditor.getValue().trim();
   if (!code) return;
+  trackEvent('answer_checked', null, { dialect: sqlDialect, code_length: code.length });
 
   const resultsEl = document.getElementById('sqlResults');
   const footerEl = document.getElementById('sqlResultFooter');
@@ -3086,6 +3107,12 @@ Please provide your feedback in this exact format:
 
     conversationHistory.push({ role: 'assistant', content: reply });
 
+    // Extract score from AI reply (e.g. "7/10")
+    const scoreMatch = reply.match(/(\d+)\s*\/\s*10/);
+    if (scoreMatch) {
+      trackEvent('score_received', null, { score: parseInt(scoreMatch[1]), dialect: sqlDialect });
+    }
+
     // Render feedback inline in results area
     resultsEl.innerHTML = `<div class="ai-feedback-panel">${formatMessage(reply)}</div>`;
     document.getElementById('sqlExecInfo').textContent = 'Feedback ready';
@@ -3098,6 +3125,9 @@ Please provide your feedback in this exact format:
 
 // ── Tab switching ──
 function switchTab(tab) {
+  if (activeCaseId && isCodeCase(activeCaseId)) {
+    trackEvent('tab_switch', null, { to: tab });
+  }
   document.querySelectorAll('.chat-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
@@ -3270,6 +3300,9 @@ document.addEventListener('click', (e) => {
 
 // Check session on page load
 checkAuth();
+
+// Track session start
+trackEvent('session_start', null, { referrer: document.referrer || 'direct' });
 </script>
 
 <script src="/components/footer.js"></script>
