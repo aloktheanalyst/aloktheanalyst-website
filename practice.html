@@ -1722,7 +1722,8 @@ const PROMPTS = [
   { id: 'sql_retention', title: 'User Retention Cohort Analysis',      topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_dedup',     title: 'Deduplication & Data Quality',        topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
   { id: 'sql_streak',    title: 'Consecutive Streaks & Gap Analysis',  topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
-  { id: 'sql_topn',      title: 'Top-N Ranking & Comparisons',        topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_topn',      title: 'Top-N Ranking per Group',             topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_dayover',   title: 'Day-over-Day Comparison (LAG)',       topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
   { id: 'sql_customer',  title: 'Customer Purchase Analytics',         topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_monthly',   title: 'Monthly Reports & MOM Growth',       topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
 
@@ -1758,7 +1759,8 @@ const CASE_PROMPTS = {
   sql_retention: 'Give me a SQL cohort retention analysis case study. Include a user events table and ask me to calculate week-over-week retention.',
   sql_dedup:     'Give me a SQL data quality / deduplication case study. Give me a messy table with duplicates and ask me to write a query to clean it.',
   sql_streak:    'You are a senior data analyst interviewing a candidate. This question tests the classic "islands and gaps" SQL pattern — frequently asked at companies like eBay, Mpockett, and Prescience. The candidate has a visits table loaded in their editor. Guide them step-by-step: first ask them to find gaps between consecutive visits using LAG(), then build up to identifying consecutive streaks. Push them to handle edge cases like single-day visits. If they struggle, hint at the ROW_NUMBER() subtraction trick for detecting islands.',
-  sql_topn:      'You are interviewing a candidate for a data analyst role. This question covers ranking and comparison patterns — asked at Cargil, Prescience/Movate, Moonfroglabs, and Blinkit. The candidate has employees and daily_temperatures tables. Start with the classic "find the second-highest salary" question, then escalate to top-N per group using window functions. Finish with the day-over-day temperature comparison using LAG(). Push them to consider ties and NULL handling.',
+  sql_topn:      'You are interviewing a candidate for a data analyst role. This question covers ranking patterns — asked at Cargil, Prescience/Movate, Moonfroglabs, and Blinkit. The candidate has an employees table. Start with the classic "find the second-highest salary" question, then escalate to top-N per group using window functions. Push them to consider ties (RANK vs DENSE_RANK vs ROW_NUMBER) and NULL handling.',
+  sql_dayover:   'You are interviewing a candidate for an entry-level data analyst role. This question tests the LAG() window function for day-over-day comparisons — a common pattern asked at Blinkit, Moonfroglabs, and similar companies. The candidate has a daily_temperatures table. Ask them to find all days where the temperature was higher than the previous day. Start simple, then push them to also calculate the temperature change and find the biggest single-day increase. Discuss LAG() vs self-join approaches.',
   sql_customer:  'You are a senior analyst conducting a technical interview. These customer analytics questions are from real Tredence and eBay interviews. The candidate has an orders table with purchase history across online and store channels. Start by asking them to find first vs second purchase dates WITHOUT window functions (self-join approach). Then ask for customer channel categorization. Finally, test consecutive purchase gap analysis. Push them on edge cases: customers with only one order, NULL channels.',
   sql_monthly:   'You are interviewing a candidate for a fintech data analyst position. These monthly reporting questions are from Mpockett and eBay interviews. The candidate has a loans table. Ask them to build a monthly report with MOM% change and 3-month rolling average — this tests DATE_TRUNC/strftime, LAG(), and window frames. Then ask for daily top user by loan count (tests ties). Finally, a 7-day moving average. Push them on dialect differences between PostgreSQL and SQLite date functions.',
 
@@ -1905,22 +1907,18 @@ INSERT INTO visits VALUES
   },
 
   sql_topn: {
-    label: 'Top-N Ranking & Comparisons',
-    question: 'Asked at Cargil, Prescience/Movate, Moonfroglabs, Blinkit. (1) Find the second-highest salary from the employees table (without using LIMIT or OFFSET). (2) Find the top 3 highest-paid employees in each department. Display department, emp_name, and salary. (3) Using daily_temperatures, find all days where the temperature was higher than the previous day.',
+    label: 'Top-N Ranking per Group',
+    question: 'Asked at Cargil, Prescience/Movate, Moonfroglabs, Blinkit. Using the employees table: (1) Find the second-highest salary (without using LIMIT or OFFSET). (2) Find the top 3 highest-paid employees in each department. Display department, emp_name, and salary. Handle ties correctly.',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'For second-highest salary: use MAX(salary) with a WHERE clause that excludes the maximum, OR use DENSE_RANK() and filter for rank = 2. Think about what happens if there are ties at the top.',
       'For top 3 per department: use DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) and filter WHERE rank <= 3 in an outer query. ROW_NUMBER vs RANK vs DENSE_RANK handle ties differently.',
-      'For temperature comparison: use LAG(temperature) OVER (ORDER BY record_date) to get the previous day\'s temperature, then filter WHERE temperature > prev_temperature. Alternatively, self-join the table on consecutive dates.'
+      'Notice Bob and Dave both have salary 105000 in Engineering, and Jack and Liam both have 91000 in Sales. DENSE_RANK would include both tied employees, while ROW_NUMBER would arbitrarily pick one. Which behavior is correct for this problem?'
     ],
     schema: [
       { name: 'employees', columns: [
         { name: 'emp_id', type: 'INTEGER PK' }, { name: 'emp_name', type: 'TEXT' },
         { name: 'department', type: 'TEXT' }, { name: 'salary', type: 'DECIMAL' }
-      ]},
-      { name: 'daily_temperatures', columns: [
-        { name: 'id', type: 'INTEGER PK' }, { name: 'record_date', type: 'DATE' },
-        { name: 'temperature', type: 'DECIMAL' }
       ]}
     ],
     setup: {
@@ -1930,8 +1928,27 @@ INSERT INTO employees VALUES
 (1,'Alice','Engineering',95000),(2,'Bob','Engineering',105000),(3,'Carol','Engineering',88000),(4,'Dave','Engineering',105000),
 (5,'Eva','Marketing',72000),(6,'Frank','Marketing',68000),(7,'Grace','Marketing',78000),(8,'Henry','Marketing',71000),
 (9,'Irene','Sales',82000),(10,'Jack','Sales',91000),(11,'Kate','Sales',76000),(12,'Liam','Sales',91000),
-(13,'Mary','HR',65000),(14,'Nick','HR',62000),(15,'Olivia','HR',69000);
+(13,'Mary','HR',65000),(14,'Nick','HR',62000),(15,'Olivia','HR',69000);`
+    }
+  },
 
+  sql_dayover: {
+    label: 'Day-over-Day Comparison (LAG)',
+    question: 'Asked at Blinkit, Moonfroglabs. Using the daily_temperatures table: (1) Find all days where the temperature was higher than the previous day. Display the date, temperature, and the previous day\'s temperature. (2) Calculate the temperature change from the previous day for every record. Which day had the biggest single-day increase?',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Use LAG(temperature) OVER (ORDER BY record_date) to get the previous day\'s temperature. The first row will have NULL for the previous value — handle that with a WHERE clause or COALESCE.',
+      'For the temperature change: subtract the LAG value from the current temperature. To find the biggest increase, ORDER BY the change DESC and take the first row, or use a CTE and filter for MAX().',
+      'Alternative approach without LAG: self-join the table — JOIN daily_temperatures t1 ON t1.record_date = t2.record_date - INTERVAL \'1 day\' (PostgreSQL) or use JULIANDAY differences (SQLite). Compare the two approaches.'
+    ],
+    schema: [
+      { name: 'daily_temperatures', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'record_date', type: 'DATE' },
+        { name: 'temperature', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
 CREATE TABLE daily_temperatures (id INTEGER PRIMARY KEY, record_date DATE NOT NULL, temperature DECIMAL(5,1) NOT NULL);
 INSERT INTO daily_temperatures VALUES
 (1,'2024-01-01',32.5),(2,'2024-01-02',28.0),(3,'2024-01-03',35.2),(4,'2024-01-04',38.7),
