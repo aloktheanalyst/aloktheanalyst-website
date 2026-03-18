@@ -1493,8 +1493,8 @@
 
     <!-- CODE EDITOR TAB SWITCHER (hidden until SQL/Python case selected) -->
     <div class="chat-tab-switcher" id="chatTabSwitcher">
-      <button class="chat-tab-btn" data-tab="chat" onclick="switchTab('chat')">&#x1F4AC; AI Coach</button>
       <button class="chat-tab-btn active" data-tab="code" onclick="switchTab('code')">&#x1F4DD; Code Editor</button>
+      <button class="chat-tab-btn" data-tab="chat" onclick="switchTab('chat')">&#x1F4AC; AI Coach</button>
     </div>
 
     <!-- MESSAGES -->
@@ -1779,7 +1779,7 @@ const SQL_DATASETS = {
   sql_window: {
     label: 'Window Functions Deep Dive',
     question: 'Using the customers and transactions tables, write queries to: (1) Rank customers by total spending using RANK(). (2) Calculate a running total of transaction amounts per region ordered by date. (3) Find the top spender in each region using a window function.',
-    defaultQuery: '-- Rank customers by total spending\nSELECT \n  c.name,\n  c.region,\n  SUM(t.amount) AS total_spent,\n  RANK() OVER (ORDER BY SUM(t.amount) DESC) AS spending_rank\nFROM transactions t\nJOIN customers c ON t.customer_id = c.id\nGROUP BY c.id, c.name, c.region;',
+    defaultQuery: '-- Write your SQL here\n',
     hints: [
       'Start by JOINing customers with transactions on customer_id. Use GROUP BY to aggregate per customer before applying any window function.',
       'Window functions like RANK(), DENSE_RANK(), and ROW_NUMBER() go in the SELECT clause with an OVER() clause. You can ORDER BY an aggregate like SUM(amount) DESC inside OVER().',
@@ -1814,8 +1814,7 @@ INSERT INTO transactions VALUES (1,1,120.50,'Electronics','2023-06-01'),(2,1,45.
       'Use COUNT(DISTINCT CASE WHEN event_date is within the week range THEN user_id END) to count how many users from each cohort were active in that week.',
       'For date ranges: in SQLite use DATE(signup_date, \'+7 days\'), in PostgreSQL use signup_date + INTERVAL \'7 days\'. LEFT JOIN user_events so you keep cohort users even if they had no events.'
     ],
-    defaultQuery: '-- Calculate weekly retention by signup cohort\nSELECT \n  u.signup_date AS cohort_week,\n  COUNT(DISTINCT u.user_id) AS cohort_size,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN u.signup_date AND DATE(u.signup_date, \'+6 days\') \n    THEN e.user_id END) AS week0,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN DATE(u.signup_date, \'+7 days\') AND DATE(u.signup_date, \'+13 days\') \n    THEN e.user_id END) AS week1\nFROM users u\nLEFT JOIN user_events e ON u.user_id = e.user_id\nGROUP BY u.signup_date\nORDER BY u.signup_date;',
-    defaultQueryPostgres: "-- Calculate weekly retention by signup cohort\nSELECT \n  u.signup_date AS cohort_week,\n  COUNT(DISTINCT u.user_id) AS cohort_size,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN u.signup_date AND u.signup_date + INTERVAL '6 days' \n    THEN e.user_id END) AS week0,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN u.signup_date + INTERVAL '7 days' AND u.signup_date + INTERVAL '13 days' \n    THEN e.user_id END) AS week1\nFROM users u\nLEFT JOIN user_events e ON u.user_id = e.user_id\nGROUP BY u.signup_date\nORDER BY u.signup_date;",
+    defaultQuery: '-- Write your SQL here\n',
     schema: [
       { name: 'users', columns: [
         { name: 'user_id', type: 'INTEGER PK' }, { name: 'signup_date', type: 'DATE' },
@@ -1844,7 +1843,7 @@ INSERT INTO user_events VALUES (1,'login','2024-01-01'),(1,'purchase','2024-01-0
       'ORDER BY created_at DESC inside the window function so the most recent entry gets rn = 1. Then wrap this in a subquery and filter WHERE rn = 1.',
       'Don\'t forget edge cases: NULL order_ids should be filtered out (WHERE order_id IS NOT NULL), and watch for email case inconsistencies (e.g., BOB@test.com vs bob@test.com).'
     ],
-    defaultQuery: '-- Find and remove duplicate orders\n-- (keep the most recent entry per order_id)\nSELECT * FROM (\n  SELECT *,\n    ROW_NUMBER() OVER (\n      PARTITION BY order_id \n      ORDER BY created_at DESC\n    ) AS rn\n  FROM raw_orders\n  WHERE order_id IS NOT NULL\n)\nWHERE rn = 1\nORDER BY order_id;',
+    defaultQuery: '-- Write your SQL here\n',
     schema: [
       { name: 'raw_orders', columns: [
         { name: 'id', type: 'INTEGER PK' }, { name: 'order_id', type: 'TEXT' },
@@ -1872,18 +1871,7 @@ const PYTHON_DATASETS = {
       'The \'amount\' column has dollar signs, \'N/A\' strings, and \'NaN\' text. Use str.replace() to clean, then pd.to_numeric(errors=\'coerce\') to convert. Category has mixed case — use str.title() or str.capitalize().',
       'Handle duplicates with df.drop_duplicates(subset=[\'order_id\']). For dates, pd.to_datetime(errors=\'coerce\') handles mixed formats. Strip whitespace from names with str.strip().'
     ],
-    defaultQuery: `import pandas as pd
-import numpy as np
-
-# The 'df' variable is pre-loaded with messy data
-print("Shape:", df.shape)
-print("\\nFirst 5 rows:")
-print(df.head())
-print("\\nData types:")
-print(df.dtypes)
-print("\\nMissing values:")
-print(df.isnull().sum())
-print("\\nDuplicate rows:", df.duplicated().sum())`,
+    defaultQuery: `# Write your Python code here\n# The 'df' DataFrame is pre-loaded\n`,
     schema: [
       { name: 'df (DataFrame)', columns: [
         { name: 'order_id', type: 'object' }, { name: 'customer_name', type: 'object' },
@@ -1918,18 +1906,7 @@ df = pd.DataFrame(data)
       'For multi-column groupby with multiple aggregates: sales.groupby([\'region\', \'category\']).agg({\'revenue\': \'sum\', \'units_sold\': \'sum\', \'cost\': \'sum\'}).',
       'Add a profit column with sales[\'profit\'] = sales[\'revenue\'] - sales[\'cost\'], then use pd.pivot_table(sales, values=\'profit\', index=\'region\', columns=\'category\', aggfunc=\'sum\') for cross-tabulation.'
     ],
-    defaultQuery: `import pandas as pd
-import numpy as np
-
-# The 'sales' DataFrame is pre-loaded
-print("Shape:", sales.shape)
-print("\\nFirst 5 rows:")
-print(sales.head())
-print("\\nColumns:", list(sales.columns))
-
-# Try: Total revenue by region
-print("\\nRevenue by Region:")
-print(sales.groupby('region')['revenue'].sum().sort_values(ascending=False))`,
+    defaultQuery: `# Write your Python code here\n# The 'sales' DataFrame is pre-loaded\n`,
     schema: [
       { name: 'sales (DataFrame)', columns: [
         { name: 'date', type: 'datetime64' }, { name: 'region', type: 'object' },
