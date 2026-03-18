@@ -2273,6 +2273,7 @@ let pyodideInstance = null;    // Pyodide runtime
 let pyodideReady = false;
 let pyodideLoading = false;
 let currentHintIndex = -1;    // -1 = no hint shown yet
+let dialectCodeCache = {};    // { caseId: { postgres: '...', sqlite: '...', python: '...' } }
 
 // ── Analytics (fire-and-forget, never blocks UI) ──
 function trackEvent(event, caseId, metadata) {
@@ -2435,6 +2436,7 @@ function loadCase(id) {
 
   // If SQL or Python case, initialize the editor and environment
   if (isCodeCase(id)) {
+    dialectCodeCache[id] = {};  // Fresh case — reset per-dialect code cache
     if (!sqlEditor) initCodeMirrorEditor();
     setDialectForCase(id); // Auto-set Python for python cases, PostgreSQL for SQL cases
     setupCodeEnvironment(id).catch(err => {
@@ -3177,7 +3179,23 @@ function resetHints() {
 async function checkMyAnswer() {
   if (!sqlEditor) return;
   const code = sqlEditor.getValue().trim();
-  if (!code) return;
+
+  // Skip LLM call if editor is empty or only contains default placeholder
+  const placeholders = [
+    '-- Write your SQL here',
+    '# Write your Python code here',
+    "# Write your Python code here\n# The 'df' DataFrame is pre-loaded",
+    "# Write your Python code here\n# The 'sales' DataFrame is pre-loaded",
+  ];
+  if (!code || placeholders.includes(code)) {
+    const resultsEl = document.getElementById('sqlResults');
+    resultsEl.innerHTML = `<div class="sql-error" style="border-left-color: #2563eb; background: #eff6ff;">
+      <strong>✍️ Write your code first!</strong><br>
+      Type your solution in the editor, then click <em>Check My Answer</em> to get AI feedback.
+    </div>`;
+    return;
+  }
+
   trackEvent('answer_checked', null, { dialect: sqlDialect, code_length: code.length });
 
   const resultsEl = document.getElementById('sqlResults');
@@ -3308,15 +3326,31 @@ function updateTabVisibility(caseId) {
 
 // ── Dialect switching ──
 async function switchDialect(dialect) {
+  const prevDialect = sqlDialect;
+
+  // Save current code for the previous dialect before switching
+  if (activeCaseId && sqlEditor) {
+    const currentCode = sqlEditor.getValue();
+    if (!dialectCodeCache[activeCaseId]) dialectCodeCache[activeCaseId] = {};
+    dialectCodeCache[activeCaseId][prevDialect] = currentCode;
+  }
+
   sqlDialect = dialect;
   if (sqlEditor) {
     const mode = dialect === 'python' ? 'python' : (dialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
     sqlEditor.setOption('mode', mode);
     sqlEditor.setOption('tabSize', dialect === 'python' ? 4 : 2);
   }
+
   // Re-setup if a case is active
   if (activeCaseId && isCodeCase(activeCaseId)) {
     await setupCodeEnvironment(activeCaseId);
+
+    // Restore cached code for the new dialect (if user previously wrote something)
+    if (dialectCodeCache[activeCaseId] && dialectCodeCache[activeCaseId][dialect] && sqlEditor) {
+      sqlEditor.setValue(dialectCodeCache[activeCaseId][dialect]);
+      setTimeout(() => sqlEditor.refresh(), 50);
+    }
   }
 }
 
