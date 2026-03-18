@@ -1728,6 +1728,7 @@ const PROMPTS = [
   { id: 'sql_monthly',   title: 'Monthly Reports & MOM Growth',       topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_competition', title: 'Group Competition Winner & Prize',  topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_maxpergroup', title: 'Max per Group & Correlated Lookup', topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
+  { id: 'sql_productfilter', title: 'Product Purchase Filtering (Sets)', topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
 
   // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
@@ -1767,6 +1768,7 @@ const CASE_PROMPTS = {
   sql_monthly:   'You are interviewing a candidate for a fintech data analyst position. These monthly reporting questions are from Mpockett and eBay interviews. The candidate has a loans table. Ask them to build a monthly report with MOM% change and 3-month rolling average — this tests DATE_TRUNC/strftime, LAG(), and window frames. Then ask for daily top user by loan count (tests ties). Finally, a 7-day moving average. Push them on dialect differences between PostgreSQL and SQLite date functions.',
   sql_competition: 'You are interviewing a candidate for a data analyst role. This question is from an Ethos interview — it tests business logic in SQL with aggregation and conditional calculations. The candidate has a competitions table with group_id, participant info, bet amounts, and scores. Ask them to find the winner of each group (highest score) and calculate their prize: own bet + 30% of all losers\' bets in their group. Push them to handle ties (what if two players have the same score?), and to think about using window functions vs subqueries.',
   sql_maxpergroup: 'You are interviewing a candidate for a data analyst intern role. This question is from a Blinkit interview. The candidate has a payroll table with employee salaries by pay date. Ask them to return the whole table with two extra columns: (1) the maximum salary drawn in that month, and (2) the employee who drew it. This tests window functions with date extraction. Push them to compare MAX() OVER vs subquery approaches, and discuss how FIRST_VALUE handles ties.',
+  sql_productfilter: 'You are interviewing a candidate for a data analyst role. This question is from a Moonfroglabs interview — it tests set-based thinking in SQL. The candidate has customers, products, and purchases tables. Ask them to find customers who bought products A AND B but did NOT buy product C. This is a common recommendation engine pattern. Push them to consider multiple approaches: GROUP BY + HAVING with conditional aggregation, INTERSECT/EXCEPT, or self-joins. Then ask them to extend it: find customers who bought ALL products in a given category.',
 
   // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
@@ -2080,6 +2082,51 @@ INSERT INTO payroll VALUES
 (101,'Alok','Engineering','2024-02-15',87000),(102,'Priya','Marketing','2024-02-15',72000),(103,'Rahul','Engineering','2024-02-15',91000),(104,'Neha','Sales','2024-02-15',78000),(105,'Vikram','HR','2024-02-15',65000),(106,'Kavita','Engineering','2024-02-15',91000),
 (101,'Alok','Engineering','2024-03-15',90000),(102,'Priya','Marketing','2024-03-15',82000),(103,'Rahul','Engineering','2024-03-15',88000),(104,'Neha','Sales','2024-03-15',75000),(105,'Vikram','HR','2024-03-15',67000),(106,'Kavita','Engineering','2024-03-15',93000),
 (101,'Alok','Engineering','2024-04-15',92000),(102,'Priya','Marketing','2024-04-15',84000),(103,'Rahul','Engineering','2024-04-15',86000),(104,'Neha','Sales','2024-04-15',92000),(105,'Vikram','HR','2024-04-15',70000),(106,'Kavita','Engineering','2024-04-15',89000);`
+    }
+  },
+
+  sql_productfilter: {
+    label: 'Product Purchase Filtering (Sets)',
+    question: '<em>Asked at Moonfroglabs.</em><br><br>Using the <strong>customers</strong>, <strong>products</strong>, and <strong>purchases</strong> tables:<br><br><strong>1.</strong> Find customers who bought products "Laptop" AND "Headphones" but did NOT buy "Tablet". These customers should be recommended the Tablet.<br><br><strong>2.</strong> Find customers who have purchased every product in the "Electronics" category.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Approach 1: GROUP BY customer_id on purchases joined with products. Use HAVING with SUM(CASE WHEN product_name = \'Laptop\' THEN 1 ELSE 0 END) > 0 to check for each product. Require Laptop > 0 AND Headphones > 0 AND Tablet = 0.',
+      'Approach 2: Use subqueries — get customers who bought Laptop INTERSECT customers who bought Headphones, then EXCEPT customers who bought Tablet. The set-operation approach is more readable.',
+      'For Q2 (bought ALL in a category): count distinct products purchased per customer in that category, then compare to the total count of products in the category. HAVING COUNT(DISTINCT product_id) = (SELECT COUNT(*) FROM products WHERE category = \'Electronics\').'
+    ],
+    schema: [
+      { name: 'customers', columns: [
+        { name: 'customer_id', type: 'INTEGER PK' }, { name: 'customer_name', type: 'TEXT' }
+      ]},
+      { name: 'products', columns: [
+        { name: 'product_id', type: 'INTEGER PK' }, { name: 'product_name', type: 'TEXT' },
+        { name: 'category', type: 'TEXT' }, { name: 'price', type: 'DECIMAL' }
+      ]},
+      { name: 'purchases', columns: [
+        { name: 'purchase_id', type: 'INTEGER PK' }, { name: 'customer_id', type: 'INTEGER FK' },
+        { name: 'product_id', type: 'INTEGER FK' }, { name: 'purchase_date', type: 'DATE' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, customer_name TEXT NOT NULL);
+INSERT INTO customers VALUES (1,'Alok'),(2,'Priya'),(3,'Rahul'),(4,'Neha'),(5,'Vikram'),(6,'Kavita'),(7,'Deepak'),(8,'Meera'),(9,'Suresh'),(10,'Isha');
+
+CREATE TABLE products (product_id INTEGER PRIMARY KEY, product_name TEXT NOT NULL, category TEXT NOT NULL, price DECIMAL(10,2) NOT NULL);
+INSERT INTO products VALUES (1,'Laptop','Electronics',75000),(2,'Headphones','Electronics',3000),(3,'Tablet','Electronics',25000),(4,'Keyboard','Electronics',2000),(5,'Novel','Books',500),(6,'Textbook','Books',1200),(7,'Backpack','Accessories',2500),(8,'Watch','Accessories',15000);
+
+CREATE TABLE purchases (purchase_id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, product_id INTEGER NOT NULL, purchase_date DATE NOT NULL);
+INSERT INTO purchases VALUES
+(1,1,1,'2024-01-05'),(2,1,2,'2024-01-10'),(3,1,5,'2024-01-15'),
+(4,2,1,'2024-01-08'),(5,2,2,'2024-01-12'),(6,2,3,'2024-01-20'),(7,2,4,'2024-02-01'),
+(8,3,1,'2024-01-15'),(9,3,2,'2024-01-18'),(10,3,4,'2024-02-05'),(11,3,7,'2024-02-10'),
+(12,4,2,'2024-01-20'),(13,4,3,'2024-01-25'),(14,4,5,'2024-02-01'),
+(15,5,1,'2024-02-01'),(16,5,2,'2024-02-05'),(17,5,3,'2024-02-10'),(18,5,4,'2024-02-15'),
+(19,6,1,'2024-02-08'),(20,6,3,'2024-02-12'),(21,6,7,'2024-02-18'),
+(22,7,1,'2024-02-15'),(23,7,2,'2024-02-18'),(24,7,3,'2024-02-22'),(25,7,4,'2024-02-28'),
+(26,8,5,'2024-02-20'),(27,8,6,'2024-02-25'),(28,8,7,'2024-03-01'),
+(29,9,1,'2024-03-01'),(30,9,2,'2024-03-05'),
+(31,10,1,'2024-03-10'),(32,10,2,'2024-03-12'),(33,10,3,'2024-03-15'),(34,10,4,'2024-03-18'),(35,10,8,'2024-03-20');`
     }
   }
 };
