@@ -1726,6 +1726,8 @@ const PROMPTS = [
   { id: 'sql_dayover',   title: 'Day-over-Day Comparison (LAG)',       topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
   { id: 'sql_customer',  title: 'Customer Purchase Analytics',         topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_monthly',   title: 'Monthly Reports & MOM Growth',       topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_competition', title: 'Group Competition Winner & Prize',  topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_maxpergroup', title: 'Max per Group & Correlated Lookup', topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
 
   // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
@@ -1763,6 +1765,8 @@ const CASE_PROMPTS = {
   sql_dayover:   'You are interviewing a candidate for an entry-level data analyst role. This question tests the LAG() window function for day-over-day comparisons — a common pattern asked at Blinkit, Moonfroglabs, and similar companies. The candidate has a daily_temperatures table. Ask them to find all days where the temperature was higher than the previous day. Start simple, then push them to also calculate the temperature change and find the biggest single-day increase. Discuss LAG() vs self-join approaches.',
   sql_customer:  'You are a senior analyst conducting a technical interview. These customer analytics questions are from real Tredence and eBay interviews. The candidate has an orders table with purchase history across online and store channels. Start by asking them to find first vs second purchase dates WITHOUT window functions (self-join approach). Then ask for customer channel categorization. Finally, test consecutive purchase gap analysis. Push them on edge cases: customers with only one order, NULL channels.',
   sql_monthly:   'You are interviewing a candidate for a fintech data analyst position. These monthly reporting questions are from Mpockett and eBay interviews. The candidate has a loans table. Ask them to build a monthly report with MOM% change and 3-month rolling average — this tests DATE_TRUNC/strftime, LAG(), and window frames. Then ask for daily top user by loan count (tests ties). Finally, a 7-day moving average. Push them on dialect differences between PostgreSQL and SQLite date functions.',
+  sql_competition: 'You are interviewing a candidate for a data analyst role. This question is from an Ethos interview — it tests business logic in SQL with aggregation and conditional calculations. The candidate has a competitions table with group_id, participant info, bet amounts, and scores. Ask them to find the winner of each group (highest score) and calculate their prize: own bet + 30% of all losers\' bets in their group. Push them to handle ties (what if two players have the same score?), and to think about using window functions vs subqueries.',
+  sql_maxpergroup: 'You are interviewing a candidate for a data analyst intern role. This question is from a Blinkit interview. The candidate has a payroll table with employee salaries by pay date. Ask them to return the whole table with two extra columns: (1) the maximum salary drawn in that month, and (2) the employee who drew it. This tests window functions with date extraction. Push them to compare MAX() OVER vs subquery approaches, and discuss how FIRST_VALUE handles ties.',
 
   // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
@@ -2021,6 +2025,61 @@ INSERT INTO loans VALUES
 (31,8,'2024-03-15',11000),(32,3,'2024-03-18',7500),(33,2,'2024-03-20',5000),(34,4,'2024-03-22',8000),
 (35,1,'2024-04-01',6500),(36,5,'2024-04-03',9000),(37,3,'2024-04-05',4500),(38,2,'2024-04-08',12500),
 (39,6,'2024-04-10',7000),(40,7,'2024-04-12',5500);`
+    }
+  },
+
+  sql_competition: {
+    label: 'Group Competition Winner & Prize',
+    question: '<em>Asked at Ethos.</em><br><br>A competition has participants split into groups. The highest scorer in each group wins. The winner gets their own bet back <strong>plus 30%</strong> of all the individual bets of those who lost in their group.<br><br>Using the <strong>competitions</strong> table:<br><br><strong>1.</strong> Find the winner of each group (highest score).<br><br><strong>2.</strong> Calculate each winner\'s prize: their own bet + 30% of the sum of all losers\' bets in their group.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Start by finding the max score per group: use RANK() OVER (PARTITION BY group_id ORDER BY score DESC) or a subquery with MAX(score) grouped by group_id.',
+      'To get the losers\' total bets per group, SUM all bets in the group and subtract the winner\'s bet. Prize = winner_bet + 0.30 * (total_group_bets - winner_bet).',
+      'Watch out for ties! If two participants have the same top score in a group, decide: do both win (split the losers\' pot)? Use RANK() (allows ties) vs ROW_NUMBER() (breaks ties arbitrarily). A CTE approach keeps it clean.'
+    ],
+    schema: [
+      { name: 'competitions', columns: [
+        { name: 'group_id', type: 'INTEGER' }, { name: 'participant_id', type: 'TEXT' },
+        { name: 'participant_name', type: 'TEXT' }, { name: 'bet', type: 'DECIMAL' },
+        { name: 'score', type: 'INTEGER' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE competitions (group_id INTEGER NOT NULL, participant_id TEXT NOT NULL, participant_name TEXT NOT NULL, bet DECIMAL(10,2) NOT NULL, score INTEGER NOT NULL);
+INSERT INTO competitions VALUES
+(1,'a1','Alok',20,15),(1,'b2','Rahul',35,12),(1,'c3','Priya',50,15),(1,'d4','Suresh',10,8),(1,'e5','Divya',25,6),
+(2,'f6','Ajit',50,20),(2,'g7','Neha',30,14),(2,'h8','Vikram',25,20),(2,'i9','Meera',40,11),(2,'j10','Ritu',15,18),(2,'k11','Sameer',60,9),
+(3,'l12','Arun',10,21),(3,'m13','Kavita',20,17),(3,'n14','Deepak',15,9),(3,'o15','Pooja',30,21),(3,'p16','Nikhil',5,3),
+(4,'q17','Astha',11,7),(4,'r18','Ravi',45,22),(4,'s19','Sonia',30,18),(4,'t20','Kiran',20,22),(4,'u21','Ankit',35,14),(4,'v22','Megha',50,22),
+(5,'w23','Farhan',100,25),(5,'x24','Isha',40,19),(5,'y25','Tarun',55,12),(5,'z26','Lata',30,19),(5,'aa27','Mohit',20,7);`
+    }
+  },
+
+  sql_maxpergroup: {
+    label: 'Max per Group & Correlated Lookup',
+    question: '<em>Asked at Blinkit.</em><br><br>Using the <strong>payroll</strong> table:<br><br><strong>1.</strong> Return the entire table with an extra column showing the maximum salary drawn in that pay month.<br><br><strong>2.</strong> Add another column showing the employee name who drew that maximum salary in the month. If there\'s a tie, show any one of them.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For the max salary per month: use MAX(salary) OVER (PARTITION BY month_part) where month_part extracts the month. In PostgreSQL: EXTRACT(MONTH FROM pay_date), in SQLite: STRFTIME(\'%Y-%m\', pay_date).',
+      'For the corresponding employee name: use FIRST_VALUE(emp_name) OVER (PARTITION BY month ORDER BY salary DESC) to grab the name of the top earner. Alternatively, use a subquery or CTE to find the max earner and JOIN back.',
+      'Alternative approach without window functions: create a CTE that finds MAX(salary) per month, then LEFT JOIN it back to the original table. For the name, join again filtering for salary = max_salary. Watch for ties — LIMIT 1 or FIRST_VALUE handles this.'
+    ],
+    schema: [
+      { name: 'payroll', columns: [
+        { name: 'emp_id', type: 'INTEGER' }, { name: 'emp_name', type: 'TEXT' },
+        { name: 'department', type: 'TEXT' }, { name: 'pay_date', type: 'DATE' },
+        { name: 'salary', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE payroll (emp_id INTEGER NOT NULL, emp_name TEXT NOT NULL, department TEXT NOT NULL, pay_date DATE NOT NULL, salary DECIMAL(10,2) NOT NULL);
+INSERT INTO payroll VALUES
+(101,'Alok','Engineering','2024-01-15',85000),(102,'Priya','Marketing','2024-01-15',72000),(103,'Rahul','Engineering','2024-01-15',95000),(104,'Neha','Sales','2024-01-15',68000),(105,'Vikram','HR','2024-01-15',62000),
+(101,'Alok','Engineering','2024-02-15',87000),(102,'Priya','Marketing','2024-02-15',72000),(103,'Rahul','Engineering','2024-02-15',91000),(104,'Neha','Sales','2024-02-15',78000),(105,'Vikram','HR','2024-02-15',65000),(106,'Kavita','Engineering','2024-02-15',91000),
+(101,'Alok','Engineering','2024-03-15',90000),(102,'Priya','Marketing','2024-03-15',82000),(103,'Rahul','Engineering','2024-03-15',88000),(104,'Neha','Sales','2024-03-15',75000),(105,'Vikram','HR','2024-03-15',67000),(106,'Kavita','Engineering','2024-03-15',93000),
+(101,'Alok','Engineering','2024-04-15',92000),(102,'Priya','Marketing','2024-04-15',84000),(103,'Rahul','Engineering','2024-04-15',86000),(104,'Neha','Sales','2024-04-15',92000),(105,'Vikram','HR','2024-04-15',70000),(106,'Kavita','Engineering','2024-04-15',89000);`
     }
   }
 };
