@@ -1721,6 +1721,10 @@ const PROMPTS = [
   { id: 'sql_window',    title: 'Window Functions Deep Dive',         topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_retention', title: 'User Retention Cohort Analysis',      topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_dedup',     title: 'Deduplication & Data Quality',        topic: 'sql',     difficulty: 'easy',   tag: 'SQL' },
+  { id: 'sql_streak',    title: 'Consecutive Streaks & Gap Analysis',  topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_topn',      title: 'Top-N Ranking & Comparisons',        topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_customer',  title: 'Customer Purchase Analytics',         topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_monthly',   title: 'Monthly Reports & MOM Growth',       topic: 'sql',     difficulty: 'hard',   tag: 'SQL' },
 
   // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
@@ -1753,6 +1757,10 @@ const CASE_PROMPTS = {
   sql_window:    'Give me a SQL window functions case study. Include a realistic scenario with a table schema and a business question that requires RANK, DENSE_RANK, or running totals.',
   sql_retention: 'Give me a SQL cohort retention analysis case study. Include a user events table and ask me to calculate week-over-week retention.',
   sql_dedup:     'Give me a SQL data quality / deduplication case study. Give me a messy table with duplicates and ask me to write a query to clean it.',
+  sql_streak:    'You are a senior data analyst interviewing a candidate. This question tests the classic "islands and gaps" SQL pattern — frequently asked at companies like eBay, Mpockett, and Prescience. The candidate has a visits table loaded in their editor. Guide them step-by-step: first ask them to find gaps between consecutive visits using LAG(), then build up to identifying consecutive streaks. Push them to handle edge cases like single-day visits. If they struggle, hint at the ROW_NUMBER() subtraction trick for detecting islands.',
+  sql_topn:      'You are interviewing a candidate for a data analyst role. This question covers ranking and comparison patterns — asked at Cargil, Prescience/Movate, Moonfroglabs, and Blinkit. The candidate has employees and daily_temperatures tables. Start with the classic "find the second-highest salary" question, then escalate to top-N per group using window functions. Finish with the day-over-day temperature comparison using LAG(). Push them to consider ties and NULL handling.',
+  sql_customer:  'You are a senior analyst conducting a technical interview. These customer analytics questions are from real Tredence and eBay interviews. The candidate has an orders table with purchase history across online and store channels. Start by asking them to find first vs second purchase dates WITHOUT window functions (self-join approach). Then ask for customer channel categorization. Finally, test consecutive purchase gap analysis. Push them on edge cases: customers with only one order, NULL channels.',
+  sql_monthly:   'You are interviewing a candidate for a fintech data analyst position. These monthly reporting questions are from Mpockett and eBay interviews. The candidate has a loans table. Ask them to build a monthly report with MOM% change and 3-month rolling average — this tests DATE_TRUNC/strftime, LAG(), and window frames. Then ask for daily top user by loan count (tests ties). Finally, a 7-day moving average. Push them on dialect differences between PostgreSQL and SQLite date functions.',
 
   // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
@@ -1855,6 +1863,147 @@ INSERT INTO user_events VALUES (1,'login','2024-01-01'),(1,'purchase','2024-01-0
       shared: `
 CREATE TABLE raw_orders (id INTEGER PRIMARY KEY, order_id TEXT, customer_email TEXT, amount DECIMAL(10,2), status TEXT, created_at DATETIME);
 INSERT INTO raw_orders VALUES (1,'ORD-001','alice@example.com',99.99,'completed','2024-03-01 10:00:00'),(2,'ORD-001','alice@example.com',99.99,'completed','2024-03-01 10:00:05'),(3,'ORD-002','bob@test.com',149.50,'pending','2024-03-01 11:30:00'),(4,'ORD-002','BOB@test.com',149.50,'completed','2024-03-01 12:00:00'),(5,'ORD-003','carol@mail.com',75.00,'completed','2024-03-02 09:15:00'),(6,'ORD-004','dave@example.com',200.00,'pending','2024-03-02 14:20:00'),(7,'ORD-004','dave@example.com',200.00,'completed','2024-03-02 14:25:00'),(8,'ORD-004','dave@example.com',200.00,'completed','2024-03-02 14:25:01'),(9,'ORD-005',NULL,50.00,'completed','2024-03-03 08:00:00'),(10,'ORD-005','',50.00,'completed','2024-03-03 08:00:02'),(11,'ORD-006','eva@example.com',320.00,'refunded','2024-03-03 16:45:00'),(12,'ORD-007','frank@test.com',89.99,'completed','2024-03-04 10:00:00'),(13,'ORD-007','frank@test.com',89.99,'completed','2024-03-04 10:00:00'),(14,'ORD-008','grace@mail.com',NULL,'pending','2024-03-04 11:30:00'),(15,'ORD-008','grace@mail.com',175.00,'completed','2024-03-04 12:00:00'),(16,'ORD-009','henry@example.com',425.00,'completed','2024-03-05 09:00:00'),(17,'ORD-010','irene@test.com',62.50,'cancelled','2024-03-05 13:00:00'),(18,'ORD-010','irene@test.com',62.50,'completed','2024-03-05 13:05:00'),(19,'ORD-011','jack@mail.com',195.00,'completed','2024-03-06 10:30:00'),(20,'ORD-011','jack@mail.com',195.00,'completed','2024-03-06 10:30:00'),(21,'ORD-011','JACK@mail.com',195.00,'completed','2024-03-06 10:31:00'),(22,'ORD-012','kate@example.com',88.00,'pending','2024-03-06 15:00:00'),(23,'ORD-012','kate@example.com',88.00,'completed','2024-03-06 15:30:00'),(24,'ORD-013','liam@test.com',550.00,'completed','2024-03-07 09:00:00'),(25,'ORD-013','liam@test.com',550.00,'completed','2024-03-07 09:00:01'),(26,NULL,'unknown@mail.com',30.00,'pending','2024-03-07 12:00:00'),(27,'ORD-014','mary@example.com',142.00,'completed','2024-03-08 10:00:00'),(28,'ORD-015','nick@test.com',267.50,'completed','2024-03-08 14:00:00'),(29,'ORD-015','nick@test.com',267.50,'pending','2024-03-08 14:00:00'),(30,'ORD-016','olivia@mail.com',99.00,'completed','2024-03-09 11:00:00'),(31,'ORD-016','Olivia@mail.com',99.00,'completed','2024-03-09 11:00:02'),(32,'ORD-017','peter@example.com',185.00,'completed','2024-03-09 16:00:00'),(33,'ORD-018','quinn@test.com',73.50,'cancelled','2024-03-10 09:00:00'),(34,'ORD-018','quinn@test.com',73.50,'completed','2024-03-10 09:30:00'),(35,'ORD-019','rachel@mail.com',410.00,'completed','2024-03-10 13:00:00'),(36,'ORD-019','rachel@mail.com',410.00,'completed','2024-03-10 13:00:00'),(37,'ORD-020','sam@example.com',58.00,'pending','2024-03-11 08:00:00'),(38,'ORD-020','sam@example.com',58.00,'completed','2024-03-11 08:15:00'),(39,'ORD-020','sam@example.com',58.00,'completed','2024-03-11 08:15:00'),(40,'ORD-021','tina@test.com',330.00,'completed','2024-03-11 14:00:00');`
+    }
+  },
+
+  // ── New cases from interview question bank ──
+
+  sql_streak: {
+    label: 'Consecutive Streaks & Gap Analysis',
+    question: 'Asked at eBay, Mpockett, Prescience. Using the visits table: (1) Calculate the gap in days between each visit and the previous visit per visitor. (2) Find visitors who visited for at least 3 consecutive days. (3) Find the longest streak of consecutive days visited per visitor.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Use LAG(visit_date) OVER (PARTITION BY visitor_id ORDER BY visit_date) to get the previous visit date. Then subtract to find the gap in days. In PostgreSQL: visit_date - LAG(...), in SQLite: JULIANDAY(visit_date) - JULIANDAY(LAG(...)).',
+      'For consecutive days: a day is "consecutive" if the gap from the previous visit = 1. Use a CTE with LAG() to flag consecutive days, then group consecutive flags into streaks.',
+      'The islands-and-gaps trick: subtract ROW_NUMBER() from the visit_date. Consecutive dates will produce the same result (the "island key"). GROUP BY visitor_id and this island key, then COUNT(*) gives streak length. Filter for COUNT(*) >= 3.'
+    ],
+    schema: [
+      { name: 'visits', columns: [
+        { name: 'visitor_id', type: 'INTEGER' }, { name: 'visit_date', type: 'DATE' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE visits (visitor_id INTEGER NOT NULL, visit_date DATE NOT NULL, PRIMARY KEY (visitor_id, visit_date));
+INSERT INTO visits VALUES
+(1,'2024-01-01'),(1,'2024-01-02'),(1,'2024-01-03'),(1,'2024-01-04'),(1,'2024-01-05'),
+(1,'2024-01-10'),(1,'2024-01-11'),
+(1,'2024-01-20'),
+(2,'2024-01-03'),(2,'2024-01-04'),(2,'2024-01-05'),
+(2,'2024-01-10'),(2,'2024-01-11'),(2,'2024-01-12'),(2,'2024-01-13'),
+(2,'2024-01-20'),(2,'2024-01-21'),
+(3,'2024-01-05'),
+(3,'2024-01-10'),
+(3,'2024-01-15'),
+(3,'2024-01-20'),
+(4,'2024-01-01'),(4,'2024-01-02'),(4,'2024-01-03'),
+(4,'2024-01-08'),(4,'2024-01-09'),(4,'2024-01-10'),
+(4,'2024-01-15'),(4,'2024-01-16'),(4,'2024-01-17'),(4,'2024-01-18'),
+(5,'2024-01-01'),
+(5,'2024-01-05'),(5,'2024-01-06');`
+    }
+  },
+
+  sql_topn: {
+    label: 'Top-N Ranking & Comparisons',
+    question: 'Asked at Cargil, Prescience/Movate, Moonfroglabs, Blinkit. (1) Find the second-highest salary from the employees table (without using LIMIT or OFFSET). (2) Find the top 3 highest-paid employees in each department. Display department, emp_name, and salary. (3) Using daily_temperatures, find all days where the temperature was higher than the previous day.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For second-highest salary: use MAX(salary) with a WHERE clause that excludes the maximum, OR use DENSE_RANK() and filter for rank = 2. Think about what happens if there are ties at the top.',
+      'For top 3 per department: use DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) and filter WHERE rank <= 3 in an outer query. ROW_NUMBER vs RANK vs DENSE_RANK handle ties differently.',
+      'For temperature comparison: use LAG(temperature) OVER (ORDER BY record_date) to get the previous day\'s temperature, then filter WHERE temperature > prev_temperature. Alternatively, self-join the table on consecutive dates.'
+    ],
+    schema: [
+      { name: 'employees', columns: [
+        { name: 'emp_id', type: 'INTEGER PK' }, { name: 'emp_name', type: 'TEXT' },
+        { name: 'department', type: 'TEXT' }, { name: 'salary', type: 'DECIMAL' }
+      ]},
+      { name: 'daily_temperatures', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'record_date', type: 'DATE' },
+        { name: 'temperature', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, emp_name TEXT NOT NULL, department TEXT NOT NULL, salary DECIMAL(10,2) NOT NULL);
+INSERT INTO employees VALUES
+(1,'Alice','Engineering',95000),(2,'Bob','Engineering',105000),(3,'Carol','Engineering',88000),(4,'Dave','Engineering',105000),
+(5,'Eva','Marketing',72000),(6,'Frank','Marketing',68000),(7,'Grace','Marketing',78000),(8,'Henry','Marketing',71000),
+(9,'Irene','Sales',82000),(10,'Jack','Sales',91000),(11,'Kate','Sales',76000),(12,'Liam','Sales',91000),
+(13,'Mary','HR',65000),(14,'Nick','HR',62000),(15,'Olivia','HR',69000);
+
+CREATE TABLE daily_temperatures (id INTEGER PRIMARY KEY, record_date DATE NOT NULL, temperature DECIMAL(5,1) NOT NULL);
+INSERT INTO daily_temperatures VALUES
+(1,'2024-01-01',32.5),(2,'2024-01-02',28.0),(3,'2024-01-03',35.2),(4,'2024-01-04',38.7),
+(5,'2024-01-05',36.1),(6,'2024-01-06',40.3),(7,'2024-01-07',39.8),(8,'2024-01-08',42.1),
+(9,'2024-01-09',37.5),(10,'2024-01-10',41.0),(11,'2024-01-11',44.2),(12,'2024-01-12',43.8),
+(13,'2024-01-13',46.5),(14,'2024-01-14',41.0),(15,'2024-01-15',45.3);`
+    }
+  },
+
+  sql_customer: {
+    label: 'Customer Purchase Analytics',
+    question: 'Asked at Tredence, Prescience/Movate, eBay. Using the orders table: (1) Find the first and second purchase date per customer and the days between them — WITHOUT using window functions (use self-joins). (2) Categorize each customer as \'online_only\', \'store_only\', or \'omni\' based on their channel history. (3) Calculate the average gap in days between consecutive purchases per customer.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For first/second purchase without window functions: first find MIN(order_date) per customer in a subquery, then JOIN back to orders where order_date > first_purchase_date and take MIN() again to get the second purchase.',
+      'For channel categorization: GROUP BY customer_id, then use CASE with MIN(channel) = MAX(channel). If they are equal, the customer only used one channel. Check which one it is. If MIN != MAX, they are \'omni\'.',
+      'For average gap: use LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date) to get the previous order date, calculate the difference, then AVG() per customer. Filter out NULLs (first orders have no gap).'
+    ],
+    schema: [
+      { name: 'orders', columns: [
+        { name: 'order_id', type: 'INTEGER PK' }, { name: 'customer_id', type: 'INTEGER' },
+        { name: 'order_date', type: 'DATE' }, { name: 'amount', type: 'DECIMAL' },
+        { name: 'channel', type: 'TEXT' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE orders (order_id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, order_date DATE NOT NULL, amount DECIMAL(10,2) NOT NULL, channel TEXT NOT NULL);
+INSERT INTO orders VALUES
+(1,101,'2024-01-05',120.00,'online'),(2,101,'2024-01-18',85.50,'online'),(3,101,'2024-02-02',200.00,'store'),(4,101,'2024-02-20',55.00,'online'),
+(5,102,'2024-01-10',340.00,'store'),(6,102,'2024-01-25',150.00,'store'),(7,102,'2024-02-15',275.00,'store'),
+(8,103,'2024-01-03',90.00,'online'),(9,103,'2024-01-04',45.00,'online'),(10,103,'2024-01-20',180.00,'online'),(11,103,'2024-02-10',120.00,'online'),
+(12,104,'2024-01-15',500.00,'store'),(13,104,'2024-02-01',320.00,'online'),(14,104,'2024-02-18',210.00,'store'),(15,104,'2024-03-05',175.00,'online'),
+(16,105,'2024-01-08',65.00,'online'),(17,105,'2024-03-10',95.00,'online'),
+(18,106,'2024-01-20',430.00,'store'),(19,106,'2024-01-22',180.00,'store'),(20,106,'2024-02-05',290.00,'online'),(21,106,'2024-02-28',150.00,'store'),
+(22,107,'2024-01-12',75.00,'online'),
+(23,108,'2024-01-25',225.00,'store'),(24,108,'2024-02-08',110.00,'store'),(25,108,'2024-02-22',340.00,'online'),(26,108,'2024-03-10',190.00,'store'),
+(27,109,'2024-02-01',88.00,'online'),(28,109,'2024-02-14',155.00,'online'),(29,109,'2024-03-01',210.00,'online'),
+(30,110,'2024-01-05',420.00,'store'),(31,110,'2024-01-06',75.00,'online'),(32,110,'2024-01-20',300.00,'store'),(33,110,'2024-02-10',185.00,'online'),(34,110,'2024-03-01',250.00,'store'),(35,110,'2024-03-15',120.00,'online');`
+    }
+  },
+
+  sql_monthly: {
+    label: 'Monthly Reports & MOM Growth',
+    question: 'Asked at Mpockett, eBay. Using the loans table: (1) Create a monthly report showing year_month, total loan amount, month-over-month % change, and 3-month rolling average of total loan amount. (2) For each day, find the user(s) with the highest number of loans on that day. (3) Calculate a 7-day moving average of total daily loan amounts.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For the monthly report: first aggregate by month (PostgreSQL: DATE_TRUNC(\'month\', loan_date), SQLite: STRFTIME(\'%Y-%m\', loan_date)). Then use LAG() to get the previous month\'s total for MOM% calculation.',
+      'For 3-month rolling average: use AVG() OVER (ORDER BY year_month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW). For MOM%: (current - previous) / previous * 100. Handle the first month where LAG returns NULL.',
+      'For top user per day: GROUP BY loan_date, user_id to get loan counts, then use RANK() OVER (PARTITION BY loan_date ORDER BY loan_count DESC). Filter for rank = 1 to handle ties. For 7-day moving avg: aggregate daily totals first, then AVG() OVER (ORDER BY loan_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW).'
+    ],
+    schema: [
+      { name: 'loans', columns: [
+        { name: 'loan_id', type: 'INTEGER PK' }, { name: 'user_id', type: 'INTEGER' },
+        { name: 'loan_date', type: 'DATE' }, { name: 'loan_amnt', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE loans (loan_id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, loan_date DATE NOT NULL, loan_amnt DECIMAL(10,2) NOT NULL);
+INSERT INTO loans VALUES
+(1,1,'2024-01-03',5000),(2,2,'2024-01-03',8000),(3,1,'2024-01-05',3000),(4,3,'2024-01-07',12000),
+(5,2,'2024-01-10',6000),(6,4,'2024-01-10',9000),(7,1,'2024-01-10',4500),(8,5,'2024-01-12',7000),
+(9,3,'2024-01-15',5500),(10,2,'2024-01-18',10000),
+(11,1,'2024-02-02',6000),(12,6,'2024-02-02',8500),(13,3,'2024-02-05',4000),(14,4,'2024-02-05',7500),
+(15,2,'2024-02-08',11000),(16,5,'2024-02-10',3500),(17,1,'2024-02-12',9000),(18,7,'2024-02-15',6500),
+(19,3,'2024-02-18',5000),(20,6,'2024-02-20',12000),(21,2,'2024-02-22',4500),(22,8,'2024-02-25',8000),
+(23,1,'2024-03-01',7000),(24,4,'2024-03-01',5500),(25,3,'2024-03-03',10000),(26,2,'2024-03-05',6000),
+(27,5,'2024-03-05',8500),(28,7,'2024-03-08',4000),(29,6,'2024-03-10',9500),(30,1,'2024-03-12',3500),
+(31,8,'2024-03-15',11000),(32,3,'2024-03-18',7500),(33,2,'2024-03-20',5000),(34,4,'2024-03-22',8000),
+(35,1,'2024-04-01',6500),(36,5,'2024-04-03',9000),(37,3,'2024-04-05',4500),(38,2,'2024-04-08',12500),
+(39,6,'2024-04-10',7000),(40,7,'2024-04-12',5500);`
     }
   }
 };
