@@ -2275,6 +2275,26 @@ let pyodideLoading = false;
 let currentHintIndex = -1;    // -1 = no hint shown yet
 let dialectCodeCache = {};    // { caseId: { postgres: '...', sqlite: '...', python: '...' } }
 
+// ── Editor snapshot for AI context (security-sanitised) ──
+const CODE_CONTEXT_MAX = 3000; // max chars sent to LLM as context
+const CODE_PLACEHOLDERS = [
+  '-- Write your SQL here',
+  '# Write your Python code here',
+  "# Write your Python code here\n# The 'df' DataFrame is pre-loaded",
+  "# Write your Python code here\n# The 'sales' DataFrame is pre-loaded",
+];
+
+function getEditorSnapshot() {
+  if (!sqlEditor || !activeCaseId || !isCodeCase(activeCaseId)) return null;
+  const code = sqlEditor.getValue().trim();
+  if (!code || CODE_PLACEHOLDERS.includes(code)) return null;
+  // Truncate to limit token cost and prevent abuse
+  if (code.length > CODE_CONTEXT_MAX) {
+    return code.substring(0, CODE_CONTEXT_MAX) + '\n-- [truncated]';
+  }
+  return code;
+}
+
 // ── Analytics (fire-and-forget, never blocks UI) ──
 function trackEvent(event, caseId, metadata) {
   try {
@@ -2491,6 +2511,28 @@ async function sendToAI(userText, isSystemTrigger) {
     conversationHistory.push({ role: 'user', content: userText });
   }
 
+  // ── Inject editor code context for user chat messages ──
+  // Temporarily enriches the last user message so the AI sees their current
+  // code progress. The original message is restored afterward so the stored
+  // conversationHistory (and visible chat) stays clean.
+  let injectedCodeContext = false;
+  const lastIdx = conversationHistory.length - 1;
+  let originalMsg = null;
+
+  if (!isSystemTrigger && lastIdx >= 0 && conversationHistory[lastIdx].role === 'user') {
+    const codeSnapshot = getEditorSnapshot();
+    if (codeSnapshot) {
+      const dialect = sqlDialect === 'python' ? 'python' : (sqlDialect === 'postgres' ? 'sql' : 'sql');
+      originalMsg = conversationHistory[lastIdx];
+      conversationHistory[lastIdx] = {
+        ...originalMsg,
+        content: originalMsg.content
+          + `\n\n[Current Code in Editor]\n\`\`\`${dialect}\n${codeSnapshot}\n\`\`\`\n[/Current Code in Editor]`
+      };
+      injectedCodeContext = true;
+    }
+  }
+
   isLoading = true;
   document.getElementById('sendBtn').disabled = true;
   showTyping();
@@ -2518,6 +2560,11 @@ async function sendToAI(userText, isSystemTrigger) {
       appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nThe free AI service may be temporarily unavailable. Try again in a moment, or switch to another provider with your own API key.`);
     } else {
       appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nMake sure your API key for **${currentProvider}** is configured. Click **API Keys** in the top bar.`);
+    }
+  } finally {
+    // Restore original message — code context was only for the AI call
+    if (injectedCodeContext && originalMsg) {
+      conversationHistory[lastIdx] = originalMsg;
     }
   }
 
@@ -3181,13 +3228,7 @@ async function checkMyAnswer() {
   const code = sqlEditor.getValue().trim();
 
   // Skip LLM call if editor is empty or only contains default placeholder
-  const placeholders = [
-    '-- Write your SQL here',
-    '# Write your Python code here',
-    "# Write your Python code here\n# The 'df' DataFrame is pre-loaded",
-    "# Write your Python code here\n# The 'sales' DataFrame is pre-loaded",
-  ];
-  if (!code || placeholders.includes(code)) {
+  if (!code || CODE_PLACEHOLDERS.includes(code)) {
     const resultsEl = document.getElementById('sqlResults');
     resultsEl.innerHTML = `<div class="sql-error" style="border-left-color: #2563eb; background: #eff6ff;">
       <strong>✍️ Write your code first!</strong><br>
