@@ -6,6 +6,22 @@
 <title>Case Study Practice — Alok The Analyst</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- CodeMirror 5 — SQL editor -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+
+<!-- sql.js — SQLite compiled to WebAssembly (lazy WASM download) -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+
+<!-- PGlite — PostgreSQL compiled to WebAssembly (ESM module, exposed to global) -->
+<script type="module">
+  import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js';
+  window.PGlite = PGlite;
+  window.dispatchEvent(new Event('pglite-ready'));
+</script>
+
 <style>
   :root {
     --bg:       #f8faff;
@@ -860,6 +876,314 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── SQL EDITOR TAB SWITCHER ── */
+  .chat-tab-switcher {
+    display: none;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 0 1.5rem;
+  }
+  .chat-tab-switcher.visible { display: flex; }
+
+  .chat-tab-btn {
+    padding: 0.65rem 1.2rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .chat-tab-btn:hover { color: var(--text); }
+  .chat-tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── SQL EDITOR PANEL ── */
+  .sql-editor-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  .sql-editor-panel.active { display: flex; }
+
+  .sql-editor-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Schema sidebar */
+  .schema-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 0.75rem;
+  }
+  .schema-sidebar::-webkit-scrollbar { width: 3px; }
+  .schema-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .schema-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    padding: 0 0.3rem;
+  }
+
+  .schema-table {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .schema-table-name {
+    background: var(--surface2);
+    padding: 0.45rem 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.2s;
+  }
+  .schema-table-name:hover { background: rgba(37,99,235,0.08); }
+  .schema-table-name .copy-icon {
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+  .schema-table-name:hover .copy-icon { opacity: 1; }
+
+  .schema-columns { padding: 0.3rem 0; }
+  .schema-col {
+    padding: 0.2rem 0.65rem;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+  }
+  .schema-col-type { color: var(--muted); font-size: 0.65rem; }
+
+  /* Editor + results split */
+  .sql-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sql-editor-wrapper {
+    flex-shrink: 0;
+    height: 220px;
+    min-height: 120px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  /* CodeMirror overrides to match site theme */
+  .sql-editor-wrapper .CodeMirror {
+    height: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .sql-editor-wrapper .CodeMirror-gutters {
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+  }
+  .sql-editor-wrapper .CodeMirror-linenumber { color: var(--muted); }
+
+  /* Editor toolbar */
+  .sql-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sql-dialect-select {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+  .sql-dialect-select:focus { border-color: var(--accent); }
+
+  .sql-run-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.4rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .sql-run-btn:hover { background: var(--accent2); }
+  .sql-run-btn svg { width: 12px; height: 12px; }
+
+  .sql-clear-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 0.4rem 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sql-clear-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .sql-toolbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sql-ask-ai-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface);
+    border: 1px solid rgba(37,99,235,0.3);
+    color: var(--accent);
+    border-radius: 5px;
+    padding: 0.4rem 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sql-ask-ai-btn:hover { background: rgba(37,99,235,0.06); }
+
+  .sql-exec-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+
+  /* Results area */
+  .sql-results {
+    flex: 1;
+    overflow: auto;
+    padding: 0.75rem;
+    background: var(--bg);
+  }
+  .sql-results::-webkit-scrollbar { width: 4px; height: 4px; }
+  .sql-results::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .sql-results-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    font-size: 0.85rem;
+    gap: 0.5rem;
+  }
+  .sql-results-empty .empty-icon { font-size: 2rem; opacity: 0.5; }
+
+  .sql-result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+  }
+  .sql-result-table th {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.45rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--white);
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+  }
+  .sql-result-table td {
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.75rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .sql-result-table tr:nth-child(even) td { background: rgba(37,99,235,0.02); }
+  .sql-result-table tr:hover td { background: rgba(37,99,235,0.05); }
+
+  .sql-null { color: var(--muted); font-style: italic; }
+
+  .sql-error {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    color: #ef4444;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .sql-result-footer {
+    padding: 0.5rem 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  /* ── SQL EDITOR RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .schema-sidebar { display: none; }
+    .sql-editor-wrapper { height: 160px; }
+    .sql-toolbar { flex-wrap: wrap; }
+    .sql-result-table { font-size: 0.72rem; }
+    .sql-result-table th, .sql-result-table td { padding: 0.3rem 0.5rem; }
+    .chat-tab-switcher { padding: 0 1rem; }
+  }
 </style>
 </head>
 <body>
@@ -971,6 +1295,12 @@
       </div>
     </div>
 
+    <!-- SQL EDITOR TAB SWITCHER (hidden until SQL case selected) -->
+    <div class="chat-tab-switcher" id="chatTabSwitcher">
+      <button class="chat-tab-btn active" data-tab="chat" onclick="switchTab('chat')">&#x1F4AC; Chat</button>
+      <button class="chat-tab-btn" data-tab="sql" onclick="switchTab('sql')">&#x1F4DD; SQL Editor</button>
+    </div>
+
     <!-- MESSAGES -->
     <div class="messages" id="messages">
       <!-- Welcome state -->
@@ -998,6 +1328,52 @@
             <div class="qs-icon">🐍</div>
             <div class="qs-title">Data Cleaning (Python)</div>
             <div class="qs-desc">Pandas, missing data, outliers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQL EDITOR PANEL (hidden until SQL tab activated) -->
+    <div class="sql-editor-panel" id="sqlEditorPanel">
+      <div class="sql-editor-layout">
+        <!-- Schema Reference Sidebar -->
+        <div class="schema-sidebar" id="schemaSidebar">
+          <div class="schema-title">TABLE SCHEMA</div>
+          <div id="schemaContent"></div>
+        </div>
+        <!-- Editor + Results -->
+        <div class="sql-main">
+          <div class="sql-toolbar">
+            <select class="sql-dialect-select" id="sqlDialectSelect" onchange="switchDialect(this.value)">
+              <option value="postgres">PostgreSQL</option>
+              <option value="sqlite">SQLite</option>
+            </select>
+            <button class="sql-run-btn" onclick="runSQL()" title="Run query (Ctrl+Enter)">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Run
+            </button>
+            <button class="sql-clear-btn" onclick="clearSQL()">Clear</button>
+            <div class="sql-toolbar-right">
+              <span class="sql-exec-info" id="sqlExecInfo"></span>
+              <button class="sql-ask-ai-btn" onclick="sendQueryToAI()" title="Send query + results to AI coach for feedback">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Ask AI Coach
+              </button>
+            </div>
+          </div>
+          <div class="sql-editor-wrapper">
+            <textarea id="sqlEditorTextarea"></textarea>
+          </div>
+          <div class="sql-results" id="sqlResults">
+            <div class="sql-results-empty">
+              <div class="empty-icon">&#x1F50D;</div>
+              <div>Write a query above and click <strong>Run Query</strong></div>
+              <div style="font-size: 0.75rem;">Ctrl+Enter to execute</div>
+            </div>
+          </div>
+          <div class="sql-result-footer" id="sqlResultFooter" style="display:none">
+            <span id="sqlRowCount"></span>
+            <span id="sqlExecTime"></span>
           </div>
         </div>
       </div>
@@ -1181,6 +1557,78 @@ const CASE_PROMPTS = {
   storytelling:  'Give me a data storytelling case study. Ask me to present a complex analysis to a non-technical C-suite audience.',
 };
 
+// ═══════════════════════════════
+// SQL EDITOR — DATASET DEFINITIONS
+// ═══════════════════════════════
+const SQL_DATASETS = {
+  sql_window: {
+    label: 'Window Functions Deep Dive',
+    defaultQuery: '-- Rank customers by total spending\nSELECT \n  c.name,\n  c.region,\n  SUM(t.amount) AS total_spent,\n  RANK() OVER (ORDER BY SUM(t.amount) DESC) AS spending_rank\nFROM transactions t\nJOIN customers c ON t.customer_id = c.id\nGROUP BY c.id, c.name, c.region;',
+    schema: [
+      { name: 'customers', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'name', type: 'TEXT' },
+        { name: 'region', type: 'TEXT' }, { name: 'signup_date', type: 'DATE' }
+      ]},
+      { name: 'transactions', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'customer_id', type: 'INTEGER FK' },
+        { name: 'amount', type: 'DECIMAL' }, { name: 'category', type: 'TEXT' },
+        { name: 'transaction_date', type: 'DATE' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, region TEXT NOT NULL, signup_date DATE NOT NULL);
+INSERT INTO customers VALUES (1,'Alice Chen','West','2023-01-15'),(2,'Bob Martinez','East','2023-02-20'),(3,'Carol Williams','West','2023-03-10'),(4,'David Kim','Central','2023-01-22'),(5,'Eva Patel','East','2023-04-05'),(6,'Frank Jones','West','2023-02-14'),(7,'Grace Liu','Central','2023-05-18'),(8,'Henry Brown','East','2023-03-25'),(9,'Irene Davis','West','2023-06-01'),(10,'Jack Wilson','Central','2023-01-30');
+
+CREATE TABLE transactions (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, amount DECIMAL(10,2) NOT NULL, category TEXT NOT NULL, transaction_date DATE NOT NULL);
+INSERT INTO transactions VALUES (1,1,120.50,'Electronics','2023-06-01'),(2,1,45.00,'Groceries','2023-06-03'),(3,2,200.00,'Electronics','2023-06-01'),(4,3,89.99,'Clothing','2023-06-02'),(5,1,150.00,'Electronics','2023-06-05'),(6,4,75.00,'Groceries','2023-06-04'),(7,2,320.00,'Electronics','2023-06-06'),(8,5,55.00,'Groceries','2023-06-03'),(9,3,210.00,'Clothing','2023-06-07'),(10,6,180.00,'Electronics','2023-06-08'),(11,7,95.00,'Groceries','2023-06-05'),(12,4,430.00,'Electronics','2023-06-09'),(13,8,67.50,'Clothing','2023-06-06'),(14,1,88.00,'Groceries','2023-06-10'),(15,9,275.00,'Electronics','2023-06-11'),(16,2,140.00,'Clothing','2023-06-08'),(17,10,190.00,'Electronics','2023-06-12'),(18,5,310.00,'Electronics','2023-06-10'),(19,3,45.00,'Groceries','2023-06-13'),(20,6,225.00,'Clothing','2023-06-14'),(21,7,160.00,'Electronics','2023-06-11'),(22,8,420.00,'Electronics','2023-06-15'),(23,4,55.00,'Groceries','2023-06-13'),(24,9,130.00,'Clothing','2023-06-16'),(25,1,340.00,'Electronics','2023-06-17'),(26,10,78.00,'Groceries','2023-06-14'),(27,2,265.00,'Electronics','2023-06-18'),(28,5,92.00,'Clothing','2023-06-15'),(29,3,185.00,'Electronics','2023-06-19'),(30,6,110.00,'Groceries','2023-06-20');`
+    }
+  },
+
+  sql_retention: {
+    label: 'User Retention Cohort Analysis',
+    defaultQuery: '-- Calculate weekly retention by signup cohort\nSELECT \n  u.signup_date AS cohort_week,\n  COUNT(DISTINCT u.user_id) AS cohort_size,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN u.signup_date AND DATE(u.signup_date, \'+6 days\') \n    THEN e.user_id END) AS week0,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN DATE(u.signup_date, \'+7 days\') AND DATE(u.signup_date, \'+13 days\') \n    THEN e.user_id END) AS week1\nFROM users u\nLEFT JOIN user_events e ON u.user_id = e.user_id\nGROUP BY u.signup_date\nORDER BY u.signup_date;',
+    defaultQueryPostgres: "-- Calculate weekly retention by signup cohort\nSELECT \n  u.signup_date AS cohort_week,\n  COUNT(DISTINCT u.user_id) AS cohort_size,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN u.signup_date AND u.signup_date + INTERVAL '6 days' \n    THEN e.user_id END) AS week0,\n  COUNT(DISTINCT CASE \n    WHEN e.event_date BETWEEN u.signup_date + INTERVAL '7 days' AND u.signup_date + INTERVAL '13 days' \n    THEN e.user_id END) AS week1\nFROM users u\nLEFT JOIN user_events e ON u.user_id = e.user_id\nGROUP BY u.signup_date\nORDER BY u.signup_date;",
+    schema: [
+      { name: 'users', columns: [
+        { name: 'user_id', type: 'INTEGER PK' }, { name: 'signup_date', type: 'DATE' },
+        { name: 'source', type: 'TEXT' }
+      ]},
+      { name: 'user_events', columns: [
+        { name: 'user_id', type: 'INTEGER FK' }, { name: 'event_type', type: 'TEXT' },
+        { name: 'event_date', type: 'DATE' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE users (user_id INTEGER PRIMARY KEY, signup_date DATE NOT NULL, source TEXT NOT NULL);
+INSERT INTO users VALUES (1,'2024-01-01','organic'),(2,'2024-01-01','paid'),(3,'2024-01-01','organic'),(4,'2024-01-01','referral'),(5,'2024-01-01','paid'),(6,'2024-01-08','organic'),(7,'2024-01-08','paid'),(8,'2024-01-08','organic'),(9,'2024-01-08','referral'),(10,'2024-01-08','paid'),(11,'2024-01-08','organic'),(12,'2024-01-15','paid'),(13,'2024-01-15','organic'),(14,'2024-01-15','referral'),(15,'2024-01-15','organic'),(16,'2024-01-15','paid'),(17,'2024-01-15','organic'),(18,'2024-01-22','paid'),(19,'2024-01-22','organic'),(20,'2024-01-22','referral');
+
+CREATE TABLE user_events (user_id INTEGER NOT NULL, event_type TEXT NOT NULL, event_date DATE NOT NULL);
+INSERT INTO user_events VALUES (1,'login','2024-01-01'),(1,'purchase','2024-01-02'),(1,'login','2024-01-05'),(1,'login','2024-01-09'),(1,'purchase','2024-01-14'),(2,'login','2024-01-01'),(2,'login','2024-01-03'),(3,'login','2024-01-01'),(3,'login','2024-01-02'),(3,'login','2024-01-08'),(3,'login','2024-01-15'),(3,'purchase','2024-01-16'),(4,'login','2024-01-02'),(4,'login','2024-01-10'),(5,'login','2024-01-01'),(6,'login','2024-01-08'),(6,'purchase','2024-01-09'),(6,'login','2024-01-12'),(6,'login','2024-01-15'),(6,'login','2024-01-22'),(7,'login','2024-01-08'),(7,'login','2024-01-10'),(8,'login','2024-01-08'),(8,'login','2024-01-14'),(8,'login','2024-01-21'),(9,'login','2024-01-08'),(9,'purchase','2024-01-11'),(10,'login','2024-01-08'),(11,'login','2024-01-08'),(11,'login','2024-01-09'),(11,'login','2024-01-15'),(12,'login','2024-01-15'),(12,'purchase','2024-01-16'),(12,'login','2024-01-22'),(13,'login','2024-01-15'),(13,'login','2024-01-18'),(14,'login','2024-01-15'),(15,'login','2024-01-15'),(15,'login','2024-01-20'),(15,'login','2024-01-28'),(16,'login','2024-01-15'),(16,'login','2024-01-17'),(17,'login','2024-01-15'),(18,'login','2024-01-22'),(18,'purchase','2024-01-23'),(19,'login','2024-01-22'),(19,'login','2024-01-25'),(20,'login','2024-01-22');`
+    }
+  },
+
+  sql_dedup: {
+    label: 'Deduplication & Data Quality',
+    defaultQuery: '-- Find and remove duplicate orders\n-- (keep the most recent entry per order_id)\nSELECT * FROM (\n  SELECT *,\n    ROW_NUMBER() OVER (\n      PARTITION BY order_id \n      ORDER BY created_at DESC\n    ) AS rn\n  FROM raw_orders\n  WHERE order_id IS NOT NULL\n)\nWHERE rn = 1\nORDER BY order_id;',
+    schema: [
+      { name: 'raw_orders', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'order_id', type: 'TEXT' },
+        { name: 'customer_email', type: 'TEXT' }, { name: 'amount', type: 'DECIMAL' },
+        { name: 'status', type: 'TEXT' }, { name: 'created_at', type: 'DATETIME' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE raw_orders (id INTEGER PRIMARY KEY, order_id TEXT, customer_email TEXT, amount DECIMAL(10,2), status TEXT, created_at DATETIME);
+INSERT INTO raw_orders VALUES (1,'ORD-001','alice@example.com',99.99,'completed','2024-03-01 10:00:00'),(2,'ORD-001','alice@example.com',99.99,'completed','2024-03-01 10:00:05'),(3,'ORD-002','bob@test.com',149.50,'pending','2024-03-01 11:30:00'),(4,'ORD-002','BOB@test.com',149.50,'completed','2024-03-01 12:00:00'),(5,'ORD-003','carol@mail.com',75.00,'completed','2024-03-02 09:15:00'),(6,'ORD-004','dave@example.com',200.00,'pending','2024-03-02 14:20:00'),(7,'ORD-004','dave@example.com',200.00,'completed','2024-03-02 14:25:00'),(8,'ORD-004','dave@example.com',200.00,'completed','2024-03-02 14:25:01'),(9,'ORD-005',NULL,50.00,'completed','2024-03-03 08:00:00'),(10,'ORD-005','',50.00,'completed','2024-03-03 08:00:02'),(11,'ORD-006','eva@example.com',320.00,'refunded','2024-03-03 16:45:00'),(12,'ORD-007','frank@test.com',89.99,'completed','2024-03-04 10:00:00'),(13,'ORD-007','frank@test.com',89.99,'completed','2024-03-04 10:00:00'),(14,'ORD-008','grace@mail.com',NULL,'pending','2024-03-04 11:30:00'),(15,'ORD-008','grace@mail.com',175.00,'completed','2024-03-04 12:00:00'),(16,'ORD-009','henry@example.com',425.00,'completed','2024-03-05 09:00:00'),(17,'ORD-010','irene@test.com',62.50,'cancelled','2024-03-05 13:00:00'),(18,'ORD-010','irene@test.com',62.50,'completed','2024-03-05 13:05:00'),(19,'ORD-011','jack@mail.com',195.00,'completed','2024-03-06 10:30:00'),(20,'ORD-011','jack@mail.com',195.00,'completed','2024-03-06 10:30:00'),(21,'ORD-011','JACK@mail.com',195.00,'completed','2024-03-06 10:31:00'),(22,'ORD-012','kate@example.com',88.00,'pending','2024-03-06 15:00:00'),(23,'ORD-012','kate@example.com',88.00,'completed','2024-03-06 15:30:00'),(24,'ORD-013','liam@test.com',550.00,'completed','2024-03-07 09:00:00'),(25,'ORD-013','liam@test.com',550.00,'completed','2024-03-07 09:00:01'),(26,NULL,'unknown@mail.com',30.00,'pending','2024-03-07 12:00:00'),(27,'ORD-014','mary@example.com',142.00,'completed','2024-03-08 10:00:00'),(28,'ORD-015','nick@test.com',267.50,'completed','2024-03-08 14:00:00'),(29,'ORD-015','nick@test.com',267.50,'pending','2024-03-08 14:00:00'),(30,'ORD-016','olivia@mail.com',99.00,'completed','2024-03-09 11:00:00'),(31,'ORD-016','Olivia@mail.com',99.00,'completed','2024-03-09 11:00:02'),(32,'ORD-017','peter@example.com',185.00,'completed','2024-03-09 16:00:00'),(33,'ORD-018','quinn@test.com',73.50,'cancelled','2024-03-10 09:00:00'),(34,'ORD-018','quinn@test.com',73.50,'completed','2024-03-10 09:30:00'),(35,'ORD-019','rachel@mail.com',410.00,'completed','2024-03-10 13:00:00'),(36,'ORD-019','rachel@mail.com',410.00,'completed','2024-03-10 13:00:00'),(37,'ORD-020','sam@example.com',58.00,'pending','2024-03-11 08:00:00'),(38,'ORD-020','sam@example.com',58.00,'completed','2024-03-11 08:15:00'),(39,'ORD-020','sam@example.com',58.00,'completed','2024-03-11 08:15:00'),(40,'ORD-021','tina@test.com',330.00,'completed','2024-03-11 14:00:00');`
+    }
+  }
+};
+
+function isSQLCase(id) { return SQL_DATASETS.hasOwnProperty(id); }
+
 const SYSTEM_PROMPT = `You are a world-class data analytics interview coach and case study tutor on aloktheanalyst.com — built by Alok, a Lead Data Analyst and YouTube content creator.
 
 Your persona: Direct, knowledgeable, encouraging. Like a senior analyst doing a real mock interview. You don't waste words.
@@ -1339,6 +1787,14 @@ let isLoading = false;
 let activeFilter = 'all';
 let activeCaseId = null;
 
+// SQL Editor state
+let sqlDB = null;             // Active DB instance (sql.js Database or PGlite)
+let sqlEditor = null;         // CodeMirror instance
+let sqlDialect = 'postgres';  // 'postgres' or 'sqlite'
+let sqlJsReady = false;
+let sqlJsSQL = null;          // sql.js constructor
+let pgliteReady = false;
+
 const apiKeys = {
   free:   '__free__',
   claude: localStorage.getItem('ak_claude') || '',
@@ -1477,6 +1933,19 @@ function loadCase(id) {
   if (ws) ws.remove();
   msgs.innerHTML = '';
   conversationHistory = [];
+
+  // Show/hide SQL tab switcher
+  updateTabVisibility(id);
+
+  // If SQL case, initialize the editor and database
+  if (isSQLCase(id)) {
+    if (!sqlEditor) initCodeMirrorEditor();
+    setupSQLDatabase(id).catch(err => {
+      console.error('SQL setup failed:', err);
+      renderSQLError(err.message || 'Failed to initialize SQL engine.');
+    });
+    switchTab('chat'); // Start on chat — AI intro plays first
+  }
 
   // Auto send the case prompt
   const casePrompt = CASE_PROMPTS[id];
@@ -1742,6 +2211,11 @@ function removeTyping() {
 
 // ── UTILITIES ──
 function resetChat() {
+  // Clean up SQL editor state
+  updateTabVisibility(null);
+  switchTab('chat');
+  destroySQLDB();
+
   conversationHistory = [];
   activeCaseId = null;
   renderPromptList(activeFilter);
@@ -1827,6 +2301,326 @@ function updateKeyStatuses() {
     }
   });
   if (anyConfigured) document.getElementById('apiKeyBtn').classList.add('configured');
+}
+
+// ═══════════════════════════════
+// SQL EDITOR ENGINE
+// ═══════════════════════════════
+
+// ── Lazy initialization ──
+async function initSqlJsEngine() {
+  if (sqlJsReady) return;
+  try {
+    sqlJsSQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+    });
+    sqlJsReady = true;
+  } catch (err) {
+    console.error('Failed to initialize sql.js:', err);
+    throw new Error('Could not load SQLite engine. Please refresh.');
+  }
+}
+
+async function initPGliteEngine() {
+  if (pgliteReady) return;
+  // PGlite may already be loaded by the ESM module script
+  if (window.PGlite) { pgliteReady = true; return; }
+  // Wait for the pglite-ready event (up to 10s)
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('PGlite failed to load. Please refresh.')), 10000);
+    window.addEventListener('pglite-ready', () => { clearTimeout(timeout); pgliteReady = true; resolve(); }, { once: true });
+  });
+}
+
+function initCodeMirrorEditor() {
+  if (sqlEditor) return;
+  if (typeof CodeMirror === 'undefined') {
+    console.warn('CodeMirror not loaded yet');
+    return;
+  }
+  const textarea = document.getElementById('sqlEditorTextarea');
+  sqlEditor = CodeMirror.fromTextArea(textarea, {
+    mode: sqlDialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql',
+    lineNumbers: true,
+    lineWrapping: true,
+    indentWithTabs: false,
+    tabSize: 2,
+    autofocus: false,
+    extraKeys: {
+      'Ctrl-Enter': function() { runSQL(); },
+      'Cmd-Enter': function() { runSQL(); },
+    }
+  });
+}
+
+// ── Database setup per case ──
+async function setupSQLDatabase(caseId) {
+  const dataset = SQL_DATASETS[caseId];
+  if (!dataset) return;
+
+  // Tear down previous DB
+  await destroySQLDB();
+
+  const setupSQL = dataset.setup.shared;
+
+  if (sqlDialect === 'sqlite') {
+    await initSqlJsEngine();
+    sqlDB = new sqlJsSQL.Database();
+    try { sqlDB.run(setupSQL); } catch (err) { console.error('SQLite setup error:', err); }
+  } else {
+    await initPGliteEngine();
+    sqlDB = new window.PGlite();
+    try { await sqlDB.exec(setupSQL); } catch (err) { console.error('PGlite setup error:', err); }
+  }
+
+  // Render schema sidebar
+  renderSchema(dataset.schema);
+
+  // Set default query
+  if (sqlEditor) {
+    const defaultQ = (sqlDialect === 'postgres' && dataset.defaultQueryPostgres)
+      ? dataset.defaultQueryPostgres
+      : dataset.defaultQuery;
+    sqlEditor.setValue(defaultQ);
+    setTimeout(() => sqlEditor.refresh(), 50);
+  }
+
+  // Clear results
+  resetSQLResults();
+}
+
+async function destroySQLDB() {
+  if (!sqlDB) return;
+  try {
+    if (typeof sqlDB.close === 'function') sqlDB.close();
+    else if (typeof sqlDB.close === 'function') await sqlDB.close();
+  } catch (e) { /* ignore */ }
+  sqlDB = null;
+}
+
+// ── Schema rendering ──
+function renderSchema(schema) {
+  const container = document.getElementById('schemaContent');
+  container.innerHTML = schema.map(table => `
+    <div class="schema-table">
+      <div class="schema-table-name" onclick="copyTableName('${table.name}')" title="Click to copy">
+        ${table.name}
+        <span class="copy-icon">&#x1F4CB;</span>
+      </div>
+      <div class="schema-columns">
+        ${table.columns.map(col => `
+          <div class="schema-col">
+            <span>${col.name}</span>
+            <span class="schema-col-type">${col.type}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function copyTableName(name) {
+  navigator.clipboard.writeText(name).catch(() => {});
+}
+
+// ── Query execution ──
+async function runSQL() {
+  if (!sqlDB) {
+    renderSQLError('No database loaded. Please select a SQL case study first.');
+    return;
+  }
+  const query = sqlEditor ? sqlEditor.getValue().trim() : '';
+  if (!query) return;
+
+  const startTime = performance.now();
+  try {
+    let columns, rows;
+    if (sqlDialect === 'sqlite') {
+      const results = sqlDB.exec(query);
+      if (results.length === 0) {
+        showSQLSuccess(startTime);
+        return;
+      }
+      const r = results[results.length - 1];
+      columns = r.columns;
+      rows = r.values;
+    } else {
+      const result = await sqlDB.query(query);
+      if (!result.rows || result.rows.length === 0) {
+        // Check if it returned fields (SELECT with no rows) vs statement (INSERT/CREATE)
+        if (result.fields && result.fields.length > 0) {
+          columns = result.fields.map(f => f.name);
+          rows = [];
+        } else {
+          showSQLSuccess(startTime);
+          return;
+        }
+      } else {
+        columns = result.fields.map(f => f.name);
+        rows = result.rows.map(row => columns.map(col => row[col]));
+      }
+    }
+
+    const elapsed = (performance.now() - startTime).toFixed(1);
+    renderSQLResults(columns, rows, elapsed);
+  } catch (err) {
+    renderSQLError(err.message);
+  }
+}
+
+function showSQLSuccess(startTime) {
+  const elapsed = (performance.now() - startTime).toFixed(1);
+  document.getElementById('sqlResults').innerHTML = `
+    <div class="sql-results-empty">
+      <div class="empty-icon">&#x2705;</div>
+      <div>Statement executed successfully</div>
+      <div style="font-size:0.75rem">No rows returned</div>
+    </div>`;
+  document.getElementById('sqlExecInfo').textContent = elapsed + 'ms';
+  document.getElementById('sqlResultFooter').style.display = 'none';
+}
+
+function renderSQLResults(columns, rows, elapsed) {
+  let html = '<table class="sql-result-table"><thead><tr>';
+  columns.forEach(col => { html += `<th>${escapeHtml(String(col))}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  const displayRows = rows.slice(0, 500);
+  displayRows.forEach(row => {
+    html += '<tr>';
+    row.forEach(val => {
+      if (val === null || val === undefined) {
+        html += '<td><span class="sql-null">NULL</span></td>';
+      } else {
+        html += `<td>${escapeHtml(String(val))}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  if (rows.length > 500) {
+    html += `<div style="padding:0.5rem;color:var(--muted);font-size:0.75rem;text-align:center;">Showing first 500 of ${rows.length} rows</div>`;
+  }
+
+  document.getElementById('sqlResults').innerHTML = html;
+  document.getElementById('sqlResultFooter').style.display = 'flex';
+  document.getElementById('sqlRowCount').textContent = `${rows.length} row${rows.length !== 1 ? 's' : ''}`;
+  document.getElementById('sqlExecTime').textContent = elapsed + 'ms';
+  document.getElementById('sqlExecInfo').textContent = `${rows.length} rows \u00B7 ${elapsed}ms`;
+}
+
+function renderSQLError(message) {
+  document.getElementById('sqlResults').innerHTML = `
+    <div class="sql-error"><strong>Error:</strong> ${escapeHtml(message)}</div>`;
+  document.getElementById('sqlResultFooter').style.display = 'none';
+  document.getElementById('sqlExecInfo').textContent = 'Error';
+}
+
+function resetSQLResults() {
+  document.getElementById('sqlResults').innerHTML = `
+    <div class="sql-results-empty">
+      <div class="empty-icon">&#x1F50D;</div>
+      <div>Write a query above and click <strong>Run Query</strong></div>
+      <div style="font-size: 0.75rem;">Ctrl+Enter to execute</div>
+    </div>`;
+  document.getElementById('sqlResultFooter').style.display = 'none';
+  document.getElementById('sqlExecInfo').textContent = '';
+}
+
+function clearSQL() {
+  if (sqlEditor) { sqlEditor.setValue(''); sqlEditor.focus(); }
+  resetSQLResults();
+}
+
+// ── Tab switching ──
+function switchTab(tab) {
+  document.querySelectorAll('.chat-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  const messages = document.getElementById('messages');
+  const inputArea = document.getElementById('inputArea');
+  const sqlPanel = document.getElementById('sqlEditorPanel');
+  if (tab === 'chat') {
+    messages.style.display = 'flex';
+    inputArea.style.display = '';
+    sqlPanel.classList.remove('active');
+  } else {
+    messages.style.display = 'none';
+    inputArea.style.display = 'none';
+    sqlPanel.classList.add('active');
+    if (sqlEditor) setTimeout(() => sqlEditor.refresh(), 10);
+  }
+}
+
+function updateTabVisibility(caseId) {
+  const tabSwitcher = document.getElementById('chatTabSwitcher');
+  if (caseId && isSQLCase(caseId)) {
+    tabSwitcher.classList.add('visible');
+  } else {
+    tabSwitcher.classList.remove('visible');
+    switchTab('chat');
+  }
+}
+
+// ── Dialect switching ──
+async function switchDialect(dialect) {
+  sqlDialect = dialect;
+  // Update CodeMirror mode
+  if (sqlEditor) {
+    sqlEditor.setOption('mode', dialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
+  }
+  // Re-setup database if a case is active
+  if (activeCaseId && isSQLCase(activeCaseId)) {
+    await setupSQLDatabase(activeCaseId);
+  }
+}
+
+// ── Ask AI Coach ──
+async function sendQueryToAI() {
+  if (!sqlEditor || !sqlDB) return;
+  const query = sqlEditor.getValue().trim();
+  if (!query) return;
+
+  // Get results text
+  let resultsText = '';
+  try {
+    let columns, rows;
+    if (sqlDialect === 'sqlite') {
+      const results = sqlDB.exec(query);
+      if (results.length > 0) {
+        const r = results[results.length - 1];
+        columns = r.columns;
+        rows = r.values;
+      }
+    } else {
+      const result = await sqlDB.query(query);
+      if (result.rows && result.rows.length > 0) {
+        columns = result.fields.map(f => f.name);
+        rows = result.rows.map(row => columns.map(col => row[col]));
+      }
+    }
+    if (columns && rows) {
+      resultsText = columns.join(' | ') + '\n';
+      resultsText += columns.map(() => '---').join(' | ') + '\n';
+      rows.slice(0, 20).forEach(row => {
+        resultsText += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n';
+      });
+      if (rows.length > 20) resultsText += `... (${rows.length - 20} more rows)\n`;
+    }
+  } catch (err) {
+    resultsText = 'Error: ' + err.message;
+  }
+
+  const dataset = SQL_DATASETS[activeCaseId];
+  const dialectLabel = sqlDialect === 'postgres' ? 'PostgreSQL' : 'SQLite';
+  const message = `I wrote this ${dialectLabel} query for the "${dataset.label}" exercise. Can you review it and give me feedback?\n\n\`\`\`sql\n${query}\n\`\`\`\n\nResults:\n\`\`\`\n${resultsText}\`\`\``;
+
+  switchTab('chat');
+  const ws = document.getElementById('welcomeState');
+  if (ws) ws.remove();
+  appendMessage('user', message);
+  conversationHistory.push({ role: 'user', content: message });
+  sendToAI(message, false);
 }
 
 // ═══════════════════════════════
