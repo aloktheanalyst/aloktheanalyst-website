@@ -2329,6 +2329,7 @@ function sendMessage() {
 
   appendMessage('user', text);
   conversationHistory.push({ role: 'user', content: text });
+  trackEvent('chat_message', null, { message: text.substring(0, 500) });
   sendToAI(text, false);
 }
 

@@ -17,6 +17,7 @@ const ALLOWED_EVENTS = [
   'score_received',    // AI returned a score
   'tab_switch',        // user switched between Code Editor / AI Coach
   'session_start',     // user landed on practice page
+  'chat_message',      // user sent a message in AI Coach
 ];
 
 const MAX_METADATA_LEN = 1024;  // limit metadata JSON size
