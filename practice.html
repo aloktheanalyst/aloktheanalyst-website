@@ -65,6 +65,20 @@
   body::before { content: none; }
 
   /* ── TOP BAR ── */
+  /* ── FOCUS MODE (fullscreen): hide chrome, dim non-essentials ── */
+  :fullscreen .topbar,
+  :fullscreen footer { display: none !important; }
+  :fullscreen .sidebar { opacity: 0.2; transition: opacity 0.3s; }
+  :fullscreen .sidebar:hover { opacity: 1; }
+  :fullscreen .chat-header { opacity: 0.25; transition: opacity 0.3s; }
+  :fullscreen .chat-header:hover { opacity: 1; }
+  :fullscreen .schema-sidebar > .schema-title,
+  :fullscreen #schemaContent { opacity: 0.2; transition: opacity 0.3s; }
+  :fullscreen .schema-sidebar:hover > .schema-title,
+  :fullscreen .schema-sidebar:hover #schemaContent { opacity: 1; }
+  :fullscreen .sql-toolbar { opacity: 0.5; transition: opacity 0.3s; }
+  :fullscreen .sql-toolbar:hover { opacity: 1; }
+
   .topbar {
     display: flex;
     align-items: center;
@@ -852,6 +866,37 @@
   }
   .close-modal-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* ── IDLE TOAST ── */
+  .dyk-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    max-width: 340px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.55;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+  .dyk-toast.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .dyk-toast-label {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
   /* RESPONSIVE */
   @media (max-width: 768px) {
     body { height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto; overflow-x: hidden; }
@@ -919,13 +964,79 @@
     flex-direction: column;
     flex: 1;
     overflow: hidden;
+    position: relative;
   }
   .sql-editor-panel.active { display: flex; }
+
+  /* ── CODE LOADING OVERLAY ── */
+  .code-loading-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.92);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  .code-loading-overlay.active { display: flex; }
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 3.5px solid #e5e7eb;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-fact {
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+    max-width: 380px;
+    line-height: 1.5;
+    transition: opacity 0.4s ease;
+  }
+  .loading-fact .fact-label {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
 
   .sql-editor-layout {
     display: flex;
     flex: 1;
     overflow: hidden;
+  }
+
+  /* ── RESIZE HANDLES ── */
+  .resize-handle-h {
+    width: 5px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.2s;
+    position: relative;
+    z-index: 5;
+  }
+  .resize-handle-h:hover,
+  .resize-handle-h.active { background: var(--accent); opacity: 0.5; }
+  .resize-handle-v {
+    height: 5px;
+    flex-shrink: 0;
+    cursor: row-resize;
+    background: transparent;
+    transition: background 0.2s;
+    position: relative;
+    z-index: 5;
+  }
+  .resize-handle-v:hover,
+  .resize-handle-v.active { background: var(--accent); opacity: 0.5; }
+  @media (max-width: 768px) {
+    .resize-handle-h, .resize-handle-v { display: none; }
   }
 
   /* Schema sidebar */
@@ -1435,10 +1546,7 @@
       API Keys
     </button>
 
-    <!-- Fullscreen -->
-    <button class="apikey-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Toggle fullscreen">
-      <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-    </button>
+    <!-- Fullscreen button moved to chat-header -->
   </div>
 </div>
 
@@ -1487,6 +1595,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy Transcript
         </button>
+        <button class="action-btn" onclick="toggleFullscreen()" title="Focus Mode — hide distractions">
+          <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          Focus Mode
+        </button>
       </div>
     </div>
 
@@ -1530,6 +1642,10 @@
 
     <!-- SQL EDITOR PANEL (hidden until SQL tab activated) -->
     <div class="sql-editor-panel" id="sqlEditorPanel">
+      <div class="code-loading-overlay" id="codeLoadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-fact" id="loadingFact"></div>
+      </div>
       <div class="sql-editor-layout">
         <!-- Schema Reference Sidebar -->
         <div class="schema-sidebar" id="schemaSidebar">
@@ -1540,6 +1656,7 @@
           <div class="schema-title">TABLE SCHEMA</div>
           <div id="schemaContent"></div>
         </div>
+        <div class="resize-handle-h" id="resizeHandleH"></div>
         <!-- Editor + Results -->
         <div class="sql-main">
           <!-- Mobile-only question (sidebar hidden on mobile) -->
@@ -1560,6 +1677,7 @@
             </button>
             <div class="sql-toolbar-right">
               <span class="sql-exec-info" id="sqlExecInfo"></span>
+              <button class="sql-clear-btn" onclick="resetPanelSizes()" title="Reset panel sizes to default">Reset Layout</button>
               <button class="sql-check-btn" onclick="checkMyAnswer()" title="Run your code and get AI scoring + feedback">
                 &#x2705; Check My Answer
               </button>
@@ -1578,6 +1696,7 @@
           <div class="sql-editor-wrapper">
             <textarea id="sqlEditorTextarea"></textarea>
           </div>
+          <div class="resize-handle-v" id="resizeHandleV"></div>
           <div class="sql-results" id="sqlResults">
             <div class="sql-results-empty">
               <div class="empty-icon">&#x1F50D;</div>
@@ -2880,6 +2999,57 @@ let pyodideLoading = false;
 let currentHintIndex = -1;    // -1 = no hint shown yet
 let dialectCodeCache = {};    // { caseId: { postgres: '...', sqlite: '...', python: '...' } }
 
+// ── Loading overlay with rotating facts ──
+let loadingFactInterval = null;
+const LOADING_FACTS = [
+  // Career facts for data analysts in India
+  "The average data analyst salary in India is 6-10 LPA. With SQL + Python, you're already ahead of 70% of applicants.",
+  "India's analytics industry is hiring 100K+ data professionals every year — demand far outpaces supply.",
+  "Top hiring cities for data analysts: Bangalore, Hyderabad, Pune, Gurgaon, and Mumbai.",
+  "Most data analyst interviews in India test SQL (90%), Excel (75%), and Python (60%). You're practicing the right skills.",
+  "A strong portfolio of 3-5 case studies can matter more than certifications in Indian analytics hiring.",
+  "Companies like Flipkart, Swiggy, Meesho, and CRED actively hire analysts who can write clean SQL and think in frameworks.",
+  "Data analyst roles in India have grown 45% in 3 years. The best time to switch is now.",
+  "LinkedIn data shows SQL is the #1 most in-demand skill for analyst roles in India.",
+  "Freshers with strong SQL + case study skills regularly land 5-8 LPA roles at startups and MNCs.",
+  "Product analytics is the fastest growing analytics specialisation in India's startup ecosystem.",
+  // Practical tips
+  "Interview tip: Always clarify the metric definition before jumping into analysis. Interviewers love this.",
+  "Always check for NULLs before doing JOINs — they silently drop rows in INNER JOINs.",
+  "pandas tip: Use .value_counts(normalize=True) to get percentages instead of raw counts.",
+  "RANK() skips numbers after ties, DENSE_RANK() doesn't. This is a common interview question.",
+  "In SQL, WHERE filters rows before GROUP BY. HAVING filters after. Interviewers test this distinction.",
+  "CTEs (WITH clauses) make complex SQL readable — interviewers prefer readable queries over clever ones.",
+  "A well-structured cohort analysis can reveal retention patterns invisible in aggregates.",
+  "Interview tip: When given a metric drop, always ask — is this a data issue or a real business change?",
+  // Motivational
+  "\"Without data, you're just another person with an opinion.\" — W. Edwards Deming",
+  "\"The goal is to turn data into information, and information into insight.\" — Carly Fiorina",
+  "\"In God we trust. All others must bring data.\" — W. Edwards Deming",
+  "Every expert was once a beginner. Keep practicing — consistency beats talent.",
+  "You don't need a CS degree to become a great data analyst. You need curiosity and practice.",
+  "The analyst who asks the right question will always outperform the one who writes the fanciest query.",
+];
+
+function showCodeLoading() {
+  const overlay = document.getElementById('codeLoadingOverlay');
+  const factEl = document.getElementById('loadingFact');
+  overlay.classList.add('active');
+  const pickFact = () => {
+    const fact = LOADING_FACTS[Math.floor(Math.random() * LOADING_FACTS.length)];
+    factEl.style.opacity = '0';
+    setTimeout(() => { factEl.innerHTML = '<div class="fact-label">Did You Know?</div>' + fact; factEl.style.opacity = '1'; }, 300);
+  };
+  pickFact();
+  loadingFactInterval = setInterval(pickFact, 3500);
+}
+
+function hideCodeLoading() {
+  const overlay = document.getElementById('codeLoadingOverlay');
+  overlay.classList.remove('active');
+  if (loadingFactInterval) { clearInterval(loadingFactInterval); loadingFactInterval = null; }
+}
+
 // ── Editor snapshot for AI context (security-sanitised) ──
 const CODE_CONTEXT_MAX = 3000; // max chars sent to LLM as context
 const CODE_PLACEHOLDERS = [
@@ -3076,6 +3246,7 @@ function loadCase(id) {
     setDialectForCase(id); // Auto-set Python for python cases, PostgreSQL for SQL cases
     setupCodeEnvironment(id).catch(err => {
       console.error('Code setup failed:', err);
+      hideCodeLoading();
       renderCodeError(err.message || 'Failed to initialize code engine.');
     });
     switchTab('code'); // Start on Code Editor for SQL/Python cases
@@ -3513,6 +3684,11 @@ async function initPyodideEngine() {
     // Pre-load pandas and numpy
     document.getElementById('sqlExecInfo').textContent = 'Loading pandas & numpy...';
     await pyodideInstance.loadPackage(['pandas', 'numpy']);
+    await pyodideInstance.runPythonAsync(`
+import pandas as pd
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+`);
     pyodideReady = true;
     document.getElementById('sqlExecInfo').textContent = 'Python ready';
   } catch (err) {
@@ -3546,6 +3722,7 @@ function initCodeMirrorEditor() {
 
 // ── Database/environment setup per case ──
 async function setupCodeEnvironment(caseId) {
+  showCodeLoading();
   // Render question in sidebar + mobile
   const dataset = SQL_DATASETS[caseId] || PYTHON_DATASETS[caseId];
   const qPanel = document.getElementById('questionPanel');
@@ -3593,6 +3770,7 @@ async function setupSQLDatabase(caseId) {
     setTimeout(() => sqlEditor.refresh(), 50);
   }
   resetCodeResults();
+  hideCodeLoading();
 }
 
 async function setupPythonEnvironment(caseId) {
@@ -3614,6 +3792,7 @@ async function setupPythonEnvironment(caseId) {
     setTimeout(() => sqlEditor.refresh(), 50);
   }
   resetCodeResults();
+  hideCodeLoading();
 }
 
 async function destroySQLDB() {
@@ -3708,9 +3887,34 @@ async function runPython() {
   pyodideInstance.setStderr({ batched: (line) => { output += '[stderr] ' + line + '\n'; } });
 
   try {
-    await pyodideInstance.runPythonAsync(code);
+    const result = await pyodideInstance.runPythonAsync(code);
     const elapsed = (performance.now() - startTime).toFixed(1);
-    if (output.trim()) {
+
+    // Check if the result is a DataFrame/Series and render as HTML table
+    let dfHtml = null;
+    if (result != null) {
+      try {
+        pyodideInstance.globals.set('__df_result__', result);
+        dfHtml = pyodideInstance.runPython(`
+import pandas as pd
+__df_result__.to_html(classes='sql-result-table') if isinstance(__df_result__, (pd.DataFrame, pd.Series)) else None
+`);
+        if (dfHtml) dfHtml = dfHtml.toString();
+        pyodideInstance.runPython('del __df_result__');
+      } catch(e) { dfHtml = null; }
+      if (result.destroy) result.destroy();
+    }
+
+    if (dfHtml) {
+      // Show stdout (if any) above the table
+      const prefix = output.trim() ? `<pre style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--text);white-space:pre-wrap;line-height:1.6;margin:0;padding:0.5rem;">${escapeHtml(output.trim())}</pre>` : '';
+      document.getElementById('sqlResults').innerHTML = prefix + dfHtml;
+      document.getElementById('sqlResultFooter').style.display = 'flex';
+      const rowCount = (dfHtml.match(/<tr>/g) || []).length - 1; // minus header row
+      document.getElementById('sqlRowCount').textContent = `${rowCount} row${rowCount !== 1 ? 's' : ''}`;
+      document.getElementById('sqlExecTime').textContent = elapsed + 'ms';
+      document.getElementById('sqlExecInfo').textContent = `${rowCount} rows · ${elapsed}ms`;
+    } else if (output.trim()) {
       renderPythonOutput(output.trim(), elapsed);
     } else {
       showCodeSuccess(startTime);
@@ -4070,7 +4274,10 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 (function restorePanelStates() {
-  if (localStorage.getItem('sidebarCollapsed') === '1') {
+  // Open sidebar on landing so users can pick a case; respect preference once a case is active
+  if (!activeCaseId && localStorage.getItem('sidebarCollapsed') === '1') {
+    localStorage.removeItem('sidebarCollapsed');
+  } else if (localStorage.getItem('sidebarCollapsed') === '1') {
     document.querySelector('.sidebar').classList.add('sidebar--collapsed');
     document.getElementById('sidebarToggleBtn').querySelector('svg').style.transform = 'rotate(180deg)';
   }
@@ -4079,6 +4286,88 @@ document.addEventListener('fullscreenchange', () => {
     document.getElementById('inputToggleBtn').querySelector('svg').style.transform = 'rotate(180deg)';
   }
 })();
+
+// ═══════════════════════════════
+// RESIZABLE PANELS
+// ═══════════════════════════════
+const DEFAULT_SCHEMA_WIDTH = 220;
+const DEFAULT_EDITOR_HEIGHT = 220;
+
+function initResizeHandles() {
+  const handleH = document.getElementById('resizeHandleH');
+  const handleV = document.getElementById('resizeHandleV');
+  const schema = document.querySelector('.schema-sidebar');
+  const editorWrap = document.querySelector('.sql-editor-wrapper');
+
+  // Restore saved sizes
+  const savedW = localStorage.getItem('editorPanelSchemaWidth');
+  const savedH = localStorage.getItem('editorPanelEditorHeight');
+  if (savedW) schema.style.width = savedW + 'px';
+  if (savedH) editorWrap.style.height = savedH + 'px';
+
+  // ── Horizontal: schema sidebar width ──
+  handleH.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    handleH.classList.add('active');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    const startX = e.clientX;
+    const startW = schema.offsetWidth;
+    const onMove = (ev) => {
+      const newW = Math.min(400, Math.max(140, startW + ev.clientX - startX));
+      schema.style.width = newW + 'px';
+    };
+    const onUp = () => {
+      handleH.classList.remove('active');
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      localStorage.setItem('editorPanelSchemaWidth', schema.offsetWidth);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  // ── Vertical: editor height ──
+  handleV.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    handleV.classList.add('active');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'row-resize';
+    const startY = e.clientY;
+    const startH = editorWrap.offsetHeight;
+    const container = editorWrap.parentElement;
+    const onMove = (ev) => {
+      const maxH = container.offsetHeight * 0.7;
+      const newH = Math.min(maxH, Math.max(80, startH + ev.clientY - startY));
+      editorWrap.style.height = newH + 'px';
+    };
+    const onUp = () => {
+      handleV.classList.remove('active');
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      localStorage.setItem('editorPanelEditorHeight', editorWrap.offsetHeight);
+      if (sqlEditor) sqlEditor.refresh();
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function resetPanelSizes() {
+  const schema = document.querySelector('.schema-sidebar');
+  const editorWrap = document.querySelector('.sql-editor-wrapper');
+  schema.style.width = DEFAULT_SCHEMA_WIDTH + 'px';
+  editorWrap.style.height = DEFAULT_EDITOR_HEIGHT + 'px';
+  localStorage.removeItem('editorPanelSchemaWidth');
+  localStorage.removeItem('editorPanelEditorHeight');
+  if (sqlEditor) sqlEditor.refresh();
+}
+
+initResizeHandles();
 
 // ═══════════════════════════════
 // AUTH — Google Sign-In
@@ -4145,6 +4434,72 @@ checkAuth();
 
 // Track session start
 trackEvent('session_start', null, { referrer: document.referrer || 'direct' });
+
+// ═══════════════════════════════
+// DID YOU KNOW — subtle placements
+// ═══════════════════════════════
+(function initDidYouKnow() {
+  const facts = LOADING_FACTS; // reuse the same facts array
+
+  // 1. Rotating chat input placeholder
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) {
+    const defaultPlaceholder = chatInput.placeholder;
+    let showingFact = false;
+    setInterval(() => {
+      if (document.activeElement === chatInput) return; // don't change while typing
+      if (showingFact) {
+        chatInput.placeholder = defaultPlaceholder;
+      } else {
+        chatInput.placeholder = '💡 ' + facts[Math.floor(Math.random() * facts.length)];
+      }
+      showingFact = !showingFact;
+    }, 8000);
+  }
+
+  // 2. Rotating footer fact — inject after footer.js loads
+  setTimeout(() => {
+    const brand = document.querySelector('#sfooter .sft-brand');
+    if (!brand) return;
+    const originalText = brand.textContent;
+    let showingFooterFact = false;
+    setInterval(() => {
+      if (showingFooterFact) {
+        brand.textContent = originalText;
+      } else {
+        brand.textContent = '💡 ' + facts[Math.floor(Math.random() * facts.length)];
+      }
+      showingFooterFact = !showingFooterFact;
+    }, 10000);
+  }, 1000); // wait for footer.js to inject
+
+  // 3. Idle toast — shows after 30s of no interaction
+  const toast = document.createElement('div');
+  toast.className = 'dyk-toast';
+  toast.innerHTML = '<div class="dyk-toast-label">Did You Know?</div><div class="dyk-toast-text"></div>';
+  document.body.appendChild(toast);
+
+  let idleTimer = null;
+  let toastTimeout = null;
+
+  function resetIdleTimer() {
+    if (idleTimer) clearTimeout(idleTimer);
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toast.classList.remove('visible');
+
+    idleTimer = setTimeout(() => {
+      toast.querySelector('.dyk-toast-text').textContent = facts[Math.floor(Math.random() * facts.length)];
+      toast.classList.add('visible');
+      // Auto-hide after 8 seconds
+      toastTimeout = setTimeout(() => toast.classList.remove('visible'), 8000);
+    }, 30000);
+  }
+
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetIdleTimer, { passive: true });
+  });
+  resetIdleTimer();
+})();
 </script>
 
 <script src="/components/footer.js"></script>
