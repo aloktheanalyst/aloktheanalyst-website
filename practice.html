@@ -434,11 +434,19 @@
   .solved-prompt .btn-no { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
   .solved-prompt .btn-no:hover { border-color: var(--accent); color: var(--accent); }
   .mark-solved-btn {
-    font-size: 0.6rem; color: var(--muted); cursor: pointer; background: none;
-    border: none; font-family: 'JetBrains Mono', monospace; padding: 0.15rem 0.4rem;
-    border-radius: 3px; transition: all 0.2s;
+    width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+    border: 1.5px solid var(--border2); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0; padding: 0;
+    margin-left: auto;
   }
-  .mark-solved-btn:hover { color: var(--green); background: rgba(22,163,74,0.08); }
+  .mark-solved-btn:hover { border-color: var(--green); background: rgba(22,163,74,0.08); }
+  .mark-solved-btn.checked {
+    background: var(--green); border-color: var(--green);
+  }
+  .mark-solved-btn.checked:hover {
+    background: #dc2626; border-color: #dc2626;
+  }
 
   .prompt-item-meta {
     display: flex;
@@ -3440,7 +3448,7 @@ function renderPromptList(filter = 'all') {
       <div class="prompt-item-meta">
         <span class="prompt-tag">${p.tag}</span>
         <span class="difficulty ${p.difficulty}">${p.difficulty}</span>
-        <button class="mark-solved-btn" onclick="toggleSolved('${p.id}', event)" title="${isSolved ? 'Mark unsolved' : 'Mark solved'}">${isSolved ? 'undo' : 'mark done'}</button>
+        <button class="mark-solved-btn ${isSolved ? 'checked' : ''}" onclick="toggleSolved('${p.id}', event)" title="${isSolved ? 'Mark unsolved' : 'Mark solved'}">${isSolved ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</button>
       </div>
     </div>`;
   }).join('');
