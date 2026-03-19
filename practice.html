@@ -4274,10 +4274,8 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 (function restorePanelStates() {
-  if (localStorage.getItem('sidebarCollapsed') === '1') {
-    document.querySelector('.sidebar').classList.add('sidebar--collapsed');
-    document.getElementById('sidebarToggleBtn').querySelector('svg').style.transform = 'rotate(180deg)';
-  }
+  // Always start with sidebar open so users see available cases on landing
+  localStorage.removeItem('sidebarCollapsed');
   if (localStorage.getItem('inputCollapsed') === '1') {
     document.getElementById('inputArea').classList.add('input-area--collapsed');
     document.getElementById('inputToggleBtn').querySelector('svg').style.transform = 'rotate(180deg)';
