@@ -3608,6 +3608,11 @@ async function initPyodideEngine() {
     // Pre-load pandas and numpy
     document.getElementById('sqlExecInfo').textContent = 'Loading pandas & numpy...';
     await pyodideInstance.loadPackage(['pandas', 'numpy']);
+    await pyodideInstance.runPythonAsync(`
+import pandas as pd
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+`);
     pyodideReady = true;
     document.getElementById('sqlExecInfo').textContent = 'Python ready';
   } catch (err) {
