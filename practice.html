@@ -2577,7 +2577,7 @@ const PYTHON_DATASETS = {
       'The \'amount\' column has dollar signs, \'N/A\' strings, and \'NaN\' text. Use str.replace() to clean, then pd.to_numeric(errors=\'coerce\') to convert. Category has mixed case — use str.title() or str.capitalize().',
       'Handle duplicates with df.drop_duplicates(subset=[\'order_id\']). For dates, pd.to_datetime(errors=\'coerce\') handles mixed formats. Strip whitespace from names with str.strip().'
     ],
-    defaultQuery: `# The 'df' DataFrame is pre-loaded — explore it first\nprint(df.head(10))\n`,
+    defaultQuery: `# The 'df' DataFrame is pre-loaded — explore it first\ndf.head(10)\n`,
     schema: [
       { name: 'df (DataFrame)', columns: [
         { name: 'order_id', type: 'object' }, { name: 'customer_name', type: 'object' },
@@ -2612,7 +2612,7 @@ df = pd.DataFrame(data)
       'For multi-column groupby with multiple aggregates: sales.groupby([\'region\', \'category\']).agg({\'revenue\': \'sum\', \'units_sold\': \'sum\', \'cost\': \'sum\'}).',
       'Add a profit column with sales[\'profit\'] = sales[\'revenue\'] - sales[\'cost\'], then use pd.pivot_table(sales, values=\'profit\', index=\'region\', columns=\'category\', aggfunc=\'sum\') for cross-tabulation.'
     ],
-    defaultQuery: `# The 'sales' DataFrame is pre-loaded — explore it first\nprint(sales.head(10))\n`,
+    defaultQuery: `# The 'sales' DataFrame is pre-loaded — explore it first\nsales.head(10)\n`,
     schema: [
       { name: 'sales (DataFrame)', columns: [
         { name: 'date', type: 'datetime64' }, { name: 'region', type: 'object' },
@@ -3811,9 +3811,34 @@ async function runPython() {
   pyodideInstance.setStderr({ batched: (line) => { output += '[stderr] ' + line + '\n'; } });
 
   try {
-    await pyodideInstance.runPythonAsync(code);
+    const result = await pyodideInstance.runPythonAsync(code);
     const elapsed = (performance.now() - startTime).toFixed(1);
-    if (output.trim()) {
+
+    // Check if the result is a DataFrame/Series and render as HTML table
+    let dfHtml = null;
+    if (result != null) {
+      try {
+        pyodideInstance.globals.set('__df_result__', result);
+        dfHtml = pyodideInstance.runPython(`
+import pandas as pd
+__df_result__.to_html(classes='sql-result-table') if isinstance(__df_result__, (pd.DataFrame, pd.Series)) else None
+`);
+        if (dfHtml) dfHtml = dfHtml.toString();
+        pyodideInstance.runPython('del __df_result__');
+      } catch(e) { dfHtml = null; }
+      if (result.destroy) result.destroy();
+    }
+
+    if (dfHtml) {
+      // Show stdout (if any) above the table
+      const prefix = output.trim() ? `<pre style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--text);white-space:pre-wrap;line-height:1.6;margin:0;padding:0.5rem;">${escapeHtml(output.trim())}</pre>` : '';
+      document.getElementById('sqlResults').innerHTML = prefix + dfHtml;
+      document.getElementById('sqlResultFooter').style.display = 'flex';
+      const rowCount = (dfHtml.match(/<tr>/g) || []).length - 1; // minus header row
+      document.getElementById('sqlRowCount').textContent = `${rowCount} row${rowCount !== 1 ? 's' : ''}`;
+      document.getElementById('sqlExecTime').textContent = elapsed + 'ms';
+      document.getElementById('sqlExecInfo').textContent = `${rowCount} rows · ${elapsed}ms`;
+    } else if (output.trim()) {
       renderPythonOutput(output.trim(), elapsed);
     } else {
       showCodeSuccess(startTime);
