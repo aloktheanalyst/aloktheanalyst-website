@@ -1898,15 +1898,18 @@
         <button data-val="fresher" onclick="toggleExpStatus(this)">Fresher / Gap Year</button>
       </div>
       <!-- Working Since (shown only when expStatus = working) -->
-      <div class="profile-row" id="workingSinceRow" style="margin-top:0.6rem;">
-        <select class="model-select" id="profStartMonth" onchange="updateExpDisplay()" style="flex:1;">
-          <option value="">Month</option>
-          <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
-          <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
-          <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
-          <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
-        </select>
-        <select class="model-select" id="profStartYear" onchange="updateExpDisplay()" style="flex:1;"></select>
+      <div id="workingSinceRow" style="margin-top:0.6rem;">
+        <div style="font-size:0.72rem; color:var(--muted); margin-bottom:0.35rem;">Working since</div>
+        <div class="profile-row">
+          <select class="model-select" id="profStartMonth" onchange="updateExpDisplay()" style="flex:1;">
+            <option value="">Month</option>
+            <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+            <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+            <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+            <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+          </select>
+          <select class="model-select" id="profStartYear" onchange="updateExpDisplay()" style="flex:1;"></select>
+        </div>
       </div>
       <div class="experience-display" id="expDisplay"></div>
     </div>
@@ -4615,7 +4618,7 @@ function toggleExpStatus(btn) {
 }
 function toggleExpStatusUI(status) {
   const row = document.getElementById('workingSinceRow');
-  row.style.display = status === 'working' ? 'flex' : 'none';
+  row.style.display = status === 'working' ? 'block' : 'none';
 }
 
 function toggleSkill(btn) {
@@ -4654,7 +4657,16 @@ function updateExpDisplay() {
     careerStartDate = new Date(parseInt(y), parseInt(m), 1).toISOString();
   }
   const text = getExperience({ expStatus: status, careerStartDate });
-  document.getElementById('expDisplay').textContent = text ? `~ ${text} experience` : '';
+  const el = document.getElementById('expDisplay');
+  if (status === 'fresher') {
+    el.textContent = 'Fresher — no prior experience';
+    el.style.color = 'var(--accent)';
+  } else if (text) {
+    el.textContent = `~ ${text} experience`;
+    el.style.color = 'var(--green)';
+  } else {
+    el.textContent = '';
+  }
 }
 
 function saveProfile() {
