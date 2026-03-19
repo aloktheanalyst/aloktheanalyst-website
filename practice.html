@@ -919,8 +919,47 @@
     flex-direction: column;
     flex: 1;
     overflow: hidden;
+    position: relative;
   }
   .sql-editor-panel.active { display: flex; }
+
+  /* ── CODE LOADING OVERLAY ── */
+  .code-loading-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.92);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  .code-loading-overlay.active { display: flex; }
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 3.5px solid #e5e7eb;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-fact {
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+    max-width: 380px;
+    line-height: 1.5;
+    transition: opacity 0.4s ease;
+  }
+  .loading-fact .fact-label {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
 
   .sql-editor-layout {
     display: flex;
@@ -1530,6 +1569,10 @@
 
     <!-- SQL EDITOR PANEL (hidden until SQL tab activated) -->
     <div class="sql-editor-panel" id="sqlEditorPanel">
+      <div class="code-loading-overlay" id="codeLoadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-fact" id="loadingFact"></div>
+      </div>
       <div class="sql-editor-layout">
         <!-- Schema Reference Sidebar -->
         <div class="schema-sidebar" id="schemaSidebar">
@@ -2880,6 +2923,57 @@ let pyodideLoading = false;
 let currentHintIndex = -1;    // -1 = no hint shown yet
 let dialectCodeCache = {};    // { caseId: { postgres: '...', sqlite: '...', python: '...' } }
 
+// ── Loading overlay with rotating facts ──
+let loadingFactInterval = null;
+const LOADING_FACTS = [
+  // Career facts for data analysts in India
+  "The average data analyst salary in India is 6-10 LPA. With SQL + Python, you're already ahead of 70% of applicants.",
+  "India's analytics industry is hiring 100K+ data professionals every year — demand far outpaces supply.",
+  "Top hiring cities for data analysts: Bangalore, Hyderabad, Pune, Gurgaon, and Mumbai.",
+  "Most data analyst interviews in India test SQL (90%), Excel (75%), and Python (60%). You're practicing the right skills.",
+  "A strong portfolio of 3-5 case studies can matter more than certifications in Indian analytics hiring.",
+  "Companies like Flipkart, Swiggy, Meesho, and CRED actively hire analysts who can write clean SQL and think in frameworks.",
+  "Data analyst roles in India have grown 45% in 3 years. The best time to switch is now.",
+  "LinkedIn data shows SQL is the #1 most in-demand skill for analyst roles in India.",
+  "Freshers with strong SQL + case study skills regularly land 5-8 LPA roles at startups and MNCs.",
+  "Product analytics is the fastest growing analytics specialisation in India's startup ecosystem.",
+  // Practical tips
+  "Interview tip: Always clarify the metric definition before jumping into analysis. Interviewers love this.",
+  "Always check for NULLs before doing JOINs — they silently drop rows in INNER JOINs.",
+  "pandas tip: Use .value_counts(normalize=True) to get percentages instead of raw counts.",
+  "RANK() skips numbers after ties, DENSE_RANK() doesn't. This is a common interview question.",
+  "In SQL, WHERE filters rows before GROUP BY. HAVING filters after. Interviewers test this distinction.",
+  "CTEs (WITH clauses) make complex SQL readable — interviewers prefer readable queries over clever ones.",
+  "A well-structured cohort analysis can reveal retention patterns invisible in aggregates.",
+  "Interview tip: When given a metric drop, always ask — is this a data issue or a real business change?",
+  // Motivational
+  "\"Without data, you're just another person with an opinion.\" — W. Edwards Deming",
+  "\"The goal is to turn data into information, and information into insight.\" — Carly Fiorina",
+  "\"In God we trust. All others must bring data.\" — W. Edwards Deming",
+  "Every expert was once a beginner. Keep practicing — consistency beats talent.",
+  "You don't need a CS degree to become a great data analyst. You need curiosity and practice.",
+  "The analyst who asks the right question will always outperform the one who writes the fanciest query.",
+];
+
+function showCodeLoading() {
+  const overlay = document.getElementById('codeLoadingOverlay');
+  const factEl = document.getElementById('loadingFact');
+  overlay.classList.add('active');
+  const pickFact = () => {
+    const fact = LOADING_FACTS[Math.floor(Math.random() * LOADING_FACTS.length)];
+    factEl.style.opacity = '0';
+    setTimeout(() => { factEl.innerHTML = '<div class="fact-label">Did You Know?</div>' + fact; factEl.style.opacity = '1'; }, 300);
+  };
+  pickFact();
+  loadingFactInterval = setInterval(pickFact, 3500);
+}
+
+function hideCodeLoading() {
+  const overlay = document.getElementById('codeLoadingOverlay');
+  overlay.classList.remove('active');
+  if (loadingFactInterval) { clearInterval(loadingFactInterval); loadingFactInterval = null; }
+}
+
 // ── Editor snapshot for AI context (security-sanitised) ──
 const CODE_CONTEXT_MAX = 3000; // max chars sent to LLM as context
 const CODE_PLACEHOLDERS = [
@@ -3076,6 +3170,7 @@ function loadCase(id) {
     setDialectForCase(id); // Auto-set Python for python cases, PostgreSQL for SQL cases
     setupCodeEnvironment(id).catch(err => {
       console.error('Code setup failed:', err);
+      hideCodeLoading();
       renderCodeError(err.message || 'Failed to initialize code engine.');
     });
     switchTab('code'); // Start on Code Editor for SQL/Python cases
@@ -3546,6 +3641,7 @@ function initCodeMirrorEditor() {
 
 // ── Database/environment setup per case ──
 async function setupCodeEnvironment(caseId) {
+  showCodeLoading();
   // Render question in sidebar + mobile
   const dataset = SQL_DATASETS[caseId] || PYTHON_DATASETS[caseId];
   const qPanel = document.getElementById('questionPanel');
@@ -3593,6 +3689,7 @@ async function setupSQLDatabase(caseId) {
     setTimeout(() => sqlEditor.refresh(), 50);
   }
   resetCodeResults();
+  hideCodeLoading();
 }
 
 async function setupPythonEnvironment(caseId) {
@@ -3614,6 +3711,7 @@ async function setupPythonEnvironment(caseId) {
     setTimeout(() => sqlEditor.refresh(), 50);
   }
   resetCodeResults();
+  hideCodeLoading();
 }
 
 async function destroySQLDB() {
