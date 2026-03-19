@@ -4398,6 +4398,14 @@ async function checkMyAnswer() {
   const langLabel = isPy ? 'Python' : (sqlDialect === 'postgres' ? 'PostgreSQL' : 'SQLite');
   const codeBlock = isPy ? 'python' : 'sql';
 
+  const rowCount = resultsText ? (resultsText.match(/\n/g) || []).length - 1 : 0;
+  const emptyWarning = (!resultsText || resultsText.trim() === '' || rowCount <= 0)
+    ? '\n\n⚠️ IMPORTANT: The query returned 0 rows or empty output. This likely means the code has a bug (wrong column names, incorrect joins, date format mismatch, or logic error). Score should NOT exceed 4/10 if the output is empty — a correct query on the provided dataset MUST return rows.'
+    : '';
+  const errorWarning = resultsText.startsWith('Error:')
+    ? '\n\n⚠️ IMPORTANT: The code produced an error. Score should NOT exceed 2/10 for code that errors out.'
+    : '';
+
   const message = `Please score and review my ${langLabel} solution for the "${dataset.label}" exercise.
 
 \`\`\`${codeBlock}
@@ -4406,7 +4414,7 @@ ${code}
 
 Output:
 \`\`\`
-${resultsText}\`\`\`
+${resultsText || '(empty — 0 rows returned)'}\`\`\`${emptyWarning}${errorWarning}
 
 Please provide your feedback in this exact format:
 1. **Score: X/10**
