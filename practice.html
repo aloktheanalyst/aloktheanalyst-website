@@ -26,6 +26,13 @@
   window.dispatchEvent(new Event('pglite-ready'));
 </script>
 
+<!-- WebLLM — In-browser LLM inference via WebGPU (lazy init, no download until user opts in) -->
+<script type="module">
+  import { CreateMLCEngine } from 'https://esm.run/@mlc-ai/web-llm';
+  window.CreateMLCEngine = CreateMLCEngine;
+  window.dispatchEvent(new Event('webllm-ready'));
+</script>
+
 <style>
   :root {
     --bg:       #f8faff;
@@ -43,6 +50,7 @@
     --white:    #0f172a;
 
     /* AI provider colors */
+    --local-color:   #8b5cf6;
     --free-color:    #f97316;
     --claude-color:  #2563eb;
     --openai-color:  #059669;
@@ -214,12 +222,25 @@
   .ptab[data-provider="claude"] .picon { background: var(--claude-color); }
   .ptab[data-provider="openai"] .picon { background: var(--openai-color); border-radius: 50%; }
   .ptab[data-provider="gemini"] .picon { background: linear-gradient(135deg, var(--gemini-color), #ea4335, #fbbc04, var(--gemini-color)); border-radius: 50%; }
+  .ptab[data-provider="local"] .picon { background: var(--local-color); border-radius: 3px; }
 
   .ptab.active { background: var(--surface2); color: var(--white); }
   .ptab[data-provider="free"].active { color: var(--free-color); }
   .ptab[data-provider="claude"].active { color: var(--claude-color); }
   .ptab[data-provider="openai"].active { color: var(--openai-color); }
   .ptab[data-provider="gemini"].active { color: var(--gemini-color); }
+  .ptab[data-provider="local"].active { color: var(--local-color); }
+
+  /* Unlimited badge on Local tab */
+  .ptab .unlimited-badge {
+    font-size: 0.6rem;
+    background: rgba(139,92,246,0.15);
+    color: var(--local-color);
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    font-weight: 700;
+    line-height: 1;
+  }
 
   /* API KEY BUTTON */
   .apikey-btn {
@@ -623,6 +644,7 @@
   .dot-claude { background: var(--claude-color); }
   .dot-openai { background: var(--openai-color); }
   .dot-gemini { background: var(--gemini-color); }
+  .dot-local  { background: var(--local-color); }
 
   .msg-content { display: flex; flex-direction: column; gap: 0.3rem; max-width: 680px; }
 
@@ -837,6 +859,46 @@
   .badge-claude  { background: rgba(37,99,235,0.1); color: var(--accent); }
   .badge-openai  { background: rgba(16,163,127,0.15);  color: var(--openai-color); }
   .badge-gemini  { background: rgba(66,133,244,0.15);  color: var(--gemini-color); }
+  .badge-local   { background: rgba(139,92,246,0.1);   color: var(--local-color); }
+
+  /* WebLLM download/init progress UI */
+  .webllm-status {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    padding: 0.75rem; background: rgba(139,92,246,0.05);
+    border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; margin-top: 0.5rem;
+  }
+  .webllm-progress-bar {
+    width: 100%; height: 6px; background: var(--border);
+    border-radius: 3px; overflow: hidden;
+  }
+  .webllm-progress-fill {
+    height: 100%; background: var(--local-color);
+    border-radius: 3px; transition: width 0.3s ease; width: 0%;
+  }
+  .webllm-progress-text {
+    font-size: 0.72rem; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .webllm-download-btn {
+    background: var(--local-color); color: #fff; border: none;
+    border-radius: 6px; padding: 0.55rem 1.2rem; font-size: 0.8rem;
+    font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .webllm-download-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .webllm-download-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .webllm-unsupported {
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px; padding: 0.75rem; font-size: 0.78rem;
+    color: #ef4444; line-height: 1.5;
+  }
+  /* Streaming cursor animation */
+  .streaming-cursor {
+    display: inline-block; width: 2px; height: 1em;
+    background: var(--local-color); margin-left: 2px;
+    animation: blink 0.8s infinite; vertical-align: text-bottom;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
   .key-input-row { display: flex; gap: 0.5rem; }
 
@@ -1615,6 +1677,9 @@
       <button class="ptab" data-provider="gemini" onclick="setProvider('gemini', this)">
         <div class="picon"></div> Gemini
       </button>
+      <button class="ptab" data-provider="local" onclick="setProvider('local', this)">
+        <div class="picon"></div> Local <span class="unlimited-badge">&#8734;</span>
+      </button>
     </div>
 
     <!-- Auth Button -->
@@ -1915,11 +1980,27 @@
       <div class="key-status miss" id="geminiStatus">⬡ Not configured</div>
     </div>
 
+    <!-- Local (WebLLM — in-browser) -->
+    <div class="modal-section">
+      <div class="modal-label">
+        <span class="provider-badge badge-local">LOCAL &#8734;</span>
+        In-Browser AI (WebLLM)
+      </div>
+      <div id="webllmModalContent">
+        <!-- Dynamically rendered by renderWebLLMModalStatus() -->
+      </div>
+      <div class="model-select-row">
+        <span class="model-select-label">Model:</span>
+        <select class="model-select" id="localModel" onchange="saveModel('local', this.value)"></select>
+      </div>
+    </div>
+
     <div class="modal-note">
       🔒 Keys are saved in your browser's localStorage and are never shared. Get keys from:<br>
       <strong style="color:var(--accent)">Claude:</strong> console.anthropic.com &nbsp;·&nbsp;
       <strong style="color:var(--openai-color)">ChatGPT:</strong> platform.openai.com &nbsp;·&nbsp;
-      <strong style="color:var(--gemini-color)">Gemini:</strong> aistudio.google.com
+      <strong style="color:var(--gemini-color)">Gemini:</strong> aistudio.google.com &nbsp;·&nbsp;
+      <strong style="color:var(--local-color)">Local:</strong> No key needed — runs in your browser!
     </div>
 
     <div class="modal-footer">
@@ -3249,6 +3330,14 @@ let pyodideInstance = null;    // Pyodide runtime
 let pyodideReady = false;
 let pyodideLoading = false;
 let currentHintIndex = -1;    // -1 = no hint shown yet
+
+// WebLLM (local in-browser AI) state
+let webllmEngine = null;       // MLCEngine instance (null until model loaded)
+let webllmReady = false;       // true once model is loaded and ready for inference
+let webllmLoading = false;     // true during model download/initialization
+let webllmProgress = 0;        // 0-100 download progress
+let webllmError = null;        // Error message string, or null
+let webllmSupported = null;    // null = not checked, true/false after check
 let dialectCodeCache = {};    // { caseId: { postgres: '...', sqlite: '...', python: '...' } }
 
 // ── Loading overlay with rotating facts ──
@@ -3339,6 +3428,7 @@ function trackEvent(event, caseId, metadata) {
 
 const apiKeys = {
   free:   '__free__',
+  local:  '__local__',
   claude: localStorage.getItem('ak_claude') || '',
   openai: localStorage.getItem('ak_openai') || '',
   gemini: localStorage.getItem('ak_gemini') || '',
@@ -3369,6 +3459,10 @@ const modelOptions = {
     { value: 'gemini-1.5-pro',        label: 'Gemini 1.5 Pro' },
     { value: 'gemini-1.5-flash-002',  label: 'Gemini 1.5 Flash 002' },
   ],
+  local: [
+    { value: 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 Coder 1.5B (recommended)' },
+    { value: 'Qwen2.5-Coder-0.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 Coder 0.5B (lighter)' },
+  ],
 };
 
 const modelSelections = {
@@ -3376,6 +3470,7 @@ const modelSelections = {
   claude: localStorage.getItem('model_claude') || 'claude-sonnet-4-20250514',
   openai: localStorage.getItem('model_openai') || 'gpt-4o',
   gemini: localStorage.getItem('model_gemini') || 'gemini-2.0-flash',
+  local:  localStorage.getItem('model_local') || 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC',
 };
 
 const providerMeta = {
@@ -3383,11 +3478,127 @@ const providerMeta = {
   claude: { color: 'var(--claude-color)', dotClass: 'dot-claude', avatarText: '✦' },
   openai: { color: 'var(--openai-color)', dotClass: 'dot-openai', avatarText: '⊕' },
   gemini: { color: 'var(--gemini-color)', dotClass: 'dot-gemini', avatarText: '◈' },
+  local:  { color: 'var(--local-color)',  dotClass: 'dot-local',  avatarText: '⚡' },
 };
 
 function getProviderLabel(provider) {
-  const names = { free: 'Llama', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini' };
+  const names = { free: 'Llama', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
+  if (provider === 'local') {
+    const short = modelSelections[provider].replace(/-Instruct-q4f16_1-MLC$/, '').replace('Qwen2.5-Coder-', 'Qwen2.5 Coder ');
+    return `${names[provider]} · ${short}`;
+  }
   return `${names[provider]} · ${modelSelections[provider]}`;
+}
+
+// ═══════════════════════════════
+// WEBLLM (LOCAL IN-BROWSER AI)
+// ═══════════════════════════════
+function checkWebGPUSupport() {
+  if (webllmSupported !== null) return webllmSupported;
+  webllmSupported = !!navigator.gpu;
+  return webllmSupported;
+}
+
+async function initWebLLM() {
+  if (webllmLoading || webllmReady) return;
+  if (!checkWebGPUSupport()) {
+    webllmError = 'WebGPU is not supported in this browser. Please use Chrome 113+ or Edge 113+.';
+    renderWebLLMModalStatus();
+    return;
+  }
+  if (!window.CreateMLCEngine) {
+    webllmError = 'WebLLM library not loaded yet. Please wait a moment and try again.';
+    renderWebLLMModalStatus();
+    return;
+  }
+
+  webllmLoading = true;
+  webllmError = null;
+  webllmProgress = 0;
+  renderWebLLMModalStatus();
+
+  try {
+    const modelId = modelSelections.local;
+    webllmEngine = await window.CreateMLCEngine(modelId, {
+      initProgressCallback: (report) => {
+        webllmProgress = Math.round((report.progress || 0) * 100);
+        renderWebLLMModalStatus();
+        // Also update chat if a progress message is shown
+        const progressEl = document.getElementById('webllmChatProgress');
+        if (progressEl) progressEl.textContent = `Downloading model... ${webllmProgress}%`;
+      }
+    });
+    webllmReady = true;
+    webllmLoading = false;
+    webllmError = null;
+    localStorage.setItem('webllm_model_cached', modelId);
+    renderWebLLMModalStatus();
+  } catch (err) {
+    webllmLoading = false;
+    webllmReady = false;
+    webllmEngine = null;
+    webllmError = err.message || 'Failed to initialize WebLLM. Your device may not have enough memory.';
+    renderWebLLMModalStatus();
+  }
+}
+
+function renderWebLLMModalStatus() {
+  const container = document.getElementById('webllmModalContent');
+  if (!container) return;
+
+  if (!checkWebGPUSupport()) {
+    container.innerHTML = `
+      <div class="webllm-unsupported">
+        <strong>&#9888; WebGPU Not Supported</strong><br>
+        Your browser doesn't support WebGPU, which is required for in-browser AI.
+        Please use <strong>Chrome 113+</strong>, <strong>Edge 113+</strong>, or <strong>Safari 26+</strong>.
+      </div>`;
+    return;
+  }
+
+  if (webllmReady) {
+    container.innerHTML = `
+      <div class="key-status ok">&#10003; Model loaded and ready — unlimited AI coaching!</div>`;
+    return;
+  }
+
+  if (webllmLoading) {
+    container.innerHTML = `
+      <div class="webllm-status">
+        <div class="webllm-progress-text">Downloading model... ${webllmProgress}%</div>
+        <div class="webllm-progress-bar">
+          <div class="webllm-progress-fill" style="width:${webllmProgress}%"></div>
+        </div>
+        <div class="webllm-progress-text" style="font-size:0.68rem; color:var(--muted);">
+          First download is ~1 GB. Cached for future visits.
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (webllmError) {
+    container.innerHTML = `
+      <div class="webllm-unsupported">${escapeHtml(webllmError)}</div>
+      <button class="webllm-download-btn" style="margin-top:0.5rem" onclick="initWebLLM()">
+        &#8635; Retry
+      </button>`;
+    return;
+  }
+
+  // Default: not yet downloaded
+  const cachedModel = localStorage.getItem('webllm_model_cached');
+  const sizeNote = modelSelections.local.includes('0.5B') ? '~600 MB' : '~1 GB';
+  container.innerHTML = `
+    <div style="font-size:0.8rem; color:var(--text); line-height:1.55; margin-bottom:0.6rem;">
+      Run AI entirely in your browser — no API key, no rate limits, completely free.
+      ${cachedModel === modelSelections.local
+        ? '<br><span style="color:var(--green); font-size:0.75rem;">&#10003; Model previously cached — should load quickly.</span>'
+        : `<br><span style="color:var(--muted); font-size:0.75rem;">First download: ${sizeNote}. Cached in browser after that.</span>`
+      }
+    </div>
+    <button class="webllm-download-btn" onclick="initWebLLM()">
+      &#9889; Download &amp; Activate Model
+    </button>`;
 }
 
 // ═══════════════════════════════
@@ -3487,6 +3698,27 @@ function setProvider(provider, el) {
   const meta = providerMeta[provider];
   document.getElementById('piDot').style.background = meta.color;
   document.getElementById('piLabel').textContent = getProviderLabel(provider);
+
+  // Auto-init WebLLM when Local is selected
+  if (provider === 'local' && !webllmReady && !webllmLoading) {
+    if (!checkWebGPUSupport()) {
+      appendMessage('bot', '⚠️ **WebGPU Not Supported**\n\nYour browser doesn\'t support WebGPU, which is required for the local AI model. Please use **Chrome 113+** or **Edge 113+**, or switch to the Free tab.');
+      return;
+    }
+    const cachedModel = localStorage.getItem('webllm_model_cached');
+    if (cachedModel === modelSelections.local) {
+      // Previously downloaded — auto-initialize
+      appendMessage('bot', '⚡ **Loading local AI model...** This should be quick since the model is cached from a previous session.');
+      initWebLLM().then(() => {
+        if (webllmReady) {
+          appendMessage('bot', '✅ **Local AI ready!** You now have unlimited AI coaching — no rate limits, no API keys needed.');
+        }
+      });
+    } else {
+      const sizeNote = modelSelections.local.includes('0.5B') ? '~600 MB' : '~1 GB';
+      appendMessage('bot', `⚡ **Local AI (Unlimited)**\n\nThis runs a Qwen2.5 Coder model entirely in your browser — no API key, no rate limits.\n\nFirst download is ${sizeNote} (cached after that). Go to **API Keys** and click **Download & Activate Model**, or just send a message and it will auto-download.`);
+    }
+  }
 }
 
 function saveModel(provider, value) {
@@ -3496,10 +3728,17 @@ function saveModel(provider, value) {
   if (provider === currentProvider) {
     document.getElementById('piLabel').textContent = getProviderLabel(provider);
   }
+  // If local model changed, need to re-init engine
+  if (provider === 'local' && webllmReady) {
+    webllmReady = false;
+    webllmEngine = null;
+    webllmProgress = 0;
+    renderWebLLMModalStatus();
+  }
 }
 
 function populateModelSelects() {
-  ['free', 'claude', 'openai', 'gemini'].forEach(p => {
+  ['free', 'claude', 'openai', 'gemini', 'local'].forEach(p => {
     const sel = document.getElementById(`${p}Model`);
     if (!sel) return;
     sel.innerHTML = '';
@@ -3619,27 +3858,64 @@ async function sendToAI(userText, isSystemTrigger) {
   document.getElementById('sendBtn').disabled = true;
   showTyping();
 
+  // Auto-init WebLLM if user sends a message with Local selected but model not loaded
+  if (currentProvider === 'local' && !webllmReady) {
+    if (!checkWebGPUSupport()) {
+      removeTyping();
+      appendMessage('bot', '⚠️ WebGPU is not supported in your browser. Please use Chrome 113+ or switch to another provider.');
+      isLoading = false;
+      document.getElementById('sendBtn').disabled = false;
+      if (injectedCodeContext && originalMsg) conversationHistory[lastIdx] = originalMsg;
+      return;
+    }
+    removeTyping();
+    appendMessage('bot', '⚡ Downloading local AI model... This is a one-time download (~1 GB). Future visits will load instantly.');
+    showTyping();
+    await initWebLLM();
+    if (!webllmReady) {
+      removeTyping();
+      appendMessage('bot', '⚠️ Failed to load the local AI model. ' + (webllmError || 'Please check that your device has enough memory and supports WebGPU.'));
+      isLoading = false;
+      document.getElementById('sendBtn').disabled = false;
+      if (injectedCodeContext && originalMsg) conversationHistory[lastIdx] = originalMsg;
+      return;
+    }
+    removeTyping();
+    showTyping();
+  }
+
   try {
     let reply = '';
 
-    if (currentProvider === 'free') {
-      reply = await callFree();
-    } else if (currentProvider === 'claude') {
-      reply = await callClaude();
-    } else if (currentProvider === 'openai') {
-      reply = await callOpenAI();
-    } else if (currentProvider === 'gemini') {
-      reply = await callGemini();
+    if (currentProvider === 'local') {
+      // callLocal() handles streaming display internally
+      reply = await callLocal();
+    } else {
+      if (currentProvider === 'free') {
+        reply = await callFree();
+      } else if (currentProvider === 'claude') {
+        reply = await callClaude();
+      } else if (currentProvider === 'openai') {
+        reply = await callOpenAI();
+      } else if (currentProvider === 'gemini') {
+        reply = await callGemini();
+      }
+      removeTyping();
+      appendMessage('bot', reply);
     }
 
-    removeTyping();
     conversationHistory.push({ role: 'assistant', content: reply });
-    appendMessage('bot', reply);
   } catch (err) {
     removeTyping();
+    // Also remove any partial streaming message on error
+    const streamEl = document.getElementById('streamingMsg');
+    if (streamEl) streamEl.remove();
+
     const errMsg = err.message || 'Unknown error';
     if (currentProvider === 'free') {
       appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nThe free AI service may be temporarily unavailable. Try again in a moment, or switch to another provider with your own API key.`);
+    } else if (currentProvider === 'local') {
+      appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nMake sure your device supports WebGPU and has enough memory. Go to **API Keys** to check the Local AI status.`);
     } else {
       appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nMake sure your API key for **${currentProvider}** is configured. Click **API Keys** in the top bar.`);
     }
@@ -3758,6 +4034,95 @@ async function callGemini() {
   }
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+// ── LOCAL (WebLLM) CALLERS ──
+async function callLocal() {
+  if (!webllmReady || !webllmEngine) {
+    throw new Error('Local AI model is not loaded yet. Go to API Keys to download the model first.');
+  }
+
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...conversationHistory
+  ];
+
+  const completion = await webllmEngine.chat.completions.create({
+    messages,
+    max_tokens: 1024,
+    temperature: 0.7,
+    stream: true
+  });
+
+  // Stream tokens into the UI
+  let fullReply = '';
+  removeTyping();
+  const streamMsg = createStreamingBubble();
+
+  for await (const chunk of completion) {
+    const delta = chunk.choices?.[0]?.delta?.content || '';
+    if (delta) {
+      fullReply += delta;
+      updateStreamingBubble(streamMsg, fullReply);
+    }
+  }
+
+  finalizeStreamingBubble(streamMsg, fullReply);
+  return fullReply;
+}
+
+async function callLocalNonStreaming() {
+  if (!webllmReady || !webllmEngine) {
+    throw new Error('Local AI model is not loaded yet. Go to API Keys to download the model first.');
+  }
+
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...conversationHistory
+  ];
+
+  const result = await webllmEngine.chat.completions.create({
+    messages,
+    max_tokens: 1024,
+    temperature: 0.7,
+    stream: false
+  });
+
+  return result.choices?.[0]?.message?.content || '';
+}
+
+// ── STREAMING BUBBLE HELPERS ──
+function createStreamingBubble() {
+  const container = document.getElementById('messages');
+  const meta = providerMeta[currentProvider];
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.id = 'streamingMsg';
+  div.innerHTML = `
+    <div class="msg-avatar bot-av">
+      <span>${meta.avatarText}</span>
+      <div class="provider-dot ${meta.dotClass}"></div>
+    </div>
+    <div class="msg-content">
+      <div class="msg-meta">${getProviderLabel(currentProvider).split(' · ')[0]}</div>
+      <div class="bubble"><span class="streaming-text"></span><span class="streaming-cursor"></span></div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function updateStreamingBubble(el, text) {
+  const textSpan = el.querySelector('.streaming-text');
+  if (textSpan) textSpan.innerHTML = formatMessage(text);
+  const container = document.getElementById('messages');
+  container.scrollTop = container.scrollHeight;
+}
+
+function finalizeStreamingBubble(el, text) {
+  el.removeAttribute('id');
+  const bubble = el.querySelector('.bubble');
+  if (bubble) bubble.innerHTML = formatMessage(text);
 }
 
 // ── MESSAGE RENDERING ──
@@ -3902,6 +4267,7 @@ function openModal() {
     const val = apiKeys[p];
     if (val) document.getElementById(`${p}Key`).placeholder = val.slice(0,8) + '••••••••••••';
   });
+  renderWebLLMModalStatus();
 }
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
@@ -4437,6 +4803,9 @@ Please provide your feedback in this exact format:
       reply = await callOpenAI();
     } else if (currentProvider === 'gemini') {
       reply = await callGemini();
+    } else if (currentProvider === 'local') {
+      if (!webllmReady) await initWebLLM();
+      reply = await callLocalNonStreaming();
     }
 
     conversationHistory.push({ role: 'assistant', content: reply });
