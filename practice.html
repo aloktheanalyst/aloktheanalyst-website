@@ -1753,6 +1753,7 @@ const PROMPTS = [
   { id: 'python_agg',    title: 'Aggregation & GroupBy Patterns',       topic: 'python',  difficulty: 'medium', tag: 'Python' },
   { id: 'python_debug',  title: 'Debug & List Comprehension',           topic: 'python',  difficulty: 'easy',   tag: 'Python' },
   { id: 'python_palindrome', title: 'Longest Palindromic Substring',    topic: 'python',  difficulty: 'medium', tag: 'Python' },
+  { id: 'python_fd',    title: 'FD Interest Calculator (Fintech)',      topic: 'python',  difficulty: 'hard',   tag: 'Python' },
 
   // ── Visualization ──
   { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'viz',     difficulty: 'easy',   tag: 'Viz' },
@@ -1804,6 +1805,7 @@ const CASE_PROMPTS = {
   python_agg:    'Give me a pandas aggregation case study. Provide a scenario requiring complex groupby operations and ask me to write the solution.',
   python_debug:  'You are interviewing a candidate for a data analyst role at Coinbase. This round tests Python fundamentals — no pandas or data frames. Present the candidate with a buggy function that is supposed to filter odd numbers from a list. The function has indentation errors and a logic bug (y_list is reset inside the loop). Ask them to: (1) identify and fix all bugs, (2) rewrite the same logic as a single-line list comprehension, (3) write a list comprehension to generate tuple pairs like [(1,1),(2,1),(2,2),(3,1),(3,2),(3,3)] given an input n. Push them on edge cases: empty lists, negative numbers, and performance differences between the approaches.',
   python_palindrome: 'You are interviewing a candidate for a Senior Data Analyst role at Jio Cinema. This question tests Python string manipulation and algorithm thinking. Ask them to find the longest palindromic substring in a given string. Start simple: can they check if a string is a palindrome (s == s[::-1])? Then the brute force approach: check all substrings. Push for optimization: the expand-around-center approach is O(n²) time and O(1) space. Discuss edge cases: single character, all same characters, no palindrome longer than 1.',
+  python_fd:         'You are giving a fintech analytics take-home assignment. The candidate must build an FD (Fixed Deposit) interest calculator in Python. The bank offers two FD types: (1) No lock-up at 4% annual, withdraw anytime; (2) Lock-up from 14-365 days with interest scaling linearly from 4.5% to 14%. Early withdrawal drops the rate to 2% for the withdrawn portion. Partial withdrawals are allowed. Guide them through: understanding the interest rate formula (linear interpolation), handling partial withdrawals (split principal tracking), pro-rating daily interest, and testing with complex multi-user scenarios. Push them on edge cases: withdrawal on exact lock-up end date, multiple partial withdrawals, and zero-day deposits.',
 
   // ── Visualization prompts ──
   viz_choose:    'Give me a data visualization case study. Describe a dataset and business question, then ask me to choose the right chart type and justify my choice.',
@@ -2654,6 +2656,56 @@ n = 4
 s1 = "babad"
 s2 = "cbbd"
 s3 = "zcbbbcd"
+`
+  },
+
+  python_fd: {
+    label: 'FD Interest Calculator (Fintech)',
+    question: '<em>Fintech analytics take-home assignment.</em><br><br>A bank offers two Fixed Deposit (FD) options:<br><br><strong>Option A — No lock-up:</strong> 4% annual return, withdraw anytime.<br><strong>Option B — Lock-up (14–365 days):</strong> Interest scales <strong>linearly from 4.5% to 14%</strong>. Early withdrawal drops rate to <strong>2%</strong> for the withdrawn portion. Partial withdrawals allowed.<br><br>All rates are <strong>annual</strong>. Interest is calculated <strong>daily</strong> (rate/365).<br><br><strong>Build a function</strong> <code>calculate_interest(deposits)</code> that takes a list of deposit scenarios (pre-loaded as <strong>test_scenarios</strong>) and returns the total interest earned from day 1 to day 365.<br><br>Each scenario dict has: <code>amount</code>, <code>deposit_day</code>, <code>lockup_days</code> (0 = no lockup), <code>withdrawals</code> (list of <code>{day, amount}</code>).<br><br><strong>Test with the pre-loaded scenarios and print results per user + total.</strong>',
+    defaultQuery: '# Write your Python code here\n',
+    hints: [
+      'For lock-up FDs, calculate the interest rate with linear interpolation: rate = 4.5 + (lockup_days - 14) * (14 - 4.5) / (365 - 14). This gives 4.5% for 14 days and 14% for 365 days.',
+      'Track remaining principal after each withdrawal. For lock-up FDs: if withdrawal_day < deposit_day + lockup_days, the withdrawn portion earns only 2% for its entire period. The remaining principal keeps earning the original rate.',
+      'Daily interest = principal * (annual_rate / 365). Loop through each day from deposit_day to 365. On withdrawal days, split principal and adjust rates for the withdrawn portion. Sum all daily interest amounts.'
+    ],
+    schema: [
+      { name: 'test_scenarios (list)', columns: [
+        { name: 'amount', type: 'deposit amount' }, { name: 'deposit_day', type: 'day 1-365' },
+        { name: 'lockup_days', type: '0 or 14-365' }, { name: 'withdrawals', type: 'list of {day, amount}' }
+      ]}
+    ],
+    setupCode: `
+# Test scenarios from the assignment
+test_scenarios = [
+    {
+        "label": "User 1",
+        "amount": 1000,
+        "deposit_day": 1,
+        "lockup_days": 180,
+        "withdrawals": [
+            {"day": 90, "amount": 500},
+            {"day": 181, "amount": 500}
+        ]
+    },
+    {
+        "label": "User 2",
+        "amount": 2000,
+        "deposit_day": 30,
+        "lockup_days": 0,
+        "withdrawals": [
+            {"day": 365, "amount": 2000}
+        ]
+    },
+    {
+        "label": "User 3",
+        "amount": 1000,
+        "deposit_day": 60,
+        "lockup_days": 365,
+        "withdrawals": [
+            {"day": 200, "amount": 1000}
+        ]
+    }
+]
 `
   }
 };
