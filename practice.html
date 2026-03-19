@@ -3379,12 +3379,14 @@ function toggleSolved(id, e) {
   const idx = solved.indexOf(id);
   if (idx >= 0) solved.splice(idx, 1); else solved.push(id);
   saveSolvedCases(solved);
+  pushToCloud();
   renderPromptList(activeFilter);
 }
 
 function markCaseSolved(id) {
   const solved = getSolvedCases();
   if (!solved.includes(id)) { solved.push(id); saveSolvedCases(solved); }
+  pushToCloud();
   renderPromptList(activeFilter);
   const prompt = document.getElementById('solvedPrompt');
   if (prompt) prompt.remove();
@@ -4776,6 +4778,7 @@ function saveProfile() {
     updatedAt: new Date().toISOString()
   };
   localStorage.setItem('userProfile', JSON.stringify(profile));
+  pushToCloud();
   closeProfileModal();
   // Show quick toast
   const toast = document.createElement('div');
@@ -4797,6 +4800,7 @@ async function checkAuth() {
     if (data.authenticated && data.user) {
       currentUser = data.user;
       showSignedIn(data.user);
+      syncFromCloud();
     } else {
       currentUser = null;
       showSignedOut();
@@ -4805,6 +4809,52 @@ async function checkAuth() {
     currentUser = null;
     showSignedOut();
   }
+}
+
+// ── Cloud Sync (D1) ──
+async function syncFromCloud() {
+  try {
+    const res = await fetch('/api/profile');
+    if (!res.ok) return;
+    const cloud = await res.json();
+
+    const localProfile = JSON.parse(localStorage.getItem('userProfile') || 'null');
+    const localSolved = getSolvedCases();
+
+    // Profile: cloud wins if newer, otherwise push local to cloud
+    if (cloud.profile && cloud.updatedAt) {
+      const cloudTime = new Date(cloud.updatedAt).getTime();
+      const localTime = localProfile?.updatedAt ? new Date(localProfile.updatedAt).getTime() : 0;
+      if (cloudTime >= localTime) {
+        localStorage.setItem('userProfile', JSON.stringify(cloud.profile));
+      }
+    } else if (localProfile && Object.keys(localProfile).length > 0) {
+      pushToCloud();
+      return;
+    }
+
+    // Solved cases: union (never lose progress from either device)
+    const cloudSolved = cloud.solvedCases || [];
+    const merged = [...new Set([...localSolved, ...cloudSolved])];
+    saveSolvedCases(merged);
+    renderPromptList(activeFilter);
+
+    // If cloud was empty but local had data, push the merged result
+    if (cloudSolved.length === 0 && localSolved.length > 0) {
+      pushToCloud();
+    }
+  } catch { /* network failure — localStorage still works */ }
+}
+
+function pushToCloud() {
+  if (!currentUser) return;
+  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  const solvedCases = getSolvedCases();
+  fetch('/api/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ profile, solvedCases }),
+  }).catch(() => {});
 }
 
 function showSignedIn(user) {
