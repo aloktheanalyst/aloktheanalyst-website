@@ -10,18 +10,22 @@
 
 const RATE_LIMIT = 30;     // max requests per window per IP
 const RATE_WINDOW = 3600;  // window in seconds (1 hour)
-const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8-fast';
+const DEFAULT_MODEL = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 
 // Global daily cap — keeps total usage within Cloudflare's free 10,000 neurons/day.
-// Llama 8B ≈ 30 neurons/exchange → 200 requests ≈ 6,000 neurons (safe headroom).
+// DeepSeek R1 ≈ 250 neurons/exchange (heavy reasoning output).
+// Mixed usage (R1 + lighter models) averages ~150 neurons/exchange.
+// 60 requests × 150 avg ≈ 9,000 neurons (safe headroom).
 // Resets daily via KV TTL.
-const DAILY_GLOBAL_CAP = 200;
+const DAILY_GLOBAL_CAP = 60;
 const DAILY_WINDOW = 86400;  // 24 hours in seconds
 
 // Whitelist — prevent users from running arbitrary models on your account
 const ALLOWED_MODELS = [
   '@cf/meta/llama-3.1-8b-instruct-fp8-fast',
-  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  '@cf/qwen/qwen2.5-coder-32b-instruct',
+  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+  '@cf/meta/llama-4-scout-17b-16e-instruct',
 ];
 
 const CORS = {

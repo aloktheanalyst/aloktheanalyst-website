@@ -3346,8 +3346,10 @@ const apiKeys = {
 
 const modelOptions = {
   free: [
-    { value: '@cf/meta/llama-3.1-8b-instruct-fp8-fast',  label: 'Llama 3.1 8B (fast)' },
-    { value: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',  label: 'Llama 3.3 70B (quality)' },
+    { value: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',   label: 'DeepSeek R1 32B (reasoning)' },
+    { value: '@cf/qwen/qwen2.5-coder-32b-instruct',            label: 'Qwen 2.5 Coder 32B (code)' },
+    { value: '@cf/meta/llama-4-scout-17b-16e-instruct',         label: 'Llama 4 Scout 17B (fast)' },
+    { value: '@cf/meta/llama-3.1-8b-instruct-fp8-fast',         label: 'Llama 3.1 8B (lightweight)' },
   ],
   claude: [
     { value: 'claude-sonnet-4-20250514',  label: 'Claude Sonnet 4 (latest)' },
@@ -3370,7 +3372,7 @@ const modelOptions = {
 };
 
 const modelSelections = {
-  free:   localStorage.getItem('model_free') || '@cf/meta/llama-3.1-8b-instruct-fp8-fast',
+  free:   localStorage.getItem('model_free') || '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
   claude: localStorage.getItem('model_claude') || 'claude-sonnet-4-20250514',
   openai: localStorage.getItem('model_openai') || 'gpt-4o',
   gemini: localStorage.getItem('model_gemini') || 'gemini-2.0-flash',
