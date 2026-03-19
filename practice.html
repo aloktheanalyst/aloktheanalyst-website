@@ -365,6 +365,11 @@
     letter-spacing: 1.5px;
     text-transform: uppercase;
     padding: 0.6rem 0.4rem 0.4rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .progress-counter {
+    font-size: 0.62rem; color: var(--green); letter-spacing: 0;
+    text-transform: none; font-weight: 600;
   }
 
   .prompt-item {
@@ -384,7 +389,30 @@
     color: var(--text);
     line-height: 1.35;
     margin-bottom: 0.3rem;
+    display: flex; align-items: center; gap: 0.4rem;
   }
+  .prompt-item-title .solved-check {
+    color: var(--green); font-size: 0.72rem; flex-shrink: 0;
+  }
+  .solved-prompt {
+    background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.25);
+    border-radius: 8px; padding: 0.6rem 0.8rem; margin-top: 0.75rem;
+    display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+  }
+  .solved-prompt button {
+    padding: 0.35rem 0.8rem; border-radius: 6px; border: none;
+    font-size: 0.72rem; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; white-space: nowrap;
+  }
+  .solved-prompt .btn-yes { background: var(--green); color: #fff; }
+  .solved-prompt .btn-no { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+  .mark-solved-btn {
+    font-size: 0.6rem; color: var(--muted); cursor: pointer; background: none;
+    border: none; font-family: 'JetBrains Mono', monospace; padding: 0.15rem 0.4rem;
+    border-radius: 3px; transition: all 0.2s;
+  }
+  .mark-solved-btn:hover { color: var(--green); background: rgba(22,163,74,0.08); }
 
   .prompt-item-meta {
     display: flex;
@@ -1613,7 +1641,10 @@
       </div>
     </div>
     <div class="sidebar-scroll">
-      <div class="prompt-section-title" id="sectionTitle">All Practice Problems</div>
+      <div class="prompt-section-title" id="sectionTitle">
+        <span id="sectionTitleText">All Practice Problems</span>
+        <span class="progress-counter" id="progressCounter"></span>
+      </div>
       <div id="promptList"></div>
     </div>
   </aside>
@@ -3337,18 +3368,51 @@ window.onload = () => {
 // ═══════════════════════════════
 // SIDEBAR
 // ═══════════════════════════════
+function getSolvedCases() {
+  try { return JSON.parse(localStorage.getItem('solvedCases') || '[]'); } catch { return []; }
+}
+function saveSolvedCases(ids) { localStorage.setItem('solvedCases', JSON.stringify(ids)); }
+
+function toggleSolved(id, e) {
+  e.stopPropagation();
+  const solved = getSolvedCases();
+  const idx = solved.indexOf(id);
+  if (idx >= 0) solved.splice(idx, 1); else solved.push(id);
+  saveSolvedCases(solved);
+  renderPromptList(activeFilter);
+}
+
+function markCaseSolved(id) {
+  const solved = getSolvedCases();
+  if (!solved.includes(id)) { solved.push(id); saveSolvedCases(solved); }
+  renderPromptList(activeFilter);
+  const prompt = document.getElementById('solvedPrompt');
+  if (prompt) prompt.remove();
+}
+
 function renderPromptList(filter = 'all') {
   const list = document.getElementById('promptList');
   const filtered = filter === 'all' ? PROMPTS : PROMPTS.filter(p => p.topic === filter);
-  list.innerHTML = filtered.map(p => `
+  const solved = getSolvedCases();
+  list.innerHTML = filtered.map(p => {
+    const isSolved = solved.includes(p.id);
+    return `
     <div class="prompt-item ${activeCaseId === p.id ? 'active' : ''}" onclick="loadCase('${p.id}')">
-      <div class="prompt-item-title">${p.title}</div>
+      <div class="prompt-item-title">
+        ${isSolved ? '<span class="solved-check" title="Solved">&#10003;</span>' : ''}
+        <span>${p.title}</span>
+      </div>
       <div class="prompt-item-meta">
         <span class="prompt-tag">${p.tag}</span>
         <span class="difficulty ${p.difficulty}">${p.difficulty}</span>
+        <button class="mark-solved-btn" onclick="toggleSolved('${p.id}', event)" title="${isSolved ? 'Mark unsolved' : 'Mark solved'}">${isSolved ? 'undo' : 'mark done'}</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+  // Update progress counter
+  const solvedInFilter = filtered.filter(p => solved.includes(p.id)).length;
+  const counter = document.getElementById('progressCounter');
+  if (counter) counter.textContent = solvedInFilter > 0 ? `${solvedInFilter}/${filtered.length} solved` : '';
 }
 
 const SECTION_TITLES = {
@@ -3364,7 +3428,7 @@ function filterTopic(topic, el) {
   activeFilter = topic;
   document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('sectionTitle').textContent = SECTION_TITLES[topic] || 'Case Studies';
+  document.getElementById('sectionTitleText').textContent = SECTION_TITLES[topic] || 'Case Studies';
   renderPromptList(topic);
 }
 
@@ -4333,6 +4397,21 @@ Please provide your feedback in this exact format:
     // Render feedback inline in results area
     resultsEl.innerHTML = `<div class="ai-feedback-panel">${formatMessage(reply)}</div>`;
     document.getElementById('sqlExecInfo').textContent = 'Feedback ready';
+
+    // If score >= 7 and not already solved, prompt user to mark as solved
+    if (scoreMatch && activeCaseId) {
+      const score = parseInt(scoreMatch[1]);
+      const solved = getSolvedCases();
+      if (score >= 7 && !solved.includes(activeCaseId)) {
+        const caseId = activeCaseId;
+        resultsEl.insertAdjacentHTML('beforeend', `
+          <div class="solved-prompt" id="solvedPrompt">
+            <span>Nice! You scored <strong>${score}/10</strong>. Mark this as solved?</span>
+            <button class="btn-yes" onclick="markCaseSolved('${caseId}')">Yes</button>
+            <button class="btn-no" onclick="document.getElementById('solvedPrompt').remove()">Not yet</button>
+          </div>`);
+      }
+    }
   } catch (err) {
     const errMsg = err.message || 'Unknown error';
     resultsEl.innerHTML = `<div class="sql-error"><strong>AI Coach Error:</strong> ${escapeHtml(errMsg)}</div>`;
