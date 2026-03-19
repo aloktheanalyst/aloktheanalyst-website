@@ -379,9 +379,16 @@
     transition: all 0.2s;
     margin-bottom: 0.25rem;
     border: 1px solid transparent;
+    border-left: 3px solid transparent;
   }
-  .prompt-item:hover { background: var(--surface); border-color: var(--border); }
-  .prompt-item.active { background: rgba(37,99,235,0.07); border-color: rgba(37,99,235,0.3); }
+  .prompt-item:hover { background: var(--surface); border-color: var(--border); border-left-color: var(--border); }
+  .prompt-item.active { background: rgba(37,99,235,0.07); border-color: rgba(37,99,235,0.3); border-left-color: var(--accent); }
+  .prompt-item.solved {
+    background: rgba(22,163,74,0.04);
+    border-left-color: var(--green);
+  }
+  .prompt-item.solved:hover { background: rgba(22,163,74,0.08); }
+  .prompt-item.solved .prompt-item-title { color: var(--muted); }
 
   .prompt-item-title {
     font-size: 0.82rem;
@@ -391,8 +398,12 @@
     margin-bottom: 0.3rem;
     display: flex; align-items: center; gap: 0.4rem;
   }
-  .prompt-item-title .solved-check {
-    color: var(--green); font-size: 0.72rem; flex-shrink: 0;
+  .solved-badge {
+    font-size: 0.55rem; font-family: 'JetBrains Mono', monospace;
+    background: rgba(22,163,74,0.12); color: var(--green);
+    padding: 0.1rem 0.4rem; border-radius: 3px;
+    font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    flex-shrink: 0;
   }
   .solved-overlay {
     position: fixed; inset: 0; z-index: 2000;
@@ -3417,11 +3428,14 @@ function renderPromptList(filter = 'all') {
   const solved = getSolvedCases();
   list.innerHTML = filtered.map(p => {
     const isSolved = solved.includes(p.id);
+    const classes = ['prompt-item'];
+    if (activeCaseId === p.id) classes.push('active');
+    if (isSolved) classes.push('solved');
     return `
-    <div class="prompt-item ${activeCaseId === p.id ? 'active' : ''}" onclick="loadCase('${p.id}')">
+    <div class="${classes.join(' ')}" onclick="loadCase('${p.id}')">
       <div class="prompt-item-title">
-        ${isSolved ? '<span class="solved-check" title="Solved">&#10003;</span>' : ''}
         <span>${p.title}</span>
+        ${isSolved ? '<span class="solved-badge">solved</span>' : ''}
       </div>
       <div class="prompt-item-meta">
         <span class="prompt-tag">${p.tag}</span>
