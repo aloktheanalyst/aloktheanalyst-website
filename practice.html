@@ -65,9 +65,19 @@
   body::before { content: none; }
 
   /* ── TOP BAR ── */
-  /* ── FULLSCREEN: hide topbar & footer ── */
+  /* ── FOCUS MODE (fullscreen): hide chrome, dim non-essentials ── */
   :fullscreen .topbar,
   :fullscreen footer { display: none !important; }
+  :fullscreen .sidebar { opacity: 0.2; transition: opacity 0.3s; }
+  :fullscreen .sidebar:hover { opacity: 1; }
+  :fullscreen .chat-header { opacity: 0.25; transition: opacity 0.3s; }
+  :fullscreen .chat-header:hover { opacity: 1; }
+  :fullscreen .schema-sidebar > .schema-title,
+  :fullscreen #schemaContent { opacity: 0.2; transition: opacity 0.3s; }
+  :fullscreen .schema-sidebar:hover > .schema-title,
+  :fullscreen .schema-sidebar:hover #schemaContent { opacity: 1; }
+  :fullscreen .sql-toolbar { opacity: 0.5; transition: opacity 0.3s; }
+  :fullscreen .sql-toolbar:hover { opacity: 1; }
 
   .topbar {
     display: flex;
