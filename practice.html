@@ -1736,6 +1736,8 @@ const PROMPTS = [
   { id: 'sql_revsegment',    title: 'Revenue Contribution by Segment',   topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_tieredreward',  title: 'Tiered Reward System (Multi-JOIN)', topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_activeweeks',   title: 'Consecutive Active Weeks',          topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_gmvretention',  title: 'GMV Retention by Cohort Week',      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_visitconvert',  title: 'Visits Before Nth Order',           topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
 
   // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
@@ -1785,6 +1787,8 @@ const CASE_PROMPTS = {
   sql_revsegment:    'You are interviewing a candidate for a data analyst role at Meesho (e-commerce). The candidate has an orders table. Ask them to find the revenue contribution of users who placed 12+ orders in 2023, specifically for April 2024. They need to segment users into "high_frequency_2023" vs "other_users" and show each segment\'s revenue and percentage of total April 2024 revenue. This tests CTEs, conditional segmentation with CASE/IN subquery, date filtering across years, and percentage calculations. Push them to think about edge cases: users who were active in 2023 but not in April 2024, and how to handle the denominator for percentage.',
   sql_tieredreward:  'You are interviewing a candidate for a Senior Data Analyst role at Jio Cinema. The candidate has users, activity_logs, and transactions tables. Ask them to classify users into reward tiers (Bronze, Silver, Gold) based on login frequency and spending in the last 30 days. Bronze: 5+ logins and $100+ spent. Silver: 10+ logins and $500+ spent. Gold: 20+ logins and $1000+ spent. This tests multi-table JOINs, conditional aggregation, CASE WHEN with multiple conditions, and tier ranking logic. Push them on: should a Gold user also show as Silver/Bronze? (No — assign highest tier only). What about users who qualify for no tier?',
   sql_activeweeks:   'You are interviewing a candidate for a Senior Data Analyst role at Jio Cinema. The candidate has a user_activity table. Ask them to find users active at least 3 days per week for 6 consecutive calendar weeks — these users earn a bonus sticker. This tests week extraction, GROUP BY + HAVING for weekly thresholds, and the islands-and-gaps pattern for consecutive qualifying weeks. Push them to think about: how to define "calendar week" (ISO week number), how to detect consecutive weeks (gaps-and-islands with ROW_NUMBER), and edge cases like activity spanning year boundaries.',
+  sql_gmvretention:  'You are giving a take-home SQL assignment from Medbikri. The candidate has an orders table. Ask them to build a GMV (Gross Merchandise Value) retention matrix by weekly cohort. The cohort is defined by the week of the user\'s first order. GMV-Week 0 is the total order value from that cohort\'s first week, GMV-Week 1 is the next week, etc. Output: week_start_date, gmv_week_0 through gmv_week_4. This tests cohort assignment (MIN order date per user), weekly date bucketing, conditional aggregation with CASE for each week offset, and pivot-style output. Push them on: how to define "week start" consistently, and that they need to track individual users across weeks (not just aggregate orders).',
+  sql_visitconvert:  'You are giving a take-home SQL assignment from Medbikri. The candidate has visits and orders tables joined by user_id. Ask them to find: (1) the average and median number of visits before a user\'s 1st order, (2) the average and median number of visits before a user\'s 8th order. This tests counting events before a threshold using correlated subqueries or window functions, understanding of MEDIAN (which has no built-in in many SQL dialects — use PERCENTILE_CONT or a subquery approach), and ROW_NUMBER for identifying nth orders. Push them on edge cases: users with fewer than 8 orders, users with no orders, visits after orders.',
 
   // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
@@ -2438,6 +2442,85 @@ INSERT INTO user_activity VALUES
 (4,'2024-01-15'),(4,'2024-01-16'),(4,'2024-01-22'),(4,'2024-01-23'),(4,'2024-01-24'),
 (5,'2024-01-08'),(5,'2024-01-10'),(5,'2024-01-15'),(5,'2024-01-22'),(5,'2024-01-29'),
 (5,'2024-02-05'),(5,'2024-02-12');`
+    }
+  },
+
+  sql_gmvretention: {
+    label: 'GMV Retention by Cohort Week',
+    question: '<em>Asked at Medbikri (take-home assignment).</em><br><br>Using the <strong>orders</strong> table (id, user_id, total, created):<br><br>Build a <strong>GMV retention matrix</strong> by weekly cohort:<br>• <strong>Cohort</strong> = the week of the user\'s <strong>first order</strong><br>• <strong>GMV-Week 0</strong> = total order value from cohort users in their first week<br>• <strong>GMV-Week 1</strong> = total order value from cohort users in week 1 after cohort week<br>• Continue through <strong>GMV-Week 4</strong><br><br><strong>Output:</strong> week_start_date, gmv_week_0, gmv_week_1, gmv_week_2, gmv_week_3, gmv_week_4',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'First, find each user\'s cohort: the week of their first order. Use MIN(created) grouped by user_id, then truncate to week start. In SQLite: DATE(min_date, \'weekday 0\', \'-6 days\'). In PostgreSQL: DATE_TRUNC(\'week\', min_date).',
+      'Join orders back to the cohort CTE. Calculate week_offset = difference in weeks between order date and cohort week. In SQLite: (JULIANDAY(created) - JULIANDAY(cohort_week)) / 7. In PostgreSQL: EXTRACT(DAYS FROM created - cohort_week) / 7.',
+      'Pivot with conditional aggregation: SUM(CASE WHEN week_offset = 0 THEN total END) AS gmv_week_0, etc. GROUP BY cohort week_start_date. Cast week_offset to INTEGER to handle fractional weeks.'
+    ],
+    schema: [
+      { name: 'orders', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'user_id', type: 'INTEGER' },
+        { name: 'total', type: 'DECIMAL' }, { name: 'created', type: 'DATE' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, total DECIMAL(10,2) NOT NULL, created DATE NOT NULL);
+INSERT INTO orders VALUES
+(1,1,250,'2024-11-04'),(2,2,180,'2024-11-05'),(3,3,320,'2024-11-06'),(4,4,90,'2024-11-07'),(5,5,410,'2024-11-08'),
+(6,1,150,'2024-11-11'),(7,2,200,'2024-11-12'),(8,6,275,'2024-11-11'),(9,7,130,'2024-11-12'),(10,8,360,'2024-11-13'),
+(11,3,280,'2024-11-14'),(12,1,190,'2024-11-18'),(13,4,110,'2024-11-19'),(14,6,220,'2024-11-18'),(15,9,300,'2024-11-18'),
+(16,10,170,'2024-11-19'),(17,2,160,'2024-11-20'),(18,5,350,'2024-11-21'),(19,7,140,'2024-11-22'),(20,8,290,'2024-11-22'),
+(21,1,210,'2024-11-25'),(22,3,180,'2024-11-25'),(23,9,260,'2024-11-26'),(24,11,400,'2024-11-25'),(25,12,150,'2024-11-26'),
+(26,6,190,'2024-11-27'),(27,10,230,'2024-11-28'),(28,5,310,'2024-11-29'),(29,2,175,'2024-12-02'),(30,4,200,'2024-12-03'),
+(31,11,280,'2024-12-02'),(32,12,160,'2024-12-04'),(33,1,220,'2024-12-05'),(34,9,340,'2024-12-03'),(35,7,190,'2024-12-06');`
+    }
+  },
+
+  sql_visitconvert: {
+    label: 'Visits Before Nth Order',
+    question: '<em>Asked at Medbikri (take-home assignment).</em><br><br>Using the <strong>visits</strong> and <strong>orders</strong> tables (joined by user_id):<br><br><strong>1.</strong> Find the <strong>average</strong> and <strong>median</strong> number of visits before a user\'s <strong>1st order</strong>.<br><br><strong>2.</strong> Find the <strong>average</strong> and <strong>median</strong> number of visits before a user\'s <strong>8th order</strong>.<br><br><em>Note: Only count visits that occurred <strong>before</strong> the respective order date. Users with fewer than 8 orders should be excluded from Q2.</em>',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For each user, find their 1st order date: MIN(created) from orders grouped by user_id. Then count visits WHERE visit_date < first_order_date per user.',
+      'For the 8th order, use ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY created) to number orders. Filter for rn = 8 to get each user\'s 8th order date. Then count visits before that date.',
+      'AVG() is straightforward. For MEDIAN in SQLite, sort the counts and pick the middle value using a subquery with LIMIT/OFFSET. In PostgreSQL use PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY visit_count).'
+    ],
+    schema: [
+      { name: 'visits', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'user_id', type: 'INTEGER' },
+        { name: 'created', type: 'DATE' }
+      ]},
+      { name: 'orders', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'user_id', type: 'INTEGER' },
+        { name: 'total', type: 'DECIMAL' }, { name: 'created', type: 'DATE' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE visits (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, created DATE NOT NULL);
+INSERT INTO visits VALUES
+(1,1,'2024-01-02'),(2,1,'2024-01-05'),(3,1,'2024-01-08'),(4,1,'2024-01-12'),(5,1,'2024-01-18'),
+(6,1,'2024-01-22'),(7,1,'2024-02-01'),(8,1,'2024-02-10'),(9,1,'2024-02-20'),(10,1,'2024-03-01'),
+(11,2,'2024-01-03'),(12,2,'2024-01-06'),(13,2,'2024-01-10'),(14,2,'2024-01-15'),(15,2,'2024-01-20'),
+(16,2,'2024-01-25'),(17,2,'2024-02-05'),(18,2,'2024-02-15'),(19,2,'2024-03-01'),(20,2,'2024-03-10'),
+(21,3,'2024-01-04'),(22,3,'2024-01-07'),(23,3,'2024-01-11'),(24,3,'2024-01-20'),(25,3,'2024-02-01'),
+(26,3,'2024-02-10'),(27,3,'2024-02-20'),(28,3,'2024-03-01'),(29,3,'2024-03-15'),(30,3,'2024-04-01'),
+(31,4,'2024-01-05'),(32,4,'2024-01-15'),(33,4,'2024-02-01'),
+(34,5,'2024-01-08'),(35,5,'2024-01-12'),(36,5,'2024-01-20'),(37,5,'2024-02-01'),(38,5,'2024-02-15'),
+(39,5,'2024-03-01'),(40,5,'2024-03-15'),(41,5,'2024-04-01'),(42,5,'2024-04-15'),(43,5,'2024-05-01'),
+(44,6,'2024-01-10'),(45,6,'2024-01-20');
+
+CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, total DECIMAL(10,2) NOT NULL, created DATE NOT NULL);
+INSERT INTO orders VALUES
+(1,1,'150','2024-01-10'),(2,1,'200','2024-01-20'),(3,1,'180','2024-01-28'),(4,1,'220','2024-02-05'),
+(5,1,'160','2024-02-15'),(6,1,'300','2024-02-25'),(7,1,'190','2024-03-05'),(8,1,'250','2024-03-15'),
+(9,1,'175','2024-03-25'),(10,1,'210','2024-04-01'),
+(11,2,'120','2024-01-12'),(12,2,'180','2024-01-22'),(13,2,'200','2024-02-01'),(14,2,'150','2024-02-12'),
+(15,2,'250','2024-02-22'),(16,2,'190','2024-03-05'),(17,2,'220','2024-03-15'),(18,2,'170','2024-03-25'),
+(19,3,'300','2024-01-15'),(20,3,'180','2024-01-25'),(21,3,'220','2024-02-05'),(22,3,'150','2024-02-15'),
+(23,3,'280','2024-02-25'),(24,3,'200','2024-03-05'),(25,3,'250','2024-03-20'),(26,3,'190','2024-04-05'),
+(27,4,'100','2024-01-20'),(28,4,'150','2024-02-10'),
+(29,5,'200','2024-01-15'),(30,5,'180','2024-01-25'),(31,5,'220','2024-02-08'),(32,5,'160','2024-02-20'),
+(33,5,'300','2024-03-05'),(34,5,'190','2024-03-20'),(35,5,'250','2024-04-05'),(36,5,'210','2024-04-20'),
+(37,6,'175','2024-01-25');`
     }
   }
 };
