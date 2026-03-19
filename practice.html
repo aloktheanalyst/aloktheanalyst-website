@@ -967,6 +967,33 @@
     overflow: hidden;
   }
 
+  /* ── RESIZE HANDLES ── */
+  .resize-handle-h {
+    width: 5px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.2s;
+    position: relative;
+    z-index: 5;
+  }
+  .resize-handle-h:hover,
+  .resize-handle-h.active { background: var(--accent); opacity: 0.5; }
+  .resize-handle-v {
+    height: 5px;
+    flex-shrink: 0;
+    cursor: row-resize;
+    background: transparent;
+    transition: background 0.2s;
+    position: relative;
+    z-index: 5;
+  }
+  .resize-handle-v:hover,
+  .resize-handle-v.active { background: var(--accent); opacity: 0.5; }
+  @media (max-width: 768px) {
+    .resize-handle-h, .resize-handle-v { display: none; }
+  }
+
   /* Schema sidebar */
   .schema-sidebar {
     width: 220px;
@@ -1583,6 +1610,7 @@
           <div class="schema-title">TABLE SCHEMA</div>
           <div id="schemaContent"></div>
         </div>
+        <div class="resize-handle-h" id="resizeHandleH"></div>
         <!-- Editor + Results -->
         <div class="sql-main">
           <!-- Mobile-only question (sidebar hidden on mobile) -->
@@ -1603,6 +1631,7 @@
             </button>
             <div class="sql-toolbar-right">
               <span class="sql-exec-info" id="sqlExecInfo"></span>
+              <button class="sql-clear-btn" onclick="resetPanelSizes()" title="Reset panel sizes to default">Reset Layout</button>
               <button class="sql-check-btn" onclick="checkMyAnswer()" title="Run your code and get AI scoring + feedback">
                 &#x2705; Check My Answer
               </button>
@@ -1621,6 +1650,7 @@
           <div class="sql-editor-wrapper">
             <textarea id="sqlEditorTextarea"></textarea>
           </div>
+          <div class="resize-handle-v" id="resizeHandleV"></div>
           <div class="sql-results" id="sqlResults">
             <div class="sql-results-empty">
               <div class="empty-icon">&#x1F50D;</div>
@@ -4207,6 +4237,88 @@ document.addEventListener('fullscreenchange', () => {
     document.getElementById('inputToggleBtn').querySelector('svg').style.transform = 'rotate(180deg)';
   }
 })();
+
+// ═══════════════════════════════
+// RESIZABLE PANELS
+// ═══════════════════════════════
+const DEFAULT_SCHEMA_WIDTH = 220;
+const DEFAULT_EDITOR_HEIGHT = 220;
+
+function initResizeHandles() {
+  const handleH = document.getElementById('resizeHandleH');
+  const handleV = document.getElementById('resizeHandleV');
+  const schema = document.querySelector('.schema-sidebar');
+  const editorWrap = document.querySelector('.sql-editor-wrapper');
+
+  // Restore saved sizes
+  const savedW = localStorage.getItem('editorPanelSchemaWidth');
+  const savedH = localStorage.getItem('editorPanelEditorHeight');
+  if (savedW) schema.style.width = savedW + 'px';
+  if (savedH) editorWrap.style.height = savedH + 'px';
+
+  // ── Horizontal: schema sidebar width ──
+  handleH.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    handleH.classList.add('active');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    const startX = e.clientX;
+    const startW = schema.offsetWidth;
+    const onMove = (ev) => {
+      const newW = Math.min(400, Math.max(140, startW + ev.clientX - startX));
+      schema.style.width = newW + 'px';
+    };
+    const onUp = () => {
+      handleH.classList.remove('active');
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      localStorage.setItem('editorPanelSchemaWidth', schema.offsetWidth);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  // ── Vertical: editor height ──
+  handleV.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    handleV.classList.add('active');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'row-resize';
+    const startY = e.clientY;
+    const startH = editorWrap.offsetHeight;
+    const container = editorWrap.parentElement;
+    const onMove = (ev) => {
+      const maxH = container.offsetHeight * 0.7;
+      const newH = Math.min(maxH, Math.max(80, startH + ev.clientY - startY));
+      editorWrap.style.height = newH + 'px';
+    };
+    const onUp = () => {
+      handleV.classList.remove('active');
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      localStorage.setItem('editorPanelEditorHeight', editorWrap.offsetHeight);
+      if (sqlEditor) sqlEditor.refresh();
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function resetPanelSizes() {
+  const schema = document.querySelector('.schema-sidebar');
+  const editorWrap = document.querySelector('.sql-editor-wrapper');
+  schema.style.width = DEFAULT_SCHEMA_WIDTH + 'px';
+  editorWrap.style.height = DEFAULT_EDITOR_HEIGHT + 'px';
+  localStorage.removeItem('editorPanelSchemaWidth');
+  localStorage.removeItem('editorPanelEditorHeight');
+  if (sqlEditor) sqlEditor.refresh();
+}
+
+initResizeHandles();
 
 // ═══════════════════════════════
 // AUTH — Google Sign-In
