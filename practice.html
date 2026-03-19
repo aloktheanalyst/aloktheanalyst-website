@@ -856,6 +856,37 @@
   }
   .close-modal-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* ── IDLE TOAST ── */
+  .dyk-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    max-width: 340px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.55;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+  .dyk-toast.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .dyk-toast-label {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
   /* RESPONSIVE */
   @media (max-width: 768px) {
     body { height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto; overflow-x: hidden; }
@@ -4390,6 +4421,72 @@ checkAuth();
 
 // Track session start
 trackEvent('session_start', null, { referrer: document.referrer || 'direct' });
+
+// ═══════════════════════════════
+// DID YOU KNOW — subtle placements
+// ═══════════════════════════════
+(function initDidYouKnow() {
+  const facts = LOADING_FACTS; // reuse the same facts array
+
+  // 1. Rotating chat input placeholder
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) {
+    const defaultPlaceholder = chatInput.placeholder;
+    let showingFact = false;
+    setInterval(() => {
+      if (document.activeElement === chatInput) return; // don't change while typing
+      if (showingFact) {
+        chatInput.placeholder = defaultPlaceholder;
+      } else {
+        chatInput.placeholder = '💡 ' + facts[Math.floor(Math.random() * facts.length)];
+      }
+      showingFact = !showingFact;
+    }, 8000);
+  }
+
+  // 2. Rotating footer fact — inject after footer.js loads
+  setTimeout(() => {
+    const brand = document.querySelector('#sfooter .sft-brand');
+    if (!brand) return;
+    const originalText = brand.textContent;
+    let showingFooterFact = false;
+    setInterval(() => {
+      if (showingFooterFact) {
+        brand.textContent = originalText;
+      } else {
+        brand.textContent = '💡 ' + facts[Math.floor(Math.random() * facts.length)];
+      }
+      showingFooterFact = !showingFooterFact;
+    }, 10000);
+  }, 1000); // wait for footer.js to inject
+
+  // 3. Idle toast — shows after 30s of no interaction
+  const toast = document.createElement('div');
+  toast.className = 'dyk-toast';
+  toast.innerHTML = '<div class="dyk-toast-label">Did You Know?</div><div class="dyk-toast-text"></div>';
+  document.body.appendChild(toast);
+
+  let idleTimer = null;
+  let toastTimeout = null;
+
+  function resetIdleTimer() {
+    if (idleTimer) clearTimeout(idleTimer);
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toast.classList.remove('visible');
+
+    idleTimer = setTimeout(() => {
+      toast.querySelector('.dyk-toast-text').textContent = facts[Math.floor(Math.random() * facts.length)];
+      toast.classList.add('visible');
+      // Auto-hide after 8 seconds
+      toastTimeout = setTimeout(() => toast.classList.remove('visible'), 8000);
+    }, 30000);
+  }
+
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetIdleTimer, { passive: true });
+  });
+  resetIdleTimer();
+})();
 </script>
 
 <script src="/components/footer.js"></script>
