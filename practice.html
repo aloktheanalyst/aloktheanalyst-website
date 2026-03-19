@@ -2534,7 +2534,7 @@ const PYTHON_DATASETS = {
       'The \'amount\' column has dollar signs, \'N/A\' strings, and \'NaN\' text. Use str.replace() to clean, then pd.to_numeric(errors=\'coerce\') to convert. Category has mixed case — use str.title() or str.capitalize().',
       'Handle duplicates with df.drop_duplicates(subset=[\'order_id\']). For dates, pd.to_datetime(errors=\'coerce\') handles mixed formats. Strip whitespace from names with str.strip().'
     ],
-    defaultQuery: `# The 'df' DataFrame is pre-loaded — explore it first\ndf.head(10)\n`,
+    defaultQuery: `# The 'df' DataFrame is pre-loaded — explore it first\nprint(df.head(10))\n`,
     schema: [
       { name: 'df (DataFrame)', columns: [
         { name: 'order_id', type: 'object' }, { name: 'customer_name', type: 'object' },
@@ -2569,7 +2569,7 @@ df = pd.DataFrame(data)
       'For multi-column groupby with multiple aggregates: sales.groupby([\'region\', \'category\']).agg({\'revenue\': \'sum\', \'units_sold\': \'sum\', \'cost\': \'sum\'}).',
       'Add a profit column with sales[\'profit\'] = sales[\'revenue\'] - sales[\'cost\'], then use pd.pivot_table(sales, values=\'profit\', index=\'region\', columns=\'category\', aggfunc=\'sum\') for cross-tabulation.'
     ],
-    defaultQuery: `# The 'sales' DataFrame is pre-loaded — explore it first\nsales.head(10)\n`,
+    defaultQuery: `# The 'sales' DataFrame is pre-loaded — explore it first\nprint(sales.head(10))\n`,
     schema: [
       { name: 'sales (DataFrame)', columns: [
         { name: 'date', type: 'datetime64' }, { name: 'region', type: 'object' },
