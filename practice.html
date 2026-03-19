@@ -394,19 +394,34 @@
   .prompt-item-title .solved-check {
     color: var(--green); font-size: 0.72rem; flex-shrink: 0;
   }
-  .solved-prompt {
-    background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.25);
-    border-radius: 8px; padding: 0.6rem 0.8rem; margin-top: 0.75rem;
-    display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem;
-    color: var(--text); font-family: 'DM Sans', sans-serif;
+  .solved-overlay {
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    animation: solvedFadeIn 0.3s ease;
   }
+  @keyframes solvedFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .solved-prompt {
+    background: var(--bg2); border: 1px solid rgba(22,163,74,0.35);
+    border-radius: 14px; padding: 2rem 2.5rem; text-align: center;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.25);
+    font-family: 'DM Sans', sans-serif; max-width: 380px;
+    animation: solvedSlideUp 0.3s ease;
+  }
+  @keyframes solvedSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .solved-prompt .solved-emoji { font-size: 2.5rem; margin-bottom: 0.6rem; }
+  .solved-prompt .solved-score { font-size: 1.3rem; font-weight: 700; color: var(--green); margin-bottom: 0.3rem; }
+  .solved-prompt .solved-msg { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.5; }
+  .solved-prompt .solved-actions { display: flex; gap: 0.6rem; justify-content: center; }
   .solved-prompt button {
-    padding: 0.35rem 0.8rem; border-radius: 6px; border: none;
-    font-size: 0.72rem; font-weight: 600; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; white-space: nowrap;
+    padding: 0.55rem 1.4rem; border-radius: 8px; border: none;
+    font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
   }
   .solved-prompt .btn-yes { background: var(--green); color: #fff; }
+  .solved-prompt .btn-yes:hover { background: #15803d; }
   .solved-prompt .btn-no { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+  .solved-prompt .btn-no:hover { border-color: var(--accent); color: var(--accent); }
   .mark-solved-btn {
     font-size: 0.6rem; color: var(--muted); cursor: pointer; background: none;
     border: none; font-family: 'JetBrains Mono', monospace; padding: 0.15rem 0.4rem;
@@ -3388,8 +3403,12 @@ function markCaseSolved(id) {
   if (!solved.includes(id)) { solved.push(id); saveSolvedCases(solved); }
   pushToCloud();
   renderPromptList(activeFilter);
-  const prompt = document.getElementById('solvedPrompt');
-  if (prompt) prompt.remove();
+  dismissSolvedOverlay();
+}
+
+function dismissSolvedOverlay() {
+  const el = document.getElementById('solvedOverlay');
+  if (el) el.remove();
 }
 
 function renderPromptList(filter = 'all') {
@@ -4400,18 +4419,28 @@ Please provide your feedback in this exact format:
     resultsEl.innerHTML = `<div class="ai-feedback-panel">${formatMessage(reply)}</div>`;
     document.getElementById('sqlExecInfo').textContent = 'Feedback ready';
 
-    // If score >= 7 and not already solved, prompt user to mark as solved
+    // If score >= 7 and not already solved, show full-screen solved prompt
     if (scoreMatch && activeCaseId) {
       const score = parseInt(scoreMatch[1]);
       const solved = getSolvedCases();
       if (score >= 7 && !solved.includes(activeCaseId)) {
         const caseId = activeCaseId;
-        resultsEl.insertAdjacentHTML('beforeend', `
-          <div class="solved-prompt" id="solvedPrompt">
-            <span>Nice! You scored <strong>${score}/10</strong>. Mark this as solved?</span>
-            <button class="btn-yes" onclick="markCaseSolved('${caseId}')">Yes</button>
-            <button class="btn-no" onclick="document.getElementById('solvedPrompt').remove()">Not yet</button>
-          </div>`);
+        const emoji = score >= 9 ? '🏆' : score >= 8 ? '🎉' : '👏';
+        const msg = score >= 9 ? 'Outstanding work!' : score >= 8 ? 'Great job!' : 'Well done!';
+        const overlay = document.createElement('div');
+        overlay.className = 'solved-overlay';
+        overlay.id = 'solvedOverlay';
+        overlay.innerHTML = `
+          <div class="solved-prompt">
+            <div class="solved-emoji">${emoji}</div>
+            <div class="solved-score">You scored ${score}/10</div>
+            <div class="solved-msg">${msg} Mark this question as complete?</div>
+            <div class="solved-actions">
+              <button class="btn-yes" onclick="markCaseSolved('${caseId}')">Yes, I'm done!</button>
+              <button class="btn-no" onclick="dismissSolvedOverlay()">Not yet</button>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
       }
     }
   } catch (err) {
