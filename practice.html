@@ -1732,6 +1732,10 @@ const PROMPTS = [
   { id: 'sql_listings',      title: 'Marketplace Active Listings',        topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_buyersegment',  title: 'Buyer Segmentation (Lifecycle)',     topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
   { id: 'sql_shipping',      title: 'Shipping OTIF & Delivery SLA',      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_engret',        title: 'Engaged Retention by Cohort',       topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_revsegment',    title: 'Revenue Contribution by Segment',   topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_tieredreward',  title: 'Tiered Reward System (Multi-JOIN)', topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_activeweeks',   title: 'Consecutive Active Weeks',          topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
 
   // ── A/B Testing ──
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
@@ -1775,6 +1779,10 @@ const CASE_PROMPTS = {
   sql_listings:      'You are interviewing a candidate for a senior data analyst role at a marketplace company. This question is from an eBay interview. The candidate has inventory and calendar tables. Ask them to find the total number of active listings and new listings created for each day. A listing is active if the date falls between its start and end date. This tests the calendar table join pattern. Then ask for a 7-day moving average of unique sellers who started listings. Push them on LEFT JOIN vs INNER JOIN implications and how COUNT(DISTINCT) interacts with window functions.',
   sql_buyersegment:  'You are interviewing a candidate for a data analyst role at a marketplace. This question is from an eBay interview. The candidate has a transactions table. Ask them to segment each transaction as new_buyer (first ever purchase), regular_buyer (purchased within 30 days of their previous transaction), or reactivated_buyer (gap > 30 days since previous purchase). This tests LAG() for previous purchase dates and CASE WHEN for business rule classification. Push them to also calculate the count and percentage of transactions in each segment.',
   sql_shipping:      'You are giving a take-home SQL assignment from Medbikri. The candidate has order_timeline and order_shipment tables. The order_timeline table has the expected dispatch date for each order, and order_shipment has the actual dispatch date. Ask them to calculate OTIF (On-Time In-Full) delivery metrics: % orders shipped on or before the expected date (OTIF), % shipped 1 day late (OTIF+1), % shipped 2 days late (OTIF+2), and % shipped more than 2 days late. This tests date arithmetic, JOIN logic, conditional aggregation with CASE, and percentage calculations. Push them to handle orders that have multiple timeline entries (take the earliest expected date).',
+  sql_engret:        'You are giving a take-home SQL assignment. The candidate has users and usage tables. They need to calculate monthly "engaged" retention rates by registration cohort. A user is "engaged" in a month if they spend >= 30 minutes total that month (sum across all geographies). The output should show registration_month, total_users, m1_retention, m2_retention, m3_retention as percentages. This tests cohort analysis, date arithmetic for calendar months, conditional aggregation with thresholds, and pivot-style output. Push them to handle edge cases: a user who uses the product multiple times in a month (sum time_spent), usage across multiple locations (aggregate across geography), and the difference between registration month vs calendar month boundaries.',
+  sql_revsegment:    'You are interviewing a candidate for a data analyst role at Meesho (e-commerce). The candidate has an orders table. Ask them to find the revenue contribution of users who placed 12+ orders in 2023, specifically for April 2024. They need to segment users into "high_frequency_2023" vs "other_users" and show each segment\'s revenue and percentage of total April 2024 revenue. This tests CTEs, conditional segmentation with CASE/IN subquery, date filtering across years, and percentage calculations. Push them to think about edge cases: users who were active in 2023 but not in April 2024, and how to handle the denominator for percentage.',
+  sql_tieredreward:  'You are interviewing a candidate for a Senior Data Analyst role at Jio Cinema. The candidate has users, activity_logs, and transactions tables. Ask them to classify users into reward tiers (Bronze, Silver, Gold) based on login frequency and spending in the last 30 days. Bronze: 5+ logins and $100+ spent. Silver: 10+ logins and $500+ spent. Gold: 20+ logins and $1000+ spent. This tests multi-table JOINs, conditional aggregation, CASE WHEN with multiple conditions, and tier ranking logic. Push them on: should a Gold user also show as Silver/Bronze? (No — assign highest tier only). What about users who qualify for no tier?',
+  sql_activeweeks:   'You are interviewing a candidate for a Senior Data Analyst role at Jio Cinema. The candidate has a user_activity table. Ask them to find users active at least 3 days per week for 6 consecutive calendar weeks — these users earn a bonus sticker. This tests week extraction, GROUP BY + HAVING for weekly thresholds, and the islands-and-gaps pattern for consecutive qualifying weeks. Push them to think about: how to define "calendar week" (ISO week number), how to detect consecutive weeks (gaps-and-islands with ROW_NUMBER), and edge cases like activity spanning year boundaries.',
 
   // ── A/B Testing prompts ──
   ab_test:       'Give me an A/B test analysis case study. Provide sample conversion data and ask me to determine statistical significance and make a ship/no-ship recommendation.',
@@ -2249,6 +2257,183 @@ INSERT INTO order_shipment VALUES
 (10,110,'2024-01-20','2024-01-20 14:00:00'),(11,111,'2024-01-22','2024-01-22 10:00:00'),(12,112,'2024-01-21','2024-01-21 11:00:00'),
 (13,113,'2024-01-22','2024-01-22 13:00:00'),(14,114,'2024-01-24','2024-01-24 08:00:00'),(15,115,'2024-01-24','2024-01-24 16:00:00'),
 (16,116,'2024-01-25','2024-01-25 09:00:00'),(17,117,'2024-01-29','2024-01-29 10:00:00'),(18,118,'2024-01-28','2024-01-28 14:00:00');`
+    }
+  },
+
+  sql_engret: {
+    label: 'Engaged Retention by Cohort',
+    question: '<em>Take-home SQL assignment.</em><br><br>Using the <strong>users</strong> and <strong>usage</strong> tables:<br><br>A user is <strong>"engaged"</strong> in a calendar month if their total time_spent that month is <strong>&ge; 30 minutes</strong> (sum across all locations).<br><br><strong>1.</strong> Calculate monthly engaged retention by registration cohort. Output: registration_month, total_users, m1_retention (%), m2_retention (%), m3_retention (%).<br><br><strong>2.</strong> m1 = first calendar month after registration month, m2 = second, m3 = third. A user counts toward retention only if they meet the 30-min threshold that month.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'First, aggregate usage per user per month: SUM(time_spent) grouped by user_id and month. Filter to only keep rows where the sum >= 30. This gives you the set of (user_id, active_month) pairs for engaged users.',
+      'Assign each user a registration cohort using their registration_date month. Then for each user\'s active months, calculate the month offset: active_month - registration_month. m1 means offset = 1, m2 = offset 2, etc.',
+      'Pivot using conditional aggregation: COUNT(DISTINCT CASE WHEN month_offset = 1 THEN user_id END) * 100.0 / total_users AS m1_retention. GROUP BY registration_month. Use LEFT JOIN so cohort users with zero engagement still count in total_users.'
+    ],
+    schema: [
+      { name: 'users', columns: [
+        { name: 'user_id', type: 'TEXT PK' }, { name: 'registration_date', type: 'DATE' }
+      ]},
+      { name: 'usage', columns: [
+        { name: 'user_id', type: 'TEXT FK' }, { name: 'usage_date', type: 'DATE' },
+        { name: 'usage_location', type: 'TEXT' }, { name: 'time_spent', type: 'INTEGER' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE users (user_id TEXT PRIMARY KEY, registration_date DATE NOT NULL);
+INSERT INTO users VALUES
+('aaa','2019-01-03'),('bbb','2019-01-02'),('ccc','2019-01-15'),('ddd','2019-02-07'),
+('eee','2019-01-20'),('fff','2019-02-10'),('ggg','2019-02-15'),('hhh','2019-03-01');
+
+CREATE TABLE usage (user_id TEXT NOT NULL, usage_date DATE NOT NULL, usage_location TEXT NOT NULL, time_spent INTEGER NOT NULL);
+INSERT INTO usage VALUES
+('aaa','2019-01-03','US',38),('aaa','2019-02-01','US',12),('aaa','2019-02-15','Canada',20),('aaa','2019-03-04','US',30),('aaa','2019-04-10','US',35),
+('bbb','2019-01-03','US',20),('bbb','2019-01-15','Canada',8),('bbb','2019-02-04','Canada',31),('bbb','2019-03-10','US',15),('bbb','2019-03-20','UK',18),
+('ccc','2019-01-16','US',40),('ccc','2019-02-20','US',45),('ccc','2019-03-10','Canada',10),('ccc','2019-03-15','US',25),
+('ddd','2019-02-08','US',45),('ddd','2019-03-12','UK',32),('ddd','2019-04-05','US',28),
+('eee','2019-01-25','US',5),('eee','2019-02-10','US',10),
+('fff','2019-02-14','US',60),('fff','2019-03-01','Canada',15),('fff','2019-03-20','US',20),('fff','2019-04-10','US',40),
+('ggg','2019-02-20','US',25),('ggg','2019-03-05','UK',10),
+('hhh','2019-03-05','US',50),('hhh','2019-04-01','US',35),('hhh','2019-05-10','Canada',40);`
+    }
+  },
+
+  sql_revsegment: {
+    label: 'Revenue Contribution by Segment',
+    question: '<em>Asked at Meesho.</em><br><br>Using the <strong>orders</strong> table (user_id, order_date, amount):<br><br><strong>1.</strong> Identify users who placed <strong>12 or more orders in 2023</strong>. Label them as <strong>"high_freq_2023"</strong>.<br><br><strong>2.</strong> For <strong>April 2024</strong>, calculate the total revenue and <strong>% revenue contribution</strong> of "high_freq_2023" users vs "other_users".',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Start with a CTE to find high-frequency users: SELECT user_id FROM orders WHERE order_date is in 2023, GROUP BY user_id HAVING COUNT(*) >= 12.',
+      'In a second CTE, filter orders to April 2024 only. Use CASE WHEN user_id IN (SELECT user_id FROM high_freq_cte) THEN \'high_freq_2023\' ELSE \'other_users\' END to segment each order.',
+      'Group by the segment, SUM(amount) for revenue. For percentage: divide each segment\'s revenue by the total April 2024 revenue * 100. Use a subquery or window SUM() for the total denominator.'
+    ],
+    schema: [
+      { name: 'orders', columns: [
+        { name: 'order_id', type: 'INTEGER PK' }, { name: 'user_id', type: 'INTEGER' },
+        { name: 'order_date', type: 'DATE' }, { name: 'amount', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE orders (order_id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, order_date DATE NOT NULL, amount DECIMAL(10,2) NOT NULL);
+INSERT INTO orders VALUES
+(1,101,'2023-01-05',120),(2,101,'2023-02-10',85),(3,101,'2023-03-15',200),(4,101,'2023-04-20',150),(5,101,'2023-05-25',90),
+(6,101,'2023-06-10',175),(7,101,'2023-07-14',60),(8,101,'2023-08-18',130),(9,101,'2023-09-22',110),(10,101,'2023-10-05',95),
+(11,101,'2023-11-12',220),(12,101,'2023-12-20',180),(13,102,'2023-01-08',50),(14,102,'2023-02-14',70),(15,102,'2023-03-20',90),
+(16,102,'2023-04-25',60),(17,102,'2023-05-30',80),(18,102,'2023-06-15',110),(19,102,'2023-07-20',95),(20,102,'2023-08-25',120),
+(21,102,'2023-09-28',75),(22,102,'2023-10-15',85),(23,102,'2023-11-20',100),(24,102,'2023-12-28',130),(25,103,'2023-01-12',200),
+(26,103,'2023-03-18',150),(27,103,'2023-06-22',180),(28,103,'2023-09-10',90),(29,104,'2023-02-05',60),(30,104,'2023-05-10',75),
+(31,104,'2023-08-15',90),(32,105,'2023-01-20',300),(33,105,'2023-02-25',250),(34,105,'2023-03-30',200),(35,105,'2023-04-15',350),
+(36,105,'2023-05-20',180),(37,105,'2023-06-25',220),(38,105,'2023-07-30',190),(39,105,'2023-08-10',280),(40,105,'2023-09-15',310),
+(41,105,'2023-10-20',260),(42,105,'2023-11-25',340),(43,105,'2023-12-30',290),(44,106,'2023-04-10',45),(45,106,'2023-07-15',55),
+(46,101,'2024-04-02',210),(47,101,'2024-04-15',185),(48,102,'2024-04-05',140),(49,102,'2024-04-18',95),(50,102,'2024-04-28',120),
+(51,103,'2024-04-10',160),(52,103,'2024-04-22',200),(53,104,'2024-04-08',75),(54,104,'2024-04-20',110),(55,105,'2024-04-03',320),
+(56,105,'2024-04-12',280),(57,105,'2024-04-25',195),(58,106,'2024-04-14',65),(59,107,'2024-04-06',90),(60,107,'2024-04-19',130);`
+    }
+  },
+
+  sql_tieredreward: {
+    label: 'Tiered Reward System (Multi-JOIN)',
+    question: '<em>Asked at Jio Cinema — Senior Data Analyst.</em><br><br>Using the <strong>users</strong>, <strong>activity_logs</strong>, and <strong>transactions</strong> tables:<br><br>Classify users into reward tiers based on <strong>last 30 days</strong> of activity:<br>• <strong>Gold</strong> — 20+ logins AND $1000+ spent<br>• <strong>Silver</strong> — 10+ logins AND $500+ spent<br>• <strong>Bronze</strong> — 5+ logins AND $100+ spent<br><br><strong>1.</strong> Output user_id, user_name, and their <strong>highest qualifying tier</strong>. Order by tier (Gold first), then alphabetically by name.<br><br><strong>2.</strong> Exclude users who qualify for no tier.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Start by aggregating activity_logs: COUNT logins per user in the last 30 days. Similarly, SUM transaction amounts per user in the last 30 days. Use separate CTEs for clarity.',
+      'JOIN both aggregations to the users table. Use CASE WHEN to assign tiers — check Gold first, then Silver, then Bronze. This ensures the highest tier is assigned.',
+      'Filter WHERE reward_tier IS NOT NULL to exclude non-qualifying users. For ordering, use CASE to map Gold=1, Silver=2, Bronze=3, then ORDER BY tier_rank, user_name.'
+    ],
+    schema: [
+      { name: 'users', columns: [
+        { name: 'user_id', type: 'INTEGER PK' }, { name: 'user_name', type: 'TEXT' },
+        { name: 'registration_date', type: 'DATE' }
+      ]},
+      { name: 'activity_logs', columns: [
+        { name: 'log_id', type: 'INTEGER PK' }, { name: 'user_id', type: 'INTEGER FK' },
+        { name: 'activity_date', type: 'DATE' }, { name: 'activity_type', type: 'TEXT' }
+      ]},
+      { name: 'transactions', columns: [
+        { name: 'transaction_id', type: 'INTEGER PK' }, { name: 'user_id', type: 'INTEGER FK' },
+        { name: 'transaction_date', type: 'DATE' }, { name: 'amount', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE users (user_id INTEGER PRIMARY KEY, user_name TEXT NOT NULL, registration_date DATE NOT NULL);
+INSERT INTO users VALUES
+(1,'Alice','2024-01-10'),(2,'Bob','2024-02-15'),(3,'Charlie','2024-01-20'),(4,'Diana','2024-03-01'),
+(5,'Eve','2024-02-10'),(6,'Frank','2024-01-05'),(7,'Grace','2024-03-15'),(8,'Hank','2024-02-20'),
+(9,'Ivy','2024-01-25'),(10,'Jack','2024-03-10');
+
+CREATE TABLE activity_logs (log_id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, activity_date DATE NOT NULL, activity_type TEXT NOT NULL);
+INSERT INTO activity_logs VALUES
+(1,1,'2024-06-01','login'),(2,1,'2024-06-02','login'),(3,1,'2024-06-03','login'),(4,1,'2024-06-04','login'),(5,1,'2024-06-05','login'),
+(6,1,'2024-06-06','login'),(7,1,'2024-06-07','login'),(8,1,'2024-06-08','login'),(9,1,'2024-06-09','login'),(10,1,'2024-06-10','login'),
+(11,1,'2024-06-11','login'),(12,1,'2024-06-12','login'),(13,1,'2024-06-13','login'),(14,1,'2024-06-14','login'),(15,1,'2024-06-15','login'),
+(16,1,'2024-06-16','login'),(17,1,'2024-06-17','login'),(18,1,'2024-06-18','login'),(19,1,'2024-06-19','login'),(20,1,'2024-06-20','login'),
+(21,1,'2024-06-21','login'),(22,1,'2024-06-22','login'),(23,1,'2024-06-23','purchase'),(24,1,'2024-06-24','purchase'),
+(25,2,'2024-06-01','login'),(26,2,'2024-06-03','login'),(27,2,'2024-06-05','login'),(28,2,'2024-06-07','login'),(29,2,'2024-06-09','login'),
+(30,2,'2024-06-11','login'),(31,2,'2024-06-13','login'),(32,2,'2024-06-15','login'),(33,2,'2024-06-17','login'),(34,2,'2024-06-19','login'),
+(35,2,'2024-06-21','login'),(36,2,'2024-06-23','login'),(37,2,'2024-06-25','purchase'),
+(38,3,'2024-06-02','login'),(39,3,'2024-06-04','login'),(40,3,'2024-06-06','login'),(41,3,'2024-06-08','login'),(42,3,'2024-06-10','login'),
+(43,3,'2024-06-12','login'),(44,3,'2024-06-14','purchase'),
+(45,4,'2024-06-01','login'),(46,4,'2024-06-05','login'),(47,4,'2024-06-10','login'),(48,4,'2024-06-15','login'),(49,4,'2024-06-20','login'),
+(50,4,'2024-06-25','login'),(51,4,'2024-06-28','purchase'),
+(52,5,'2024-06-01','login'),(53,5,'2024-06-10','login'),(54,5,'2024-06-20','login'),
+(55,6,'2024-06-05','login'),(56,6,'2024-06-10','login'),(57,6,'2024-06-15','login'),(58,6,'2024-06-20','login'),(59,6,'2024-06-25','login'),
+(60,6,'2024-06-28','login'),
+(61,7,'2024-06-01','login'),(62,7,'2024-06-02','login'),(63,7,'2024-06-03','login'),(64,7,'2024-06-04','login'),(65,7,'2024-06-05','login'),
+(66,7,'2024-06-06','login'),(67,7,'2024-06-07','login'),(68,7,'2024-06-08','login'),(69,7,'2024-06-09','login'),(70,7,'2024-06-10','login'),
+(71,7,'2024-06-11','login'),(72,7,'2024-06-12','login'),(73,7,'2024-06-13','login'),(74,7,'2024-06-14','login'),(75,7,'2024-06-15','login'),
+(76,7,'2024-06-16','login'),(77,7,'2024-06-17','login'),(78,7,'2024-06-18','login'),(79,7,'2024-06-19','login'),(80,7,'2024-06-20','login'),
+(81,8,'2024-06-01','login'),(82,8,'2024-06-15','login'),(83,8,'2024-06-28','login'),
+(84,9,'2024-06-01','login'),(85,9,'2024-06-02','login'),(86,9,'2024-06-03','login'),(87,9,'2024-06-04','login'),(88,9,'2024-06-05','login'),
+(89,9,'2024-06-06','login'),(90,9,'2024-06-07','login'),(91,9,'2024-06-08','login'),(92,9,'2024-06-09','login'),(93,9,'2024-06-10','login');
+
+CREATE TABLE transactions (transaction_id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, transaction_date DATE NOT NULL, amount DECIMAL(10,2) NOT NULL);
+INSERT INTO transactions VALUES
+(1,1,'2024-06-01',120),(2,1,'2024-06-05',250),(3,1,'2024-06-10',180),(4,1,'2024-06-15',300),(5,1,'2024-06-20',200),(6,1,'2024-06-25',150),
+(7,2,'2024-06-02',80),(8,2,'2024-06-08',150),(9,2,'2024-06-14',200),(10,2,'2024-06-20',120),(11,2,'2024-06-26',60),
+(12,3,'2024-06-03',90),(13,3,'2024-06-09',110),(14,3,'2024-06-15',50),
+(15,4,'2024-06-05',30),(16,4,'2024-06-15',45),(17,4,'2024-06-25',35),
+(18,5,'2024-06-01',20),(19,5,'2024-06-20',40),
+(20,6,'2024-06-10',60),(21,6,'2024-06-20',55),
+(22,7,'2024-06-01',150),(23,7,'2024-06-10',200),(24,7,'2024-06-15',350),(25,7,'2024-06-20',180),(26,7,'2024-06-25',250),
+(27,8,'2024-06-15',70),
+(28,9,'2024-06-01',100),(29,9,'2024-06-05',200),(30,9,'2024-06-10',180),(31,9,'2024-06-15',150);`
+    }
+  },
+
+  sql_activeweeks: {
+    label: 'Consecutive Active Weeks',
+    question: '<em>Asked at Jio Cinema — Senior Data Analyst.</em><br><br>Using the <strong>user_activity</strong> table (user_id, activity_date):<br><br>A user is <strong>"active"</strong> in a calendar week if they have activity on <strong>&ge; 3 distinct days</strong> that week.<br><br><strong>1.</strong> Find users who were active for <strong>6 or more consecutive calendar weeks</strong>. These users earn a <strong>bonus sticker</strong>.<br><br><strong>2.</strong> Output the qualifying user_ids.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'First, extract the ISO week number from each activity_date. Group by user_id + week_number and count distinct activity days. Keep only weeks where the count >= 3.',
+      'Now you have (user_id, week_number) pairs for "active" weeks. Use ROW_NUMBER() partitioned by user_id ordered by week_number. Subtract ROW_NUMBER from week_number to create a group_id — consecutive weeks will have the same group_id (islands-and-gaps pattern).',
+      'Group by user_id + group_id and COUNT(*) the consecutive active weeks. Filter HAVING COUNT(*) >= 6 to find qualifying users.'
+    ],
+    schema: [
+      { name: 'user_activity', columns: [
+        { name: 'user_id', type: 'INTEGER' }, { name: 'activity_date', type: 'DATE' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE user_activity (user_id INTEGER NOT NULL, activity_date DATE NOT NULL);
+INSERT INTO user_activity VALUES
+(1,'2024-01-01'),(1,'2024-01-02'),(1,'2024-01-03'),(1,'2024-01-08'),(1,'2024-01-09'),(1,'2024-01-10'),
+(1,'2024-01-15'),(1,'2024-01-16'),(1,'2024-01-17'),(1,'2024-01-22'),(1,'2024-01-23'),(1,'2024-01-24'),
+(1,'2024-01-29'),(1,'2024-01-30'),(1,'2024-01-31'),(1,'2024-02-05'),(1,'2024-02-06'),(1,'2024-02-07'),
+(1,'2024-02-12'),(1,'2024-02-13'),(1,'2024-02-14'),
+(2,'2024-01-01'),(2,'2024-01-02'),(2,'2024-01-03'),(2,'2024-01-08'),(2,'2024-01-09'),(2,'2024-01-10'),
+(2,'2024-01-15'),(2,'2024-01-16'),(2,'2024-01-17'),(2,'2024-01-22'),(2,'2024-01-23'),(2,'2024-01-24'),
+(2,'2024-01-29'),(2,'2024-01-30'),(2,'2024-01-31'),(2,'2024-02-05'),(2,'2024-02-06'),(2,'2024-02-07'),
+(3,'2024-01-01'),(3,'2024-01-02'),(3,'2024-01-03'),(3,'2024-01-08'),(3,'2024-01-09'),(3,'2024-01-10'),
+(3,'2024-01-15'),(3,'2024-01-16'),(3,'2024-01-17'),(3,'2024-01-22'),(3,'2024-01-23'),
+(3,'2024-02-05'),(3,'2024-02-06'),(3,'2024-02-07'),(3,'2024-02-12'),(3,'2024-02-13'),(3,'2024-02-14'),
+(4,'2024-01-01'),(4,'2024-01-02'),(4,'2024-01-03'),(4,'2024-01-08'),(4,'2024-01-09'),(4,'2024-01-10'),
+(4,'2024-01-15'),(4,'2024-01-16'),(4,'2024-01-22'),(4,'2024-01-23'),(4,'2024-01-24'),
+(5,'2024-01-08'),(5,'2024-01-10'),(5,'2024-01-15'),(5,'2024-01-22'),(5,'2024-01-29'),
+(5,'2024-02-05'),(5,'2024-02-12');`
     }
   }
 };
