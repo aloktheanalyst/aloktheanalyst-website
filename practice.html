@@ -1749,6 +1749,8 @@ const PROMPTS = [
   // ── Python ──
   { id: 'python_clean',  title: 'Messy Dataset Cleaning (Pandas)',      topic: 'python',  difficulty: 'easy',   tag: 'Python' },
   { id: 'python_agg',    title: 'Aggregation & GroupBy Patterns',       topic: 'python',  difficulty: 'medium', tag: 'Python' },
+  { id: 'python_debug',  title: 'Debug & List Comprehension',           topic: 'python',  difficulty: 'easy',   tag: 'Python' },
+  { id: 'python_palindrome', title: 'Longest Palindromic Substring',    topic: 'python',  difficulty: 'medium', tag: 'Python' },
 
   // ── Visualization ──
   { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'viz',     difficulty: 'easy',   tag: 'Viz' },
@@ -1796,6 +1798,8 @@ const CASE_PROMPTS = {
   // ── Python prompts ──
   python_clean:  'Give me a pandas data cleaning case study. Describe a messy dataset with nulls, wrong dtypes, and duplicates. Ask me how I would clean it.',
   python_agg:    'Give me a pandas aggregation case study. Provide a scenario requiring complex groupby operations and ask me to write the solution.',
+  python_debug:  'You are interviewing a candidate for a data analyst role at Coinbase. This round tests Python fundamentals — no pandas or data frames. Present the candidate with a buggy function that is supposed to filter odd numbers from a list. The function has indentation errors and a logic bug (y_list is reset inside the loop). Ask them to: (1) identify and fix all bugs, (2) rewrite the same logic as a single-line list comprehension, (3) write a list comprehension to generate tuple pairs like [(1,1),(2,1),(2,2),(3,1),(3,2),(3,3)] given an input n. Push them on edge cases: empty lists, negative numbers, and performance differences between the approaches.',
+  python_palindrome: 'You are interviewing a candidate for a Senior Data Analyst role at Jio Cinema. This question tests Python string manipulation and algorithm thinking. Ask them to find the longest palindromic substring in a given string. Start simple: can they check if a string is a palindrome (s == s[::-1])? Then the brute force approach: check all substrings. Push for optimization: the expand-around-center approach is O(n²) time and O(1) space. Discuss edge cases: single character, all same characters, no palindrome longer than 1.',
 
   // ── Visualization prompts ──
   viz_choose:    'Give me a data visualization case study. Describe a dataset and business question, then ask me to choose the right chart type and justify my choice.',
@@ -2526,6 +2530,47 @@ for i in range(n):
         'salesperson': np.random.choice(salespeople)
     })
 sales = pd.DataFrame(rows).sort_values('date').reset_index(drop=True)
+`
+  },
+
+  python_debug: {
+    label: 'Debug & List Comprehension',
+    question: '<em>Asked at Coinbase.</em><br><br>A pre-loaded variable <strong>test_list</strong> contains sample numbers.<br><br><strong>1.</strong> The function <code>output_all_odd(x_list)</code> below has <strong>bugs</strong>. Find and fix them, then test with test_list:<br><pre>def output_all_odd(x_list):\n    all_odd_numbers = range(1, max(x_list)+1, 2)\n    for i in x_list:\n        y_list = []\n        if i in all_odd_numbers:\n            y_list.append(i)\n    return y_list</pre><br><strong>2.</strong> Rewrite the same logic as a <strong>single-line list comprehension</strong>.<br><br><strong>3.</strong> Given input <code>n = 4</code>, use a list comprehension to generate:<br><code>[(1,1),(2,1),(2,2),(3,1),(3,2),(3,3),(4,1),(4,2),(4,3),(4,4)]</code>',
+    defaultQuery: '# Write your Python code here\n',
+    hints: [
+      'Bug 1: y_list = [] is INSIDE the for loop — it resets every iteration. Move it before the loop. Bug 2: max(x_list) fails if x_list is empty. Also, the range approach misses negative odd numbers.',
+      'List comprehension for odd filter: [x for x in x_list if x % 2 != 0]. This is simpler and handles negatives too.',
+      'For the tuple pairs: [(i, j) for i in range(1, n+1) for j in range(1, i+1)]. The inner loop goes up to i (inclusive) to generate the triangular pattern.'
+    ],
+    schema: [
+      { name: 'test_list (variable)', columns: [
+        { name: 'value', type: 'list of integers' }
+      ]}
+    ],
+    setupCode: `
+test_list = [3, 8, 15, 22, 7, -3, 0, 11, 42, 1, -5, 6, 19, 100, 33]
+n = 4
+`
+  },
+
+  python_palindrome: {
+    label: 'Longest Palindromic Substring',
+    question: '<em>Asked at Jio Cinema — Senior Data Analyst.</em><br><br>Pre-loaded variables <strong>s1</strong>, <strong>s2</strong>, <strong>s3</strong> contain test strings.<br><br><strong>1.</strong> Write a function <code>longest_palindrome(s)</code> that returns the <strong>longest palindromic substring</strong> in a given string.<br><br>Examples:<br>• <code>"babad"</code> → <code>"bab"</code> (or <code>"aba"</code>)<br>• <code>"cbbd"</code> → <code>"bb"</code><br>• <code>"zcbbbcd"</code> → <code>"cbbbс"</code> is not palindrome, answer is <code>"bbb"</code><br><br><strong>2.</strong> Test your function on s1, s2, s3 and print results.<br><br><strong>Constraint:</strong> 1 &le; len(s) &le; 1000. String contains only digits and English letters.',
+    defaultQuery: '# Write your Python code here\n',
+    hints: [
+      'Brute force: check all substrings s[i:j] and test if s[i:j] == s[i:j][::-1]. Track the longest one found. This is O(n³) but works for small inputs.',
+      'Optimization — expand around center: for each index i, expand outward while characters match. Check both odd-length (center = i) and even-length (center = i, i+1) palindromes. This is O(n²) time, O(1) space.',
+      'Edge cases: single character → return it (every single char is a palindrome). All same characters like "aaaa" → return entire string. Empty string → return empty.'
+    ],
+    schema: [
+      { name: 'test strings (variables)', columns: [
+        { name: 's1', type: '"babad"' }, { name: 's2', type: '"cbbd"' }, { name: 's3', type: '"zcbbbcd"' }
+      ]}
+    ],
+    setupCode: `
+s1 = "babad"
+s2 = "cbbd"
+s3 = "zcbbbcd"
 `
   }
 };
