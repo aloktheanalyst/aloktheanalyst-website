@@ -1456,16 +1456,15 @@
       </div>
       <div class="topic-filters" id="topicFilters">
         <span class="topic-chip active" data-topic="all" onclick="filterTopic('all', this)">All</span>
-        <span class="topic-chip" data-topic="rca" onclick="filterTopic('rca', this)">Case Study (RCA)</span>
-        <span class="topic-chip" data-topic="sql" onclick="filterTopic('sql', this)">SQL</span>
-        <span class="topic-chip" data-topic="python" onclick="filterTopic('python', this)">Python</span>
-        <span class="topic-chip" data-topic="product" onclick="filterTopic('product', this)">Product</span>
-        <span class="topic-chip" data-topic="ab" onclick="filterTopic('ab', this)">A/B Testing</span>
-        <span class="topic-chip" data-topic="viz" onclick="filterTopic('viz', this)">Visualization</span>
+        <span class="topic-chip" data-topic="casestudy" onclick="filterTopic('casestudy', this)">Case Study</span>
+        <span class="topic-chip" data-topic="sql" onclick="filterTopic('sql', this)">SQL Questions</span>
+        <span class="topic-chip" data-topic="python" onclick="filterTopic('python', this)">Python Questions</span>
+        <span class="topic-chip" data-topic="puzzles" onclick="filterTopic('puzzles', this)">Puzzles</span>
+        <span class="topic-chip" data-topic="guesstimates" onclick="filterTopic('guesstimates', this)">Guesstimates</span>
       </div>
     </div>
     <div class="sidebar-scroll">
-      <div class="prompt-section-title">Case Studies</div>
+      <div class="prompt-section-title" id="sectionTitle">All Practice Problems</div>
       <div id="promptList"></div>
     </div>
   </aside>
@@ -1709,13 +1708,13 @@
 // DATA
 // ═══════════════════════════════
 const PROMPTS = [
-  // ── RCA Case Studies ──
-  { id: 'rca_orders',       title: 'Weekly Orders Dropped 25%',              topic: 'rca', difficulty: 'hard',   tag: 'Case Study (RCA)' },
-  { id: 'rca_dau',          title: 'DAU Down 15% — What Happened?',          topic: 'rca', difficulty: 'medium', tag: 'Case Study (RCA)' },
-  { id: 'rca_signup',       title: 'Signup Conversion Rate Crashed',         topic: 'rca', difficulty: 'hard',   tag: 'Case Study (RCA)' },
-  { id: 'rca_revenue',      title: 'SaaS Revenue Dropped After Launch',      topic: 'rca', difficulty: 'hard',   tag: 'Case Study (RCA)' },
-  { id: 'rca_cart',         title: 'Cart Abandonment Spiked Overnight',      topic: 'rca', difficulty: 'medium', tag: 'Case Study (RCA)' },
-  { id: 'rca_engagement',   title: 'Feature Engagement Fell 40%',            topic: 'rca', difficulty: 'medium', tag: 'Case Study (RCA)' },
+  // ── Case Studies ──
+  { id: 'rca_orders',       title: 'Weekly Orders Dropped 25%',              topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'rca_dau',          title: 'DAU Down 15% — What Happened?',          topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'rca_signup',       title: 'Signup Conversion Rate Crashed',         topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'rca_revenue',      title: 'SaaS Revenue Dropped After Launch',      topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'rca_cart',         title: 'Cart Abandonment Spiked Overnight',      topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'rca_engagement',   title: 'Feature Engagement Fell 40%',            topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
 
   // ── SQL ──
   { id: 'sql_window',    title: 'Window Functions Deep Dive',         topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
@@ -1739,14 +1738,11 @@ const PROMPTS = [
   { id: 'sql_gmvretention',  title: 'GMV Retention by Cohort Week',      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_visitconvert',  title: 'Visits Before Nth Order',           topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
 
-  // ── A/B Testing ──
-  { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'ab',      difficulty: 'hard',   tag: 'A/B' },
-  { id: 'ab_sample',     title: 'Sample Size & Power Calculation',      topic: 'ab',      difficulty: 'medium', tag: 'A/B' },
-
-  // ── Product ──
-  { id: 'funnel',        title: 'E-commerce Funnel Drop-off',           topic: 'product', difficulty: 'medium', tag: 'Product' },
-  { id: 'metric_drop',   title: 'Revenue Metric Drop Investigation',    topic: 'product', difficulty: 'hard',   tag: 'Product' },
-  { id: 'kpi_design',    title: 'KPI Design for a New Feature',         topic: 'product', difficulty: 'medium', tag: 'Product' },
+  { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'ab_sample',     title: 'Sample Size & Power Calculation',      topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'funnel',        title: 'E-commerce Funnel Drop-off',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'metric_drop',   title: 'Revenue Metric Drop Investigation',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'kpi_design',    title: 'KPI Design for a New Feature',         topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
 
   // ── Python ──
   { id: 'python_clean',  title: 'Messy Dataset Cleaning (Pandas)',      topic: 'python',  difficulty: 'easy',   tag: 'Python' },
@@ -1755,9 +1751,8 @@ const PROMPTS = [
   { id: 'python_palindrome', title: 'Longest Palindromic Substring',    topic: 'python',  difficulty: 'medium', tag: 'Python' },
   { id: 'python_fd',    title: 'FD Interest Calculator (Fintech)',      topic: 'python',  difficulty: 'hard',   tag: 'Python' },
 
-  // ── Visualization ──
-  { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'viz',     difficulty: 'easy',   tag: 'Viz' },
-  { id: 'storytelling',  title: 'Data Storytelling for Stakeholders',   topic: 'viz',     difficulty: 'medium', tag: 'Viz' },
+  { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
+  { id: 'storytelling',  title: 'Data Storytelling for Stakeholders',   topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
 ];
 
 const CASE_PROMPTS = {
@@ -2539,7 +2534,7 @@ const PYTHON_DATASETS = {
       'The \'amount\' column has dollar signs, \'N/A\' strings, and \'NaN\' text. Use str.replace() to clean, then pd.to_numeric(errors=\'coerce\') to convert. Category has mixed case — use str.title() or str.capitalize().',
       'Handle duplicates with df.drop_duplicates(subset=[\'order_id\']). For dates, pd.to_datetime(errors=\'coerce\') handles mixed formats. Strip whitespace from names with str.strip().'
     ],
-    defaultQuery: `# Write your Python code here\n# The 'df' DataFrame is pre-loaded\n`,
+    defaultQuery: `# The 'df' DataFrame is pre-loaded — explore it first\ndf.head(10)\n`,
     schema: [
       { name: 'df (DataFrame)', columns: [
         { name: 'order_id', type: 'object' }, { name: 'customer_name', type: 'object' },
@@ -2574,7 +2569,7 @@ df = pd.DataFrame(data)
       'For multi-column groupby with multiple aggregates: sales.groupby([\'region\', \'category\']).agg({\'revenue\': \'sum\', \'units_sold\': \'sum\', \'cost\': \'sum\'}).',
       'Add a profit column with sales[\'profit\'] = sales[\'revenue\'] - sales[\'cost\'], then use pd.pivot_table(sales, values=\'profit\', index=\'region\', columns=\'category\', aggfunc=\'sum\') for cross-tabulation.'
     ],
-    defaultQuery: `# Write your Python code here\n# The 'sales' DataFrame is pre-loaded\n`,
+    defaultQuery: `# The 'sales' DataFrame is pre-loaded — explore it first\nsales.head(10)\n`,
     schema: [
       { name: 'sales (DataFrame)', columns: [
         { name: 'date', type: 'datetime64' }, { name: 'region', type: 'object' },
@@ -2621,7 +2616,7 @@ sales = pd.DataFrame(rows).sort_values('date').reset_index(drop=True)
   python_debug: {
     label: 'Debug & List Comprehension',
     question: '<em>Asked at Coinbase.</em><br><br>A pre-loaded variable <strong>test_list</strong> contains sample numbers.<br><br><strong>1.</strong> The function <code>output_all_odd(x_list)</code> below has <strong>bugs</strong>. Find and fix them, then test with test_list:<br><pre>def output_all_odd(x_list):\n    all_odd_numbers = range(1, max(x_list)+1, 2)\n    for i in x_list:\n        y_list = []\n        if i in all_odd_numbers:\n            y_list.append(i)\n    return y_list</pre><br><strong>2.</strong> Rewrite the same logic as a <strong>single-line list comprehension</strong>.<br><br><strong>3.</strong> Given input <code>n = 4</code>, use a list comprehension to generate:<br><code>[(1,1),(2,1),(2,2),(3,1),(3,2),(3,3),(4,1),(4,2),(4,3),(4,4)]</code>',
-    defaultQuery: '# Write your Python code here\n',
+    defaultQuery: '# Pre-loaded variables — explore them first\nprint("test_list:", test_list)\nprint("n:", n)\n',
     hints: [
       'Bug 1: y_list = [] is INSIDE the for loop — it resets every iteration. Move it before the loop. Bug 2: max(x_list) fails if x_list is empty. Also, the range approach misses negative odd numbers.',
       'List comprehension for odd filter: [x for x in x_list if x % 2 != 0]. This is simpler and handles negatives too.',
@@ -2641,7 +2636,7 @@ n = 4
   python_palindrome: {
     label: 'Longest Palindromic Substring',
     question: '<em>Asked at Jio Cinema — Senior Data Analyst.</em><br><br>Pre-loaded variables <strong>s1</strong>, <strong>s2</strong>, <strong>s3</strong> contain test strings.<br><br><strong>1.</strong> Write a function <code>longest_palindrome(s)</code> that returns the <strong>longest palindromic substring</strong> in a given string.<br><br>Examples:<br>• <code>"babad"</code> → <code>"bab"</code> (or <code>"aba"</code>)<br>• <code>"cbbd"</code> → <code>"bb"</code><br>• <code>"zcbbbcd"</code> → <code>"cbbbс"</code> is not palindrome, answer is <code>"bbb"</code><br><br><strong>2.</strong> Test your function on s1, s2, s3 and print results.<br><br><strong>Constraint:</strong> 1 &le; len(s) &le; 1000. String contains only digits and English letters.',
-    defaultQuery: '# Write your Python code here\n',
+    defaultQuery: '# Pre-loaded test strings — explore them first\nprint("s1:", s1)\nprint("s2:", s2)\nprint("s3:", s3)\n',
     hints: [
       'Brute force: check all substrings s[i:j] and test if s[i:j] == s[i:j][::-1]. Track the longest one found. This is O(n³) but works for small inputs.',
       'Optimization — expand around center: for each index i, expand outward while characters match. Check both odd-length (center = i) and even-length (center = i, i+1) palindromes. This is O(n²) time, O(1) space.',
@@ -2662,7 +2657,7 @@ s3 = "zcbbbcd"
   python_fd: {
     label: 'FD Interest Calculator (Fintech)',
     question: '<em>Fintech analytics take-home assignment.</em><br><br>A bank offers two Fixed Deposit (FD) options:<br><br><strong>Option A — No lock-up:</strong> 4% annual return, withdraw anytime.<br><strong>Option B — Lock-up (14–365 days):</strong> Interest scales <strong>linearly from 4.5% to 14%</strong>. Early withdrawal drops rate to <strong>2%</strong> for the withdrawn portion. Partial withdrawals allowed.<br><br>All rates are <strong>annual</strong>. Interest is calculated <strong>daily</strong> (rate/365).<br><br><strong>Build a function</strong> <code>calculate_interest(deposits)</code> that takes a list of deposit scenarios (pre-loaded as <strong>test_scenarios</strong>) and returns the total interest earned from day 1 to day 365.<br><br>Each scenario dict has: <code>amount</code>, <code>deposit_day</code>, <code>lockup_days</code> (0 = no lockup), <code>withdrawals</code> (list of <code>{day, amount}</code>).<br><br><strong>Test with the pre-loaded scenarios and print results per user + total.</strong>',
-    defaultQuery: '# Write your Python code here\n',
+    defaultQuery: '# test_scenarios is pre-loaded — explore the data first\nfor scenario in test_scenarios:\n    print(scenario)\n',
     hints: [
       'For lock-up FDs, calculate the interest rate with linear interpolation: rate = 4.5 + (lockup_days - 14) * (14 - 4.5) / (365 - 14). This gives 4.5% for 14 days and 14% for 365 days.',
       'Track remaining principal after each withdrawal. For lock-up FDs: if withdrawal_day < deposit_day + lockup_days, the withdrawn portion earns only 2% for its entire period. The remaining principal keeps earning the original rate.',
@@ -2999,10 +2994,20 @@ function renderPromptList(filter = 'all') {
   `).join('');
 }
 
+const SECTION_TITLES = {
+  all: 'All Practice Problems',
+  casestudy: 'Case Studies',
+  sql: 'SQL Questions',
+  python: 'Python Questions',
+  puzzles: 'Puzzles',
+  guesstimates: 'Guesstimates'
+};
+
 function filterTopic(topic, el) {
   activeFilter = topic;
   document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('sectionTitle').textContent = SECTION_TITLES[topic] || 'Case Studies';
   renderPromptList(topic);
 }
 
@@ -3581,8 +3586,10 @@ async function setupSQLDatabase(caseId) {
 
   renderSchema(dataset.schema);
   if (sqlEditor) {
-    const defaultQ = (sqlDialect === 'postgres' && dataset.defaultQueryPostgres) ? dataset.defaultQueryPostgres : dataset.defaultQuery;
-    sqlEditor.setValue(defaultQ);
+    // Auto-generate a starter query that previews the first table's data
+    const firstTable = dataset.schema[0].name.split(' ')[0];
+    const starterQuery = `-- Explore the data first\nSELECT * FROM ${firstTable} LIMIT 10;\n`;
+    sqlEditor.setValue(starterQuery);
     setTimeout(() => sqlEditor.refresh(), 50);
   }
   resetCodeResults();
