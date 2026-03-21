@@ -29,8 +29,11 @@ const PROVIDERS = {
   },
 };
 
+const PROXY_HOURLY_LIMIT = 60;  // generous — user's own API key
+const RATE_WINDOW = 3600;
+
 export async function onRequest(context) {
-  const { request } = context;
+  const { env, request } = context;
 
   // CORS preflight
   if (request.method === 'OPTIONS') {
@@ -39,6 +42,20 @@ export async function onRequest(context) {
 
   if (request.method !== 'POST') {
     return json({ error: 'Method not allowed' }, 405);
+  }
+
+  // Rate limit by IP to prevent proxy abuse
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  if (env.RATE_LIMIT_KV) {
+    try {
+      const key = `rl:proxy:ip:${ip}`;
+      const raw = await env.RATE_LIMIT_KV.get(key);
+      const count = raw ? parseInt(raw, 10) : 0;
+      if (count >= PROXY_HOURLY_LIMIT) {
+        return json({ error: 'Proxy rate limit exceeded. Please try again later.' }, 429);
+      }
+      await env.RATE_LIMIT_KV.put(key, String(count + 1), { expirationTtl: RATE_WINDOW });
+    } catch { /* don't block on rate limit failure */ }
   }
 
   // Parse request
