@@ -3845,23 +3845,25 @@ function renderProviderDropdown() {
 
 async function startLocalDownload() {
   setProvider('local');
-  // Keep dropdown open during download to show progress
+  // Re-open dropdown (setProvider closes it) to show download progress
+  document.getElementById('providerSelector').classList.add('open');
   renderProviderDropdown();
 
   await initWebLLM();
   renderWebLLMModalStatus();
 
   if (webllmReady) {
-    renderProviderDropdown(); // Update to show "Ready" status
+    renderProviderDropdown();
     closeProviderDropdown();
     appendMessage('bot', '✅ **Local AI ready!** Unlimited AI coaching — no rate limits, no API keys.');
   } else if (webllmError) {
-    renderProviderDropdown(); // Show error in dropdown
+    renderProviderDropdown(); // Show error in dropdown (stays open)
   }
 }
 
-// Click-outside handler for provider dropdown
+// Click-outside handler for provider dropdown (don't close during WebLLM download)
 document.addEventListener('click', (e) => {
+  if (webllmLoading) return; // Keep dropdown open during download
   const sel = document.getElementById('providerSelector');
   if (sel && !sel.contains(e.target)) closeProviderDropdown();
 });
