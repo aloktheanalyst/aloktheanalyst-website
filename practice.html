@@ -254,16 +254,17 @@
   .pd-status.downloading { background: rgba(139,92,246,0.12); color: var(--local-color); }
 
   .pd-model {
-    font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem;
   }
   .pd-model select {
-    background: transparent; border: none; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 5px;
     font-size: 0.7rem; font-family: 'DM Sans', sans-serif;
-    cursor: pointer; padding: 0; margin: 0; outline: none;
-    -webkit-appearance: none; appearance: none;
+    cursor: pointer; padding: 0.25rem 0.4rem; outline: none;
+    width: 100%; max-width: 260px;
   }
-  .pd-model select:hover { color: var(--text); }
+  .pd-model select:hover { border-color: var(--accent); }
+  .pd-model select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
 
   .pd-divider { height: 1px; background: var(--border); margin: 0.2rem 0.5rem; }
 
@@ -3788,7 +3789,7 @@ function renderProviderDropdown() {
       const opts = modelOptions[p].map(m =>
         `<option value="${m.value}" ${m.value === modelSelections[p] ? 'selected' : ''}>${m.label}</option>`
       ).join('');
-      modelHtml = `<div class="pd-model"><select onchange="saveModel('${p}', this.value); event.stopPropagation();">${opts}</select> ▾</div>`;
+      modelHtml = `<div class="pd-model"><select onchange="saveModel('${p}', this.value); event.stopPropagation();">${opts}</select></div>`;
     } else if (modelSelections[p] && p !== 'local') {
       const currentModel = modelOptions[p]?.find(m => m.value === modelSelections[p]);
       modelHtml = `<div class="pd-model">${currentModel ? currentModel.label : modelSelections[p]}</div>`;
