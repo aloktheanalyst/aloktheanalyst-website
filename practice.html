@@ -3434,7 +3434,6 @@ function trackEvent(event, caseId, metadata) {
 
 const apiKeys = {
   free:   '__free__',
-  groq:   '__groq__',
   local:  '__local__',
   claude: localStorage.getItem('ak_claude') || '',
   openai: localStorage.getItem('ak_openai') || '',
@@ -3443,16 +3442,16 @@ const apiKeys = {
 
 const modelOptions = {
   free: [
+    // Cloudflare Workers AI models
     { value: '@cf/meta/llama-3.1-8b-instruct-fp8-fast',         label: 'Llama 3.1 8B (fast, default)' },
     { value: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',   label: 'DeepSeek R1 32B (reasoning)' },
     { value: '@cf/qwen/qwen2.5-coder-32b-instruct',            label: 'Qwen 2.5 Coder 32B (code)' },
     { value: '@cf/meta/llama-4-scout-17b-16e-instruct',         label: 'Llama 4 Scout 17B (balanced)' },
-  ],
-  groq: [
-    { value: 'llama-3.3-70b-versatile',     label: 'Llama 3.3 70B (powerful)' },
-    { value: 'llama-3.1-8b-instant',         label: 'Llama 3.1 8B (fast)' },
-    { value: 'gemma2-9b-it',                 label: 'Gemma 2 9B' },
-    { value: 'mixtral-8x7b-32768',           label: 'Mixtral 8x7B' },
+    // Groq-powered models (ultra-fast inference)
+    { value: 'llama-3.3-70b-versatile',     label: '⚡ Llama 3.3 70B (powerful)' },
+    { value: 'llama-3.1-8b-instant',         label: '⚡ Llama 3.1 8B Instant' },
+    { value: 'gemma2-9b-it',                 label: '⚡ Gemma 2 9B' },
+    { value: 'mixtral-8x7b-32768',           label: '⚡ Mixtral 8x7B' },
   ],
   claude: [
     { value: 'claude-sonnet-4-20250514',  label: 'Claude Sonnet 4 (latest)' },
@@ -3480,7 +3479,6 @@ const modelOptions = {
 
 const modelSelections = {
   free:   localStorage.getItem('model_free') || '@cf/meta/llama-3.1-8b-instruct-fp8-fast',
-  groq:   localStorage.getItem('model_groq') || 'llama-3.3-70b-versatile',
   claude: localStorage.getItem('model_claude') || 'claude-sonnet-4-20250514',
   openai: localStorage.getItem('model_openai') || 'gpt-4o',
   gemini: localStorage.getItem('model_gemini') || 'gemini-2.0-flash',
@@ -3489,7 +3487,6 @@ const modelSelections = {
 
 const providerMeta = {
   free:   { color: 'var(--free-color)',   dotClass: 'dot-free',   avatarText: '🦙' },
-  groq:   { color: 'var(--groq-color)',   dotClass: 'dot-groq',   avatarText: '🚀' },
   claude: { color: 'var(--claude-color)', dotClass: 'dot-claude', avatarText: '✦' },
   openai: { color: 'var(--openai-color)', dotClass: 'dot-openai', avatarText: '⊕' },
   gemini: { color: 'var(--gemini-color)', dotClass: 'dot-gemini', avatarText: '◈' },
@@ -3497,7 +3494,7 @@ const providerMeta = {
 };
 
 function getProviderLabel(provider) {
-  const names = { free: 'Instant', groq: 'Groq', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
+  const names = { free: 'Instant', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
   if (provider === 'local') {
     const short = modelSelections[provider].replace(/-Instruct-q4f16_1-MLC$/, '').replace('Qwen2.5-Coder-', 'Qwen2.5 Coder ');
     return `${names[provider]} · ${short}`;
@@ -3704,8 +3701,8 @@ function filterTopic(topic, el) {
 // ═══════════════════════════════
 // PROVIDER SELECTOR (Pill + Dropdown)
 // ═══════════════════════════════
-const providerNames = { free: 'Instant', groq: 'Groq', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
-const providerOrder = ['free', 'local', 'groq', 'claude', 'openai', 'gemini'];
+const providerNames = { free: 'Instant', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
+const providerOrder = ['free', 'local', 'claude', 'openai', 'gemini'];
 
 function setProvider(provider) {
   currentProvider = provider;
@@ -3755,7 +3752,6 @@ function closeProviderDropdown() {
 function getProviderStatus(p) {
   if (p === currentProvider) return { text: 'Active', cls: 'active' };
   if (p === 'free') return { text: 'No setup', cls: 'active' };
-  if (p === 'groq') return { text: 'No setup', cls: 'active' };
   if (p === 'local') {
     if (!checkWebGPUSupport()) return { text: '⚠ No WebGPU', cls: 'unavailable' };
     if (webllmReady) return { text: '✓ Ready', cls: 'ready' };
@@ -3780,7 +3776,7 @@ function renderProviderDropdown() {
 
     // Model display for active provider (+ Local always shows selector for pre-download selection)
     let modelHtml = '';
-    if ((isActive || p === 'local') && modelOptions[p]) {
+    if ((isActive || p === 'local' || p === 'free') && modelOptions[p]) {
       const opts = modelOptions[p].map(m =>
         `<option value="${m.value}" ${m.value === modelSelections[p] ? 'selected' : ''}>${m.label}</option>`
       ).join('');
@@ -3818,8 +3814,8 @@ function renderProviderDropdown() {
     }
 
     // Add divider between free/local group and paid group
-    // Divider between no-setup group (Instant/Local/Groq) and API-key providers
-    if (i === 3) html += '<div class="pd-divider"></div>';
+    // Divider between no-setup group (Instant/Local) and API-key providers
+    if (i === 2) html += '<div class="pd-divider"></div>';
 
     html += `
       <div class="pd-card ${isActive ? 'active' : ''}" onclick="setProvider('${p}')">
@@ -4035,8 +4031,6 @@ async function sendToAI(userText, isSystemTrigger) {
     } else {
       if (currentProvider === 'free') {
         reply = await callFree();
-      } else if (currentProvider === 'groq') {
-        reply = await callGroq();
       } else if (currentProvider === 'claude') {
         reply = await callClaude();
       } else if (currentProvider === 'openai') {
@@ -4056,7 +4050,7 @@ async function sendToAI(userText, isSystemTrigger) {
     if (streamEl) streamEl.remove();
 
     const errMsg = err.message || 'Unknown error';
-    if (currentProvider === 'free' || currentProvider === 'groq') {
+    if (currentProvider === 'free') {
       appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nThe AI service may be temporarily unavailable. Try again in a moment, or switch to another provider.`);
     } else if (currentProvider === 'local') {
       appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nMake sure your device supports WebGPU and has enough memory. Go to **API Keys** to check the Local AI status.`);
@@ -4076,22 +4070,27 @@ async function sendToAI(userText, isSystemTrigger) {
 
 // ── API CALLERS ──
 async function callFree() {
-  const res = await fetch('/api/chat', {
+  const model = modelSelections.free;
+  // Auto-route: @cf/ models → Cloudflare Workers AI, others → Groq
+  const isCloudflare = model.startsWith('@cf/');
+  const endpoint = isCloudflare ? '/api/chat' : '/api/groq';
+
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({
       messages: conversationHistory,
       system: SYSTEM_PROMPT,
-      model: modelSelections.free,
+      model,
     })
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    // If auth required, prompt sign-in
     if (err.auth_required) {
-      throw new Error('🔒 Please sign in with Google to use the free AI model. Click the "Sign in" button in the top bar.');
+      throw new Error('🔒 Please sign in with Google to use the AI coach. Click the "Sign in" button in the top bar.');
     }
-    throw new Error(err.error || `Instant AI error ${res.status}`);
+    throw new Error(err.error || `AI error ${res.status}`);
   }
   const data = await res.json();
   const reply = data.reply;
@@ -4182,26 +4181,7 @@ async function callGemini() {
   return reply;
 }
 
-async function callGroq() {
-  const res = await fetch('/api/groq', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({
-      system: SYSTEM_PROMPT,
-      model: modelSelections.groq,
-      messages: conversationHistory,
-    })
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Groq error ${res.status}`);
-  }
-  const data = await res.json();
-  const reply = data.reply;
-  if (!reply) throw new Error('Groq returned an empty response. Try again or switch models.');
-  return reply;
-}
+
 
 // ── LOCAL (WebLLM) CALLERS ──
 async function callLocal() {
@@ -4962,8 +4942,6 @@ Please provide your feedback in this exact format:
     let reply = '';
     if (currentProvider === 'free') {
       reply = await callFree();
-    } else if (currentProvider === 'groq') {
-      reply = await callGroq();
     } else if (currentProvider === 'claude') {
       reply = await callClaude();
     } else if (currentProvider === 'openai') {
