@@ -3789,7 +3789,7 @@ function renderProviderDropdown() {
       const opts = modelOptions[p].map(m =>
         `<option value="${m.value}" ${m.value === modelSelections[p] ? 'selected' : ''}>${m.label}</option>`
       ).join('');
-      modelHtml = `<div class="pd-model"><select onchange="saveModel('${p}', this.value); event.stopPropagation();">${opts}</select></div>`;
+      modelHtml = `<div class="pd-model" onclick="event.stopPropagation()"><select onchange="saveModel('${p}', this.value);">${opts}</select></div>`;
     } else if (modelSelections[p] && p !== 'local') {
       const currentModel = modelOptions[p]?.find(m => m.value === modelSelections[p]);
       modelHtml = `<div class="pd-model">${currentModel ? currentModel.label : modelSelections[p]}</div>`;
