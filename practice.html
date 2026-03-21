@@ -52,6 +52,7 @@
     /* AI provider colors */
     --local-color:   #8b5cf6;
     --free-color:    #f97316;
+    --groq-color:    #f55036;
     --claude-color:  #2563eb;
     --openai-color:  #059669;
     --gemini-color:  #2563eb;
@@ -188,58 +189,110 @@
   .auth-dropdown-item:hover { background: var(--surface2); }
   .auth-dropdown-item.logout { color: #ef4444; }
 
-  /* PROVIDER SELECTOR */
-  .provider-tabs {
-    display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 3px;
-    gap: 2px;
+  /* PROVIDER SELECTOR — Compact pill + dropdown */
+  .provider-selector { position: relative; }
+
+  .provider-pill {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.4rem 0.75rem; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    cursor: pointer; font-size: 0.78rem; font-weight: 600;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .provider-pill:hover { border-color: var(--border2); background: var(--surface2); }
+
+  .pill-icon { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .pill-chevron {
+    width: 10px; height: 10px; color: var(--muted);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .provider-selector.open .pill-chevron { transform: rotate(180deg); }
+
+  /* Dropdown */
+  .provider-dropdown {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.35rem;
+    min-width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 200;
+  }
+  .provider-selector.open .provider-dropdown { display: block; }
+
+  /* Provider cards inside dropdown */
+  .pd-card {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.6rem 0.7rem; border-radius: 7px; cursor: pointer;
+    transition: background 0.15s; position: relative;
+  }
+  .pd-card:hover { background: var(--surface2); }
+  .pd-card.active {
+    background: var(--surface2);
+    border-left: 2.5px solid var(--accent);
+    padding-left: calc(0.7rem - 2.5px);
   }
 
-  .ptab {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.9rem;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--muted);
-    transition: all 0.2s;
-    border: none;
-    background: transparent;
-    letter-spacing: 0.3px;
-    font-family: 'DM Sans', sans-serif;
-    white-space: nowrap;
+  .pd-icon {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    margin-top: 3px;
   }
+  .pd-info { flex: 1; min-width: 0; }
+  .pd-name {
+    font-size: 0.8rem; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .pd-status {
+    font-size: 0.62rem; font-weight: 600; padding: 0.1rem 0.4rem;
+    border-radius: 3px; white-space: nowrap;
+  }
+  .pd-status.active { background: rgba(22,163,74,0.1); color: var(--green); }
+  .pd-status.unlimited { background: rgba(139,92,246,0.12); color: var(--local-color); }
+  .pd-status.ready { background: rgba(22,163,74,0.1); color: var(--green); }
+  .pd-status.needs-key { background: rgba(100,116,139,0.1); color: var(--muted); cursor: pointer; }
+  .pd-status.unavailable { background: rgba(239,68,68,0.1); color: #ef4444; }
+  .pd-status.downloading { background: rgba(139,92,246,0.12); color: var(--local-color); }
 
-  .ptab .picon { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  .pd-model {
+    font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pd-model select {
+    background: transparent; border: none; color: var(--muted);
+    font-size: 0.7rem; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; padding: 0; margin: 0; outline: none;
+    -webkit-appearance: none; appearance: none;
+  }
+  .pd-model select:hover { color: var(--text); }
 
-  .ptab[data-provider="free"] .picon { background: var(--free-color); border-radius: 50%; }
-  .ptab[data-provider="claude"] .picon { background: var(--claude-color); }
-  .ptab[data-provider="openai"] .picon { background: var(--openai-color); border-radius: 50%; }
-  .ptab[data-provider="gemini"] .picon { background: linear-gradient(135deg, var(--gemini-color), #ea4335, #fbbc04, var(--gemini-color)); border-radius: 50%; }
-  .ptab[data-provider="local"] .picon { background: var(--local-color); border-radius: 3px; }
+  .pd-divider { height: 1px; background: var(--border); margin: 0.2rem 0.5rem; }
 
-  .ptab.active { background: var(--surface2); color: var(--white); }
-  .ptab[data-provider="free"].active { color: var(--free-color); }
-  .ptab[data-provider="claude"].active { color: var(--claude-color); }
-  .ptab[data-provider="openai"].active { color: var(--openai-color); }
-  .ptab[data-provider="gemini"].active { color: var(--gemini-color); }
-  .ptab[data-provider="local"].active { color: var(--local-color); }
-
-  /* Unlimited badge on Local tab */
-  .ptab .unlimited-badge {
-    font-size: 0.6rem;
-    background: rgba(139,92,246,0.15);
-    color: var(--local-color);
-    padding: 0.05rem 0.35rem;
-    border-radius: 3px;
-    font-weight: 700;
-    line-height: 1;
+  /* Local AI download section within card */
+  .pd-local-expand {
+    margin-top: 0.5rem; padding: 0.6rem; border-radius: 6px;
+    background: rgba(139,92,246,0.04); border: 1px solid rgba(139,92,246,0.12);
+  }
+  .pd-local-desc {
+    font-size: 0.72rem; color: var(--muted); line-height: 1.45; margin-bottom: 0.5rem;
+  }
+  .pd-local-btn {
+    background: var(--local-color); color: #fff; border: none;
+    border-radius: 6px; padding: 0.45rem 1rem; font-size: 0.75rem;
+    font-weight: 600; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s; width: 100%;
+  }
+  .pd-local-btn:hover { filter: brightness(1.1); }
+  .pd-local-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pd-local-progress {
+    width: 100%; height: 5px; background: var(--border);
+    border-radius: 3px; overflow: hidden; margin-top: 0.4rem;
+  }
+  .pd-local-progress-fill {
+    height: 100%; background: var(--local-color);
+    border-radius: 3px; transition: width 0.3s ease; width: 0%;
+  }
+  .pd-local-pct {
+    font-size: 0.68rem; color: var(--local-color); margin-top: 0.25rem;
+    font-family: 'JetBrains Mono', monospace;
   }
 
   /* API KEY BUTTON */
@@ -856,6 +909,7 @@
     font-weight: 500;
   }
   .badge-free    { background: rgba(249,115,22,0.1); color: var(--free-color); }
+  .badge-groq    { background: rgba(245,80,54,0.1);  color: var(--groq-color); }
   .badge-claude  { background: rgba(37,99,235,0.1); color: var(--accent); }
   .badge-openai  { background: rgba(16,163,127,0.15);  color: var(--openai-color); }
   .badge-gemini  { background: rgba(66,133,244,0.15);  color: var(--gemini-color); }
@@ -1663,23 +1717,16 @@
   <div class="topbar-title">ALOK<span>.</span>ANALYST — PRACTICE ARENA</div>
 
   <div class="topbar-right">
-    <!-- Provider Tabs -->
-    <div class="provider-tabs" id="providerTabs">
-      <button class="ptab active" data-provider="free" onclick="setProvider('free', this)">
-        <div class="picon"></div> Free
+    <!-- Provider Selector (compact pill + dropdown) -->
+    <div class="provider-selector" id="providerSelector">
+      <button class="provider-pill" id="providerPill" onclick="toggleProviderDropdown()">
+        <div class="pill-icon" id="pillIcon" style="background:var(--free-color)"></div>
+        <span id="pillLabel">Free</span>
+        <svg class="pill-chevron" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="currentColor"/></svg>
       </button>
-      <button class="ptab" data-provider="claude" onclick="setProvider('claude', this)">
-        <div class="picon"></div> Claude
-      </button>
-      <button class="ptab" data-provider="openai" onclick="setProvider('openai', this)">
-        <div class="picon"></div> ChatGPT
-      </button>
-      <button class="ptab" data-provider="gemini" onclick="setProvider('gemini', this)">
-        <div class="picon"></div> Gemini
-      </button>
-      <button class="ptab" data-provider="local" onclick="setProvider('local', this)">
-        <div class="picon"></div> Local <span class="unlimited-badge">&#8734;</span>
-      </button>
+      <div class="provider-dropdown" id="providerDropdown">
+        <!-- Dynamically rendered by renderProviderDropdown() -->
+      </div>
     </div>
 
     <!-- Auth Button -->
@@ -1914,20 +1961,7 @@
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
   <div class="modal">
     <div class="modal-title">API KEYS</div>
-    <div class="modal-sub">Add your API keys to use different AI models. Keys are stored only in your browser's localStorage — never sent to any server except the AI provider's API.</div>
-
-    <!-- Free (Workers AI) -->
-    <div class="modal-section">
-      <div class="modal-label">
-        <span class="provider-badge badge-free">FREE</span>
-        Workers AI (Llama)
-      </div>
-      <div class="key-status ok" style="margin-bottom:0.5rem">✓ No API key needed — works immediately</div>
-      <div class="model-select-row">
-        <span class="model-select-label">Model:</span>
-        <select class="model-select" id="freeModel" onchange="saveModel('free', this.value)"></select>
-      </div>
-    </div>
+    <div class="modal-sub">Add API keys to unlock premium AI models. Use the model selector in the topbar to switch providers and choose models.</div>
 
     <!-- Claude -->
     <div class="modal-section">
@@ -1938,10 +1972,6 @@
       <div class="key-input-row">
         <input type="password" class="key-input" id="claudeKey" placeholder="sk-ant-api03-..." />
         <button class="save-key-btn" onclick="saveKey('claude')">Save</button>
-      </div>
-      <div class="model-select-row">
-        <span class="model-select-label">Model:</span>
-        <select class="model-select" id="claudeModel" onchange="saveModel('claude', this.value)"></select>
       </div>
       <div class="key-status miss" id="claudeStatus">⬡ Not configured</div>
     </div>
@@ -1956,10 +1986,6 @@
         <input type="password" class="key-input" id="openaiKey" placeholder="sk-..." />
         <button class="save-key-btn" onclick="saveKey('openai')">Save</button>
       </div>
-      <div class="model-select-row">
-        <span class="model-select-label">Model:</span>
-        <select class="model-select" id="openaiModel" onchange="saveModel('openai', this.value)"></select>
-      </div>
       <div class="key-status miss" id="openaiStatus">⬡ Not configured</div>
     </div>
 
@@ -1973,34 +1999,14 @@
         <input type="password" class="key-input" id="geminiKey" placeholder="AIza..." />
         <button class="save-key-btn" onclick="saveKey('gemini')">Save</button>
       </div>
-      <div class="model-select-row">
-        <span class="model-select-label">Model:</span>
-        <select class="model-select" id="geminiModel" onchange="saveModel('gemini', this.value)"></select>
-      </div>
       <div class="key-status miss" id="geminiStatus">⬡ Not configured</div>
     </div>
 
-    <!-- Local (WebLLM — in-browser) -->
-    <div class="modal-section">
-      <div class="modal-label">
-        <span class="provider-badge badge-local">LOCAL &#8734;</span>
-        In-Browser AI (WebLLM)
-      </div>
-      <div id="webllmModalContent">
-        <!-- Dynamically rendered by renderWebLLMModalStatus() -->
-      </div>
-      <div class="model-select-row">
-        <span class="model-select-label">Model:</span>
-        <select class="model-select" id="localModel" onchange="saveModel('local', this.value)"></select>
-      </div>
-    </div>
-
     <div class="modal-note">
-      🔒 Keys are saved in your browser's localStorage and are never shared. Get keys from:<br>
+      🔒 Keys are stored only in your browser — never sent to any server except the AI provider's API.<br>
       <strong style="color:var(--accent)">Claude:</strong> console.anthropic.com &nbsp;·&nbsp;
       <strong style="color:var(--openai-color)">ChatGPT:</strong> platform.openai.com &nbsp;·&nbsp;
-      <strong style="color:var(--gemini-color)">Gemini:</strong> aistudio.google.com &nbsp;·&nbsp;
-      <strong style="color:var(--local-color)">Local:</strong> No key needed — runs in your browser!
+      <strong style="color:var(--gemini-color)">Gemini:</strong> aistudio.google.com
     </div>
 
     <div class="modal-footer">
@@ -3428,6 +3434,7 @@ function trackEvent(event, caseId, metadata) {
 
 const apiKeys = {
   free:   '__free__',
+  groq:   '__groq__',
   local:  '__local__',
   claude: localStorage.getItem('ak_claude') || '',
   openai: localStorage.getItem('ak_openai') || '',
@@ -3441,6 +3448,12 @@ const modelOptions = {
     { value: '@cf/qwen/qwen2.5-coder-32b-instruct',            label: 'Qwen 2.5 Coder 32B (code)' },
     { value: '@cf/meta/llama-4-scout-17b-16e-instruct',         label: 'Llama 4 Scout 17B (balanced)' },
   ],
+  groq: [
+    { value: 'llama-3.3-70b-versatile',     label: 'Llama 3.3 70B (powerful)' },
+    { value: 'llama-3.1-8b-instant',         label: 'Llama 3.1 8B (fast)' },
+    { value: 'gemma2-9b-it',                 label: 'Gemma 2 9B' },
+    { value: 'mixtral-8x7b-32768',           label: 'Mixtral 8x7B' },
+  ],
   claude: [
     { value: 'claude-sonnet-4-20250514',  label: 'Claude Sonnet 4 (latest)' },
     { value: 'claude-opus-4-5',           label: 'Claude Opus 4.5' },
@@ -3448,10 +3461,10 @@ const modelOptions = {
     { value: 'claude-3-5-sonnet-20241022',label: 'Claude 3.5 Sonnet' },
   ],
   openai: [
-    { value: 'gpt-4o',      label: 'GPT-4o' },
+    { value: 'gpt-4o',      label: 'GPT-4o (recommended)' },
     { value: 'gpt-4o-mini', label: 'GPT-4o Mini (fast)' },
-    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-    { value: 'o1-mini',     label: 'o1-mini' },
+    { value: 'o3-mini',     label: 'o3-mini (reasoning)' },
+    { value: 'o1-mini',     label: 'o1-mini (reasoning)' },
   ],
   gemini: [
     { value: 'gemini-2.0-flash',      label: 'Gemini 2.0 Flash (recommended)' },
@@ -3467,6 +3480,7 @@ const modelOptions = {
 
 const modelSelections = {
   free:   localStorage.getItem('model_free') || '@cf/meta/llama-3.1-8b-instruct-fp8-fast',
+  groq:   localStorage.getItem('model_groq') || 'llama-3.3-70b-versatile',
   claude: localStorage.getItem('model_claude') || 'claude-sonnet-4-20250514',
   openai: localStorage.getItem('model_openai') || 'gpt-4o',
   gemini: localStorage.getItem('model_gemini') || 'gemini-2.0-flash',
@@ -3475,6 +3489,7 @@ const modelSelections = {
 
 const providerMeta = {
   free:   { color: 'var(--free-color)',   dotClass: 'dot-free',   avatarText: '🦙' },
+  groq:   { color: 'var(--groq-color)',   dotClass: 'dot-groq',   avatarText: '🚀' },
   claude: { color: 'var(--claude-color)', dotClass: 'dot-claude', avatarText: '✦' },
   openai: { color: 'var(--openai-color)', dotClass: 'dot-openai', avatarText: '⊕' },
   gemini: { color: 'var(--gemini-color)', dotClass: 'dot-gemini', avatarText: '◈' },
@@ -3482,7 +3497,7 @@ const providerMeta = {
 };
 
 function getProviderLabel(provider) {
-  const names = { free: 'Llama', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
+  const names = { free: 'Instant', groq: 'Groq', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
   if (provider === 'local') {
     const short = modelSelections[provider].replace(/-Instruct-q4f16_1-MLC$/, '').replace('Qwen2.5-Coder-', 'Qwen2.5 Coder ');
     return `${names[provider]} · ${short}`;
@@ -3523,9 +3538,7 @@ async function initWebLLM() {
       initProgressCallback: (report) => {
         webllmProgress = Math.round((report.progress || 0) * 100);
         renderWebLLMModalStatus();
-        // Also update chat if a progress message is shown
-        const progressEl = document.getElementById('webllmChatProgress');
-        if (progressEl) progressEl.textContent = `Downloading model... ${webllmProgress}%`;
+        renderProviderDropdown();
       }
     });
     webllmReady = true;
@@ -3607,7 +3620,7 @@ function renderWebLLMModalStatus() {
 window.onload = () => {
   renderPromptList();
   updateKeyStatuses();
-  populateModelSelects();
+  updatePillDisplay();
   // Set initial status bar label using selected model
   document.getElementById('piLabel').textContent = getProviderLabel(currentProvider);
 };
@@ -3689,37 +3702,164 @@ function filterTopic(topic, el) {
 }
 
 // ═══════════════════════════════
-// PROVIDER
+// PROVIDER SELECTOR (Pill + Dropdown)
 // ═══════════════════════════════
-function setProvider(provider, el) {
+const providerNames = { free: 'Instant', groq: 'Groq', claude: 'Claude', openai: 'ChatGPT', gemini: 'Gemini', local: 'Local' };
+const providerOrder = ['free', 'local', 'groq', 'claude', 'openai', 'gemini'];
+
+function setProvider(provider) {
   currentProvider = provider;
-  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  updatePillDisplay();
   const meta = providerMeta[provider];
   document.getElementById('piDot').style.background = meta.color;
   document.getElementById('piLabel').textContent = getProviderLabel(provider);
+  closeProviderDropdown();
 
   // Auto-init WebLLM when Local is selected
   if (provider === 'local' && !webllmReady && !webllmLoading) {
-    if (!checkWebGPUSupport()) {
-      appendMessage('bot', '⚠️ **WebGPU Not Supported**\n\nYour browser doesn\'t support WebGPU, which is required for the local AI model. Please use **Chrome 113+** or **Edge 113+**, or switch to the Free tab.');
-      return;
-    }
     const cachedModel = localStorage.getItem('webllm_model_cached');
-    if (cachedModel === modelSelections.local) {
-      // Previously downloaded — auto-initialize
-      appendMessage('bot', '⚡ **Loading local AI model...** This should be quick since the model is cached from a previous session.');
+    if (checkWebGPUSupport() && cachedModel === modelSelections.local) {
       initWebLLM().then(() => {
+        renderProviderDropdown();
         if (webllmReady) {
-          appendMessage('bot', '✅ **Local AI ready!** You now have unlimited AI coaching — no rate limits, no API keys needed.');
+          appendMessage('bot', '✅ **Local AI ready!** Unlimited AI coaching — no rate limits.');
         }
       });
-    } else {
-      const sizeNote = modelSelections.local.includes('0.5B') ? '~600 MB' : '~1 GB';
-      appendMessage('bot', `⚡ **Local AI (Unlimited)**\n\nThis runs a Qwen2.5 Coder model entirely in your browser — no API key, no rate limits.\n\nFirst download is ${sizeNote} (cached after that). Go to **API Keys** and click **Download & Activate Model**, or just send a message and it will auto-download.`);
     }
+    // Non-cached or no WebGPU → handled by dropdown card UI (no chat spam)
   }
 }
+
+function updatePillDisplay() {
+  const meta = providerMeta[currentProvider];
+  document.getElementById('pillIcon').style.background = meta.color;
+  const label = currentProvider === 'local' ? 'Local ∞' : providerNames[currentProvider];
+  document.getElementById('pillLabel').textContent = label;
+}
+
+function toggleProviderDropdown() {
+  const sel = document.getElementById('providerSelector');
+  const isOpen = sel.classList.contains('open');
+  if (isOpen) {
+    closeProviderDropdown();
+  } else {
+    renderProviderDropdown();
+    sel.classList.add('open');
+  }
+}
+
+function closeProviderDropdown() {
+  document.getElementById('providerSelector').classList.remove('open');
+}
+
+function getProviderStatus(p) {
+  if (p === currentProvider) return { text: 'Active', cls: 'active' };
+  if (p === 'free') return { text: 'No setup', cls: 'active' };
+  if (p === 'groq') return { text: 'No setup', cls: 'active' };
+  if (p === 'local') {
+    if (!checkWebGPUSupport()) return { text: '⚠ No WebGPU', cls: 'unavailable' };
+    if (webllmReady) return { text: '✓ Ready', cls: 'ready' };
+    if (webllmLoading) return { text: `${webllmProgress}%`, cls: 'downloading' };
+    return { text: '∞ Unlimited', cls: 'unlimited' };
+  }
+  if (apiKeys[p]) return { text: '✓ Configured', cls: 'ready' };
+  return { text: 'Add key →', cls: 'needs-key' };
+}
+
+function renderProviderDropdown() {
+  const container = document.getElementById('providerDropdown');
+  let html = '';
+
+  providerOrder.forEach((p, i) => {
+    const isActive = p === currentProvider;
+    const status = getProviderStatus(p);
+    const meta = providerMeta[p];
+    const iconStyle = p === 'gemini'
+      ? `background:linear-gradient(135deg, var(--gemini-color), #ea4335, #fbbc04, var(--gemini-color))`
+      : `background:${meta.color}`;
+
+    // Model display for active provider (+ Local always shows selector for pre-download selection)
+    let modelHtml = '';
+    if ((isActive || p === 'local') && modelOptions[p]) {
+      const opts = modelOptions[p].map(m =>
+        `<option value="${m.value}" ${m.value === modelSelections[p] ? 'selected' : ''}>${m.label}</option>`
+      ).join('');
+      modelHtml = `<div class="pd-model"><select onchange="saveModel('${p}', this.value); event.stopPropagation();">${opts}</select> ▾</div>`;
+    } else if (modelSelections[p] && p !== 'local') {
+      const currentModel = modelOptions[p]?.find(m => m.value === modelSelections[p]);
+      modelHtml = `<div class="pd-model">${currentModel ? currentModel.label : modelSelections[p]}</div>`;
+    }
+
+    // Local AI special expanded section
+    let localExpandHtml = '';
+    if (p === 'local' && !webllmReady && !webllmLoading && checkWebGPUSupport()) {
+      const sizeNote = modelSelections.local.includes('0.5B') ? '~600 MB' : '~1 GB';
+      const cachedModel = localStorage.getItem('webllm_model_cached');
+      const cachedNote = cachedModel === modelSelections.local
+        ? '<span style="color:var(--green)">✓ Cached — loads quickly</span>'
+        : `📦 ${sizeNote} download (one-time)`;
+      localExpandHtml = `
+        <div class="pd-local-expand" onclick="event.stopPropagation()">
+          <div class="pd-local-desc">Run AI in your browser — no API key, no rate limits.<br>${cachedNote}</div>
+          <button class="pd-local-btn" onclick="startLocalDownload()">⚡ Download & Activate</button>
+        </div>`;
+    } else if (p === 'local' && webllmLoading) {
+      localExpandHtml = `
+        <div class="pd-local-expand" onclick="event.stopPropagation()">
+          <div class="pd-local-pct">Downloading... ${webllmProgress}%</div>
+          <div class="pd-local-progress"><div class="pd-local-progress-fill" style="width:${webllmProgress}%"></div></div>
+          <div class="pd-local-desc" style="margin-top:0.3rem;margin-bottom:0">Cached for future visits</div>
+        </div>`;
+    } else if (p === 'local' && !webllmReady && !checkWebGPUSupport()) {
+      localExpandHtml = `
+        <div class="pd-local-expand" onclick="event.stopPropagation()" style="border-color:rgba(239,68,68,0.15);background:rgba(239,68,68,0.04)">
+          <div class="pd-local-desc" style="margin-bottom:0;color:#ef4444">Your browser doesn't support WebGPU. Use <strong>Chrome 113+</strong> or <strong>Edge 113+</strong>.</div>
+        </div>`;
+    }
+
+    // Add divider between free/local group and paid group
+    // Divider between no-setup group (Instant/Local/Groq) and API-key providers
+    if (i === 3) html += '<div class="pd-divider"></div>';
+
+    html += `
+      <div class="pd-card ${isActive ? 'active' : ''}" onclick="setProvider('${p}')">
+        <div class="pd-icon" style="${iconStyle}"></div>
+        <div class="pd-info">
+          <div class="pd-name">
+            ${providerNames[p]}${p === 'local' ? ' <span style="font-size:0.65rem;color:var(--local-color)">∞</span>' : ''}
+            <span class="pd-status ${status.cls}">${status.text}</span>
+          </div>
+          ${modelHtml}
+          ${localExpandHtml}
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+async function startLocalDownload() {
+  setProvider('local');
+  // Keep dropdown open during download to show progress
+  renderProviderDropdown();
+
+  await initWebLLM();
+  renderWebLLMModalStatus();
+
+  if (webllmReady) {
+    renderProviderDropdown(); // Update to show "Ready" status
+    closeProviderDropdown();
+    appendMessage('bot', '✅ **Local AI ready!** Unlimited AI coaching — no rate limits, no API keys.');
+  } else if (webllmError) {
+    renderProviderDropdown(); // Show error in dropdown
+  }
+}
+
+// Click-outside handler for provider dropdown
+document.addEventListener('click', (e) => {
+  const sel = document.getElementById('providerSelector');
+  if (sel && !sel.contains(e.target)) closeProviderDropdown();
+});
 
 function saveModel(provider, value) {
   modelSelections[provider] = value;
@@ -3734,6 +3874,7 @@ function saveModel(provider, value) {
     webllmEngine = null;
     webllmProgress = 0;
     renderWebLLMModalStatus();
+    renderProviderDropdown();
   }
 }
 
@@ -3862,19 +4003,20 @@ async function sendToAI(userText, isSystemTrigger) {
   if (currentProvider === 'local' && !webllmReady) {
     if (!checkWebGPUSupport()) {
       removeTyping();
-      appendMessage('bot', '⚠️ WebGPU is not supported in your browser. Please use Chrome 113+ or switch to another provider.');
+      appendMessage('bot', '⚠️ WebGPU is not supported in your browser. Please use **Chrome 113+** or switch to another provider via the model selector.');
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
       if (injectedCodeContext && originalMsg) conversationHistory[lastIdx] = originalMsg;
       return;
     }
+    // Auto-download with minimal chat feedback
     removeTyping();
-    appendMessage('bot', '⚡ Downloading local AI model... This is a one-time download (~1 GB). Future visits will load instantly.');
+    appendMessage('bot', '⚡ Downloading local AI model... This is a one-time download. Check progress in the model selector.');
     showTyping();
     await initWebLLM();
     if (!webllmReady) {
       removeTyping();
-      appendMessage('bot', '⚠️ Failed to load the local AI model. ' + (webllmError || 'Please check that your device has enough memory and supports WebGPU.'));
+      appendMessage('bot', '⚠️ Failed to load the local AI model. ' + (webllmError || 'Check the model selector for details.'));
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
       if (injectedCodeContext && originalMsg) conversationHistory[lastIdx] = originalMsg;
@@ -3893,6 +4035,8 @@ async function sendToAI(userText, isSystemTrigger) {
     } else {
       if (currentProvider === 'free') {
         reply = await callFree();
+      } else if (currentProvider === 'groq') {
+        reply = await callGroq();
       } else if (currentProvider === 'claude') {
         reply = await callClaude();
       } else if (currentProvider === 'openai') {
@@ -3912,8 +4056,8 @@ async function sendToAI(userText, isSystemTrigger) {
     if (streamEl) streamEl.remove();
 
     const errMsg = err.message || 'Unknown error';
-    if (currentProvider === 'free') {
-      appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nThe free AI service may be temporarily unavailable. Try again in a moment, or switch to another provider with your own API key.`);
+    if (currentProvider === 'free' || currentProvider === 'groq') {
+      appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nThe AI service may be temporarily unavailable. Try again in a moment, or switch to another provider.`);
     } else if (currentProvider === 'local') {
       appendMessage('bot', `⚠️ **Error:** ${errMsg}\n\nMake sure your device supports WebGPU and has enough memory. Go to **API Keys** to check the Local AI status.`);
     } else {
@@ -3947,10 +4091,12 @@ async function callFree() {
     if (err.auth_required) {
       throw new Error('🔒 Please sign in with Google to use the free AI model. Click the "Sign in" button in the top bar.');
     }
-    throw new Error(err.error || `Free AI error ${res.status}`);
+    throw new Error(err.error || `Instant AI error ${res.status}`);
   }
   const data = await res.json();
-  return data.reply || '';
+  const reply = data.reply;
+  if (!reply) throw new Error('AI returned an empty response. Try again or switch models.');
+  return reply;
 }
 
 async function callClaude() {
@@ -3962,7 +4108,7 @@ async function callClaude() {
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': key,
-      'anthropic-version': '2023-06-01',
+      'anthropic-version': '2024-06-01',
       'anthropic-dangerous-direct-browser-calls': 'true'
     },
     body: JSON.stringify({
@@ -3977,36 +4123,34 @@ async function callClaude() {
     throw new Error(err.error?.message || `Claude API error ${res.status}`);
   }
   const data = await res.json();
-  return data.content?.[0]?.text || '';
+  const reply = data.content?.[0]?.text;
+  if (!reply) throw new Error('Claude returned an empty response. Try again or switch models.');
+  return reply;
 }
 
 async function callOpenAI() {
   const key = apiKeys.openai;
   if (!key) throw new Error('No OpenAI API key found. Please add it via the API Keys button.');
 
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    ...conversationHistory
-  ];
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch('/api/proxy', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      provider: 'openai',
+      apiKey: key,
       model: modelSelections.openai,
-      max_tokens: 1024,
-      messages
+      system: SYSTEM_PROMPT,
+      messages: conversationHistory,
     })
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `OpenAI API error ${res.status}`);
+    throw new Error(err.error || `OpenAI API error ${res.status}`);
   }
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
+  const reply = data.reply;
+  if (!reply) throw new Error('OpenAI returned an empty response. Try again or switch models.');
+  return reply;
 }
 
 async function callGemini() {
@@ -4033,7 +4177,30 @@ async function callGemini() {
     throw new Error(err.error?.message || `Gemini API error ${res.status}`);
   }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!reply) throw new Error('Gemini returned an empty response. Try again or switch models.');
+  return reply;
+}
+
+async function callGroq() {
+  const res = await fetch('/api/groq', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      system: SYSTEM_PROMPT,
+      model: modelSelections.groq,
+      messages: conversationHistory,
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Groq error ${res.status}`);
+  }
+  const data = await res.json();
+  const reply = data.reply;
+  if (!reply) throw new Error('Groq returned an empty response. Try again or switch models.');
+  return reply;
 }
 
 // ── LOCAL (WebLLM) CALLERS ──
@@ -4261,13 +4428,11 @@ function copyTranscript() {
 // ── API KEY MODAL ──
 function openModal() {
   document.getElementById('modalOverlay').classList.add('open');
-  populateModelSelects();
   // Pre-fill with masked values if saved
   ['claude', 'openai', 'gemini'].forEach(p => {
     const val = apiKeys[p];
     if (val) document.getElementById(`${p}Key`).placeholder = val.slice(0,8) + '••••••••••••';
   });
-  renderWebLLMModalStatus();
 }
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
@@ -4797,6 +4962,8 @@ Please provide your feedback in this exact format:
     let reply = '';
     if (currentProvider === 'free') {
       reply = await callFree();
+    } else if (currentProvider === 'groq') {
+      reply = await callGroq();
     } else if (currentProvider === 'claude') {
       reply = await callClaude();
     } else if (currentProvider === 'openai') {
