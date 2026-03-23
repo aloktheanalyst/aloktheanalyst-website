@@ -5475,24 +5475,11 @@ async function runTestCases() {
   document.getElementById('sqlExecInfo').textContent = `${passed}/${total} tests passed`;
   window._lastTestResults = results; // Store for AI Help context
 
-  // Mark solved if all tests pass
+  // Auto-mark solved if all tests pass
   if (allPassed && activeCaseId) {
     const solved = getSolvedCases();
     if (!solved.includes(activeCaseId)) {
-      const overlay = document.createElement('div');
-      overlay.className = 'solved-overlay';
-      overlay.id = 'solvedOverlay';
-      overlay.innerHTML = `
-        <div class="solved-prompt">
-          <div class="solved-emoji">🏆</div>
-          <div class="solved-score">All ${total} tests passed!</div>
-          <div class="solved-msg">Great work! Mark this question as complete?</div>
-          <div class="solved-actions">
-            <button class="btn-yes" onclick="markCaseSolved('${activeCaseId}')">Yes, I'm done!</button>
-            <button class="btn-no" onclick="dismissSolvedOverlay()">Not yet</button>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
+      markCaseSolved(activeCaseId);
     }
   }
 }
@@ -5650,7 +5637,7 @@ Please provide your feedback in this exact format:
     if (scoreMatch && activeCaseId) {
       const score = parseInt(scoreMatch[1]);
       const solved = getSolvedCases();
-      if (score >= 7 && !solved.includes(activeCaseId)) {
+      if (score >= 8 && !solved.includes(activeCaseId)) {
         const caseId = activeCaseId;
         const emoji = score >= 9 ? '🏆' : score >= 8 ? '🎉' : '👏';
         const msg = score >= 9 ? 'Outstanding work!' : score >= 8 ? 'Great job!' : 'Well done!';
