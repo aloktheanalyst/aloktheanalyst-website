@@ -6129,9 +6129,24 @@ function loadCase(id) {
     solBtn.style.display = PUZZLE_SOLUTIONS[id] ? 'flex' : 'none';
   }
 
-  // Auto send the case prompt
+  // For puzzle cases: display puzzle statically (no LLM call)
+  // For other cases: send prompt to AI as before
   const casePrompt = CASE_PROMPTS[id];
-  sendToAI(casePrompt, true); // true = hide user bubble (it's a system trigger)
+  if (p.topic === 'puzzles' && casePrompt) {
+    // Extract puzzle statement + question (everything before "Guide the user:")
+    const guideIdx = casePrompt.indexOf('Guide the user:');
+    const puzzleDisplay = guideIdx > 0 ? casePrompt.substring(casePrompt.indexOf('**The Puzzle:**'), guideIdx).trim() : casePrompt;
+    // Show as static bot message
+    const displayText = puzzleDisplay
+      .replace(/^You are a puzzle interviewer\..*?\n\n/s, '') // strip system instruction
+      .trim();
+    appendMessage('bot', displayText + '\n\nTake your time to think through this. When you\'re ready, share your approach and I\'ll guide you step by step. You can also click **Show Solution** below if you want to see the answer directly.');
+    // Store full coaching prompt as system context so AI can guide if user asks
+    conversationHistory.push({ role: 'system', content: casePrompt });
+    conversationHistory.push({ role: 'assistant', content: displayText + '\n\nTake your time to think through this. When you\'re ready, share your approach and I\'ll guide you step by step.' });
+  } else {
+    sendToAI(casePrompt, true); // true = hide user bubble (it's a system trigger)
+  }
 }
 
 function showPuzzleSolution() {
