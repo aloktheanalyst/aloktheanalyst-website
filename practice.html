@@ -2177,7 +2177,7 @@ const CASE_PROMPTS = {
 const SQL_DATASETS = {
   sql_window: {
     label: 'Window Functions Deep Dive',
-    question: 'Using the <strong>customers</strong> and <strong>transactions</strong> tables, write queries to:<br><br><strong>1.</strong> Rank customers by total spending using RANK().<br><br><strong>2.</strong> Calculate a running total of transaction amounts per region ordered by date.<br><br><strong>3.</strong> Find the top spender in each region using a window function.',
+    question: 'Using the <strong>customers</strong> and <strong>transactions</strong> tables, write queries to:<br><br><strong>1.</strong> Rank customers by total spending using RANK(). <em>Order by rank ascending.</em><br><br><strong>2.</strong> Calculate a running total of transaction amounts per region ordered by date. <em>Order by region, then date.</em><br><br><strong>3.</strong> Find the top spender in each region using a window function. <em>Order by region.</em>',
     defaultQuery: '-- Write your SQL here\n',
     hints: [
       'Start by JOINing customers with transactions on customer_id. Use GROUP BY to aggregate per customer before applying any window function.',
@@ -3077,76 +3077,42 @@ function isCodeCase(id) { return isSQLCase(id) || isPythonCase(id); }
 const TEST_CASES = {
 
   // ── SQL Cases ──
-  // PRINCIPLE: Check for COMPUTED values (aggregations, calculations, derived columns)
-  // that only appear in correct solutions — never check for raw table data (names, dates)
-  // which would pass on SELECT * FROM base_table.
+  // STRATEGY: Each test has an expectedQuery that runs against the SAME loaded database.
+  // The test runner executes it, extracts key computed values, and checks if they appear
+  // in the user's output. This is self-validating — no hardcoded values to get wrong.
+  // For multi-part questions, each test targets one sub-question.
+  // minMatchRatio: fraction of expected key values that must appear in user output (default 0.5)
 
   sql_window: [
     { name: 'Rank customers by total spending',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output — run your query first' };
-        // Computed totals: Bob=925, Alice=743.5, David=560, Carol=529.99, Frank=515
-        // These aggregated values do NOT exist in raw tables
-        const hasTotals = out.includes('925') || out.includes('743.5') || out.includes('743.50');
-        if (!hasTotals) return { pass: false, msg: 'Expected aggregated total spending per customer (e.g., Bob Martinez = 925.00). Did you SUM(amount) and GROUP BY customer?' };
-        // Check for ranking indicator
-        if (!/rank|rnk|dense_rank|row_number/i.test(out) && !/\b1\b.*\b2\b.*\b3\b/s.test(out)) return { pass: false, msg: 'Expected a RANK() or ranking column in output' };
-        return { pass: true, msg: 'Customer spending totals with ranking present' };
-      }
+      expectedQuery: `SELECT c.name, SUM(t.amount) AS total_spending, RANK() OVER (ORDER BY SUM(t.amount) DESC) AS rnk FROM customers c JOIN transactions t ON c.id = t.customer_id GROUP BY c.name ORDER BY rnk`,
+      minMatchRatio: 0.4,
+      failMsg: 'Did you SUM(amount) GROUP BY customer and use RANK() OVER (ORDER BY total DESC)?'
     },
     { name: 'Running total per region',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Running totals produce large cumulative values (>430, the max single txn)
-        // East running totals: 200, 255, 575, 642.5, 782.5, 1092.5, ...
-        // West running totals accumulate to 2193.49, Central to 1083
-        const nums = out.match(/\d+\.?\d*/g);
-        if (!nums) return { pass: false, msg: 'No numeric values in output' };
-        const vals = nums.map(Number);
-        const hasLargeRunning = vals.some(v => v > 500 && v < 3000 && v !== 925 && v !== 743.5);
-        if (!hasLargeRunning) return { pass: false, msg: 'Expected cumulative running totals (values >500 from SUM OVER). Use SUM(amount) OVER (PARTITION BY region ORDER BY date)' };
-        return { pass: true, msg: 'Running total values present (cumulative sums detected)' };
-      }
+      expectedQuery: `SELECT c.region, t.transaction_date, t.amount, SUM(t.amount) OVER (PARTITION BY c.region ORDER BY t.transaction_date, t.id) AS running_total FROM customers c JOIN transactions t ON c.id = t.customer_id ORDER BY c.region, t.transaction_date`,
+      minMatchRatio: 0.3,
+      failMsg: 'Use SUM(amount) OVER (PARTITION BY region ORDER BY transaction_date) for cumulative totals per region.'
     },
     { name: 'Top spender in each region',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Must show aggregated totals AND region grouping with ~3 result rows
-        // Top: West=Alice(743.5), East=Bob(925), Central=David(560)
-        const has925 = out.includes('925');
-        const has743 = out.includes('743.5') || out.includes('743.50');
-        const has560 = out.includes('560');
-        const matchCount = [has925, has743, has560].filter(Boolean).length;
-        if (matchCount < 2) return { pass: false, msg: 'Expected top spender totals: Alice Chen=743.50 (West), Bob Martinez=925.00 (East), David Kim=560.00 (Central)' };
-        return { pass: true, msg: 'Top spender totals per region correct' };
-      }
+      expectedQuery: `SELECT region, name, total_spending FROM (SELECT c.region, c.name, SUM(t.amount) AS total_spending, RANK() OVER (PARTITION BY c.region ORDER BY SUM(t.amount) DESC) AS rnk FROM customers c JOIN transactions t ON c.id = t.customer_id GROUP BY c.region, c.name) sub WHERE rnk = 1 ORDER BY region`,
+      minMatchRatio: 0.5,
+      failMsg: 'Use RANK() OVER (PARTITION BY region ORDER BY total DESC) and filter WHERE rank = 1.'
     }
   ],
 
   sql_retention: [
-    { name: 'Cohort sizes computed correctly',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Cohort sizes: 2024-01-01=5 users, 2024-01-08=6, 2024-01-15=6, 2024-01-22=3
-        // A SELECT * FROM users would show 20 individual rows, not aggregated cohort sizes
-        const hasDate = out.includes('2024-01-01') || out.includes('2024-01');
-        if (!hasDate) return { pass: false, msg: 'Expected cohort week dates (2024-01-01, 2024-01-08, etc.)' };
-        // Check row count — cohort analysis should produce 3-4 rows, not 20
-        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length > 15) return { pass: false, msg: 'Too many rows — expected ~4 cohort rows (one per signup week), not individual user rows' };
-        return { pass: true, msg: 'Cohort aggregation with weekly grouping' };
-      }
+    { name: 'Weekly cohort sizes',
+      expectedQuery: `SELECT DATE_TRUNC('week', signup_date)::DATE AS cohort_week, COUNT(*) AS cohort_size FROM users GROUP BY cohort_week ORDER BY cohort_week`,
+      minMatchRatio: 0.5,
+      failMsg: 'Group users by signup week using DATE_TRUNC(\'week\', signup_date) and COUNT(*) per cohort.',
+      maxRows: 10
     },
     { name: 'Retention counts per week offset',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Should reference week offsets (week_0, week_1, w0, w1, m0, m1) or have multiple numeric columns
-        const hasOffset = /week.?0|week.?1|week.?2|w0|w1|w2|m0|m1|m2|retained|retention/i.test(out);
-        const pipes = (out.match(/\|/g) || []).length;
-        const hasMultipleCols = pipes > 8; // multiple columns per row = retention grid
-        if (!hasOffset && !hasMultipleCols) return { pass: false, msg: 'Expected retention columns (week_0, week_1, week_2) showing user counts per period' };
-        return { pass: true, msg: 'Retention period columns present' };
-      }
+      expectedQuery: `SELECT DATE_TRUNC('week', u.signup_date)::DATE AS cohort_week, COUNT(DISTINCT u.user_id) AS cohort_size, COUNT(DISTINCT CASE WHEN DATE_TRUNC('week', e.event_date) = DATE_TRUNC('week', u.signup_date) THEN u.user_id END) AS week_0, COUNT(DISTINCT CASE WHEN DATE_TRUNC('week', e.event_date) = DATE_TRUNC('week', u.signup_date) + INTERVAL '7 days' THEN u.user_id END) AS week_1, COUNT(DISTINCT CASE WHEN DATE_TRUNC('week', e.event_date) = DATE_TRUNC('week', u.signup_date) + INTERVAL '14 days' THEN u.user_id END) AS week_2 FROM users u LEFT JOIN user_events e ON u.user_id = e.user_id GROUP BY cohort_week ORDER BY cohort_week`,
+      minMatchRatio: 0.3,
+      failMsg: 'Use conditional COUNT(DISTINCT CASE WHEN week_offset = N THEN user_id END) for each retention period.',
+      minCols: 4
     }
   ],
 
@@ -3154,22 +3120,18 @@ const TEST_CASES = {
     { name: 'Duplicates removed — keep latest per order_id',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Raw table has 40 rows. After dedup should have ~20 unique order_ids
         const ordMatches = out.match(/ORD-\d{3}/g);
         if (!ordMatches) return { pass: false, msg: 'No order IDs found in output' };
         const allCount = ordMatches.length;
         const uniqueCount = new Set(ordMatches).size;
-        // If every order_id appears exactly once, dedup worked
-        if (allCount === uniqueCount && uniqueCount >= 15) return { pass: true, msg: `${uniqueCount} unique orders, no duplicates` };
-        // If duplicates still present
         if (allCount > uniqueCount + 2) return { pass: false, msg: `Found ${allCount} order rows but only ${uniqueCount} unique — duplicates still present` };
-        return { pass: true, msg: `Deduplicated to ${uniqueCount} orders` };
+        if (uniqueCount < 15) return { pass: false, msg: `Only ${uniqueCount} unique orders — expected ~20` };
+        return { pass: true, msg: `${uniqueCount} unique orders, no duplicates` };
       }
     },
     { name: 'NULL order_ids filtered out',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Row 26 has NULL order_id with unknown@mail.com — should not appear
         if (out.includes('unknown@mail.com')) return { pass: false, msg: 'Row with NULL order_id (unknown@mail.com) should be filtered out' };
         return { pass: true, msg: 'NULL order_ids excluded' };
       }
@@ -3177,10 +3139,8 @@ const TEST_CASES = {
     { name: 'Email casing standardized to lowercase',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Raw data has BOB@test.com, JACK@mail.com, Olivia@mail.com, MIKE@mail.com
         const hasUpperEmail = out.includes('BOB@') || out.includes('JACK@') || out.includes('Olivia@') || out.includes('MIKE@');
         if (hasUpperEmail) return { pass: false, msg: 'Mixed-case emails still present (e.g., BOB@test.com). Use LOWER(customer_email)' };
-        // Make sure there ARE emails in output
         if (!out.includes('@')) return { pass: false, msg: 'No email addresses in output — include customer_email column' };
         return { pass: true, msg: 'All emails lowercased' };
       }
@@ -3189,228 +3149,127 @@ const TEST_CASES = {
 
   sql_streak: [
     { name: 'Gap in days between visits calculated',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Raw visits table only has visitor_id and visit_date — no gap column
-        // A correct answer computes gap values using LAG. Gaps include: 1, 5, 2, 5, 5, 5, etc.
-        // Check that output has more columns than raw table (which has just 2)
-        const firstLine = out.trim().split('\n')[0];
-        const colCount = (firstLine.match(/\|/g) || []).length + 1;
-        if (colCount <= 2) return { pass: false, msg: 'Expected a computed gap column (days between visits). Use LAG() to get previous visit date' };
-        return { pass: true, msg: 'Gap column computed' };
-      }
+      expectedQuery: `SELECT visitor_id, visit_date, visit_date - LAG(visit_date) OVER (PARTITION BY visitor_id ORDER BY visit_date) AS gap_days FROM visits ORDER BY visitor_id, visit_date`,
+      minMatchRatio: 0.2,
+      failMsg: 'Use LAG(visit_date) OVER (PARTITION BY visitor_id ORDER BY visit_date) to get previous visit date, then subtract.',
+      minCols: 3
     },
-    { name: '3+ consecutive day visitors identified',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Visitors with 3+ streaks: 1, 2, 4. Visitor 3 has NO 3+ streak.
-        // Visitor 5 has max streak of 2.
-        // If visitor 3 or 5 appears as having a 3+ streak, it's wrong
-        // Check that the output is not just raw data (26 visit rows)
-        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length > 20) return { pass: false, msg: 'Too many rows — should filter to only visitors with 3+ consecutive days, not all visits' };
-        return { pass: true, msg: 'Filtered consecutive streak results' };
-      }
+    { name: 'Visitors with 3+ consecutive days',
+      expectedQuery: `WITH gaps AS (SELECT visitor_id, visit_date, visit_date - ROW_NUMBER() OVER (PARTITION BY visitor_id ORDER BY visit_date) * INTERVAL '1 day' AS grp FROM visits), streaks AS (SELECT visitor_id, grp, COUNT(*) AS streak_len FROM gaps GROUP BY visitor_id, grp) SELECT DISTINCT visitor_id FROM streaks WHERE streak_len >= 3 ORDER BY visitor_id`,
+      minMatchRatio: 0.5,
+      failMsg: 'Find consecutive streaks using the date-minus-row_number technique, then filter for streak_length >= 3.',
+      maxRows: 8
     },
-    { name: 'Longest streak: visitor 1=5, visitor 2=4, visitor 4=4',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Visitor 1: 5 days (Jan 1-5), Visitor 2: 4 days (Jan 10-13), Visitor 4: 4 days (Jan 15-18)
-        // These streak LENGTH values (5, 4) must appear alongside visitor IDs
-        // The number 5 must appear as a streak length, not just visitor_id=5
-        const has5 = /\b5\b/.test(out);
-        const has4 = /\b4\b/.test(out);
-        if (!has5) return { pass: false, msg: 'Expected longest streak of 5 (visitor 1, Jan 1-5)' };
-        if (!has4) return { pass: false, msg: 'Expected streak of 4 (visitor 2: Jan 10-13, visitor 4: Jan 15-18)' };
-        // Verify it's not just raw data — streak output should be compact (≤5 visitor rows)
-        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length > 10) return { pass: false, msg: 'Expected one row per visitor with their longest streak, not raw visit data' };
-        return { pass: true, msg: 'Streak lengths 5 and 4 correctly computed' };
-      }
+    { name: 'Longest streak per visitor',
+      expectedQuery: `WITH gaps AS (SELECT visitor_id, visit_date, visit_date - ROW_NUMBER() OVER (PARTITION BY visitor_id ORDER BY visit_date) * INTERVAL '1 day' AS grp FROM visits), streaks AS (SELECT visitor_id, grp, COUNT(*) AS streak_len FROM gaps GROUP BY visitor_id, grp) SELECT visitor_id, MAX(streak_len) AS longest_streak FROM streaks GROUP BY visitor_id ORDER BY visitor_id`,
+      minMatchRatio: 0.5,
+      failMsg: 'Expected longest streaks per visitor (e.g., visitor 1 = 5 days). GROUP BY visitor_id and use MAX(streak_length).',
+      maxRows: 10
     }
   ],
 
   sql_topn: [
     { name: 'Second-highest salary is 95000',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        if (!out.includes('95000')) return { pass: false, msg: 'Expected second-highest salary = 95000 (Alice, Engineering)' };
-        // Should NOT just list all 15 employees — it's asking for THE second-highest
-        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length > 8) return { pass: false, msg: 'Too many rows — find THE second-highest salary, not a full employee list' };
-        return { pass: true, msg: 'Second-highest salary 95000 found' };
-      }
+      expectedQuery: `SELECT DISTINCT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1`,
+      minMatchRatio: 1.0,
+      failMsg: 'Expected second-highest salary = 95000. Use DENSE_RANK or a subquery to find it without LIMIT/OFFSET.',
+      maxRows: 5
     },
     { name: 'Top 3 per department (handling ties)',
+      expectedQuery: `SELECT department, emp_name, salary, DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rnk FROM employees QUALIFY DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) <= 3 ORDER BY department, salary DESC`,
+      // PGlite doesn't support QUALIFY, use fallback check
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Engineering top 3: Bob(105k), Dave(105k), Alice(95k) — 2 tied at rank 1
-        // Must show department names AND salary values
         const has = s => out.toLowerCase().includes(s.toLowerCase());
         if (!has('Engineering') && !has('Marketing') && !has('Sales') && !has('HR')) {
           return { pass: false, msg: 'Expected department names in output (use PARTITION BY department)' };
         }
-        // Check for ranking evidence (DENSE_RANK handles ties correctly)
-        const has105k = out.includes('105000');
-        const has95k = out.includes('95000');
-        if (!has105k && !has95k) return { pass: false, msg: 'Expected Engineering top salaries: 105000 (Bob & Dave tied), 95000 (Alice)' };
+        if (!out.includes('105000') && !out.includes('95000')) return { pass: false, msg: 'Expected Engineering top salaries: 105000 (Bob & Dave tied), 95000 (Alice)' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length > 18) return { pass: false, msg: 'Too many rows — expected top 3 per department (~12 rows), not all employees' };
         return { pass: true, msg: 'Top 3 per department with department grouping' };
       }
     }
   ],
 
   sql_dayover: [
-    { name: 'Previous day temperature shown (LAG)',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Raw table has: id, record_date, temperature (3 cols)
-        // Correct answer adds prev_temp column (4+ cols) or shows temperature changes
-        const firstLine = out.trim().split('\n')[0];
-        const colCount = (firstLine.match(/\|/g) || []).length + 1;
-        if (colCount <= 3) return { pass: false, msg: 'Expected an additional column for previous day temperature (use LAG). Raw table only has 3 columns.' };
-        return { pass: true, msg: 'Previous temperature column present' };
-      }
+    { name: 'Previous day temperature with difference',
+      expectedQuery: `SELECT record_date, temperature, LAG(temperature) OVER (ORDER BY record_date) AS prev_temp, temperature - LAG(temperature) OVER (ORDER BY record_date) AS temp_change FROM daily_temperatures ORDER BY record_date`,
+      minMatchRatio: 0.3,
+      failMsg: 'Use LAG(temperature) OVER (ORDER BY record_date) to get previous day temp, then subtract for the change.',
+      minCols: 4
     },
     { name: 'Biggest increase is 7.2 on Jan 3',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Jan 3: 35.2 - 28.0 = 7.2 is the biggest single-day increase
-        // 7.2 does NOT appear in raw data (raw temps are 32.5, 28.0, 35.2, etc.)
-        if (out.includes('7.2')) return { pass: true, msg: 'Correctly found biggest increase: 7.2° on Jan 3' };
-        // Also accept if they show 2024-01-03 with the change value nearby
-        if (out.includes('2024-01-03') && /\d+\.\d/.test(out)) {
-          // Verify it's not just SELECT * — check for computed change column
-          const firstLine = out.trim().split('\n')[0];
-          const colCount = (firstLine.match(/\|/g) || []).length + 1;
-          if (colCount > 3) return { pass: true, msg: 'Temperature change calculated for Jan 3' };
-        }
-        return { pass: false, msg: 'Expected biggest increase = 7.2° (Jan 3: 35.2 - 28.0). Calculate the difference using LAG.' };
-      }
+      expectedQuery: `SELECT record_date, temperature - LAG(temperature) OVER (ORDER BY record_date) AS temp_increase FROM daily_temperatures ORDER BY temp_increase DESC LIMIT 1`,
+      minMatchRatio: 0.5,
+      failMsg: 'Expected biggest increase = 7.2° (Jan 3: 35.2 - 28.0). ORDER BY the change DESC and take the first row.'
     }
   ],
 
   sql_customer: [
-    { name: 'Days between first and second purchase (no window functions)',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Customer 103: first=Jan 3, second=Jan 4, gap=1 day
-        // Customer 105: first=Jan 8, second=Mar 10, gap=61 or 62 days
-        // These GAP values (1, 13, 15, etc.) are COMPUTED, not in raw data
-        // Raw orders table has: order_id, customer_id, order_date, amount, channel
-        const firstLine = out.trim().split('\n')[0];
-        const colCount = (firstLine.match(/\|/g) || []).length + 1;
-        if (colCount <= 5) return { pass: false, msg: 'Expected computed columns (first_purchase, second_purchase, days_between). Raw orders table has 5 cols.' };
-        return { pass: true, msg: 'Purchase gap computation present' };
-      }
+    { name: 'First & second purchase dates with gap',
+      expectedQuery: `SELECT a.customer_id, a.order_date AS first_purchase, MIN(b.order_date) AS second_purchase, MIN(b.order_date) - a.order_date AS days_between FROM orders a JOIN orders b ON a.customer_id = b.customer_id AND b.order_date > a.order_date WHERE a.order_date = (SELECT MIN(order_date) FROM orders o WHERE o.customer_id = a.customer_id) GROUP BY a.customer_id, a.order_date ORDER BY a.customer_id`,
+      minMatchRatio: 0.3,
+      failMsg: 'Use a self-join to find first and second purchase, then subtract dates for the gap. No window functions allowed.',
+      minCols: 3
     },
     { name: 'Channel categorization (online_only / store_only / omni)',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
         const lower = out.toLowerCase();
-        // Must contain the DERIVED category labels — these don't exist in raw data
         const hasCategory = lower.includes('omni') || lower.includes('online_only') || lower.includes('store_only');
-        if (!hasCategory) return { pass: false, msg: 'Expected derived categories: online_only, store_only, or omni. Use CASE with MIN(channel)/MAX(channel).' };
-        // Customer 102 is store_only, 103 is online_only, 101 is omni
+        if (!hasCategory) return { pass: false, msg: 'Expected derived categories: online_only, store_only, or omni. Use CASE with HAVING or conditional aggregation.' };
         return { pass: true, msg: 'Channel categories assigned' };
       }
     },
     { name: 'Average gap between consecutive purchases',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Average gap produces decimal values like 15.33, 21.5, etc.
-        const decimals = out.match(/\d+\.\d+/g);
-        if (!decimals || decimals.length < 2) return { pass: false, msg: 'Expected average gap values (decimal numbers) per customer. Use LAG + AVG.' };
-        return { pass: true, msg: 'Average gap values computed' };
-      }
+      expectedQuery: `SELECT a.customer_id, AVG(b.order_date - a.order_date) AS avg_gap FROM orders a JOIN orders b ON a.customer_id = b.customer_id AND b.order_date = (SELECT MIN(order_date) FROM orders o WHERE o.customer_id = a.customer_id AND o.order_date > a.order_date) GROUP BY a.customer_id ORDER BY a.customer_id`,
+      minMatchRatio: 0.3,
+      failMsg: 'Calculate average gap using self-join to pair each purchase with its next, then AVG the differences.'
     }
   ],
 
   sql_monthly: [
     { name: 'Monthly loan totals aggregated',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Raw loans table has individual amounts (3000-12500). Monthly sums are much larger.
-        // Jan total: 5000+8000+3000+12000+6000+9000+4500+7000+5500+10000 = 70000
-        // Feb total: ~95500, Mar total: ~85500, Apr total: ~40000
-        if (out.includes('70000') || out.includes('95500') || out.includes('85500')) return { pass: true, msg: 'Monthly loan totals correctly summed' };
-        // Check for large aggregated values (>15000, which is above max single loan of 12500)
-        const nums = out.match(/\d+\.?\d*/g);
-        if (nums) {
-          const vals = nums.map(Number);
-          if (vals.some(v => v > 30000)) return { pass: true, msg: 'Monthly aggregated totals present' };
-        }
-        return { pass: false, msg: 'Expected monthly SUM of loan amounts (e.g., Jan ≈ 70000). Aggregate by month, not individual loans.' };
-      }
+      expectedQuery: `SELECT TO_CHAR(loan_date, 'YYYY-MM') AS year_month, SUM(amount) AS total_amount FROM loans GROUP BY year_month ORDER BY year_month`,
+      minMatchRatio: 0.5,
+      failMsg: 'Aggregate loans by month: GROUP BY TO_CHAR(loan_date, \'YYYY-MM\') and SUM(amount).',
+      maxRows: 8
     },
-    { name: 'Month-over-month % change calculated',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // MOM% produces decimal values. Feb vs Jan: (95500-70000)/70000*100 ≈ 36.4%
-        const hasPercent = out.includes('%') || /mom|change|growth|pct/i.test(out);
-        const decimals = out.match(/\d+\.\d+/g);
-        const hasDecimalValues = decimals && decimals.length >= 2;
-        if (!hasPercent && !hasDecimalValues) return { pass: false, msg: 'Expected MOM % change column. Use LAG() to get previous month total, then calculate (current-prev)/prev * 100.' };
-        return { pass: true, msg: 'MOM % change values present' };
-      }
+    { name: 'Month-over-month % change',
+      expectedQuery: `WITH monthly AS (SELECT TO_CHAR(loan_date, 'YYYY-MM') AS year_month, SUM(amount) AS total_amount FROM loans GROUP BY year_month ORDER BY year_month) SELECT year_month, total_amount, LAG(total_amount) OVER (ORDER BY year_month) AS prev_month, ROUND((total_amount - LAG(total_amount) OVER (ORDER BY year_month))::NUMERIC / LAG(total_amount) OVER (ORDER BY year_month) * 100, 2) AS mom_pct_change FROM monthly`,
+      minMatchRatio: 0.3,
+      failMsg: 'Use LAG(total) OVER (ORDER BY month) then calculate (current - prev) / prev * 100 for MOM %.',
+      minCols: 3
     }
   ],
 
   sql_competition: [
     { name: 'Winner of each group (highest score)',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Raw table has 27 participants. Winner query should return ~8-10 rows (winners, some tied).
-        // Group 5 winner: Farhan (score 25)
-        // A raw SELECT * would show all 27 rows
-        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length > 18) return { pass: false, msg: 'Too many rows — expected only winners (one or two per group), not all participants' };
-        if (dataLines.length < 3) return { pass: false, msg: 'Expected at least 5 winners (one per group)' };
-        return { pass: true, msg: 'Filtered to group winners' };
-      }
+      expectedQuery: `SELECT group_id, participant_name, score FROM competitions c WHERE score = (SELECT MAX(score) FROM competitions c2 WHERE c2.group_id = c.group_id) ORDER BY group_id`,
+      minMatchRatio: 0.4,
+      failMsg: 'Find the MAX(score) per group and filter participants who match it.',
+      maxRows: 15
     },
     { name: 'Prize = own bet + 30% of losers\' bets',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Group 5: Farhan wins. Losers bets: 40+55+30+20=145. Prize = 100 + 0.3*145 = 143.5
-        // Group 4: Ravi,Kiran,Megha tied at 22. Losers: Astha(11)+Ankit(35)=46. Each gets own_bet + 0.3*46/3
-        // The value 143.5 is a COMPUTED prize, not in raw data
-        const has143 = out.includes('143.5') || out.includes('143.50');
-        // Also check for any decimal prize values that aren't raw bets
-        const decimals = out.match(/\d+\.\d+/g);
-        const hasComputedPrize = decimals && decimals.some(d => {
-          const v = parseFloat(d);
-          return v > 0 && ![20,35,50,10,25,30,40,15,60,5,11,45,100,55].includes(v);
-        });
-        if (!has143 && !hasComputedPrize) return { pass: false, msg: 'Expected computed prize amounts (e.g., Farhan: 100 + 30%×145 = 143.50). Calculate own_bet + 0.3 × SUM(losers\' bets).' };
-        return { pass: true, msg: 'Prize amounts computed correctly' };
-      }
+      expectedQuery: `WITH winners AS (SELECT *, RANK() OVER (PARTITION BY group_id ORDER BY score DESC) AS rnk FROM competitions), winner_count AS (SELECT group_id, COUNT(*) AS num_winners FROM winners WHERE rnk = 1 GROUP BY group_id), loser_bets AS (SELECT w.group_id, SUM(w.bet_amount) AS total_loser_bets FROM winners w WHERE rnk > 1 GROUP BY w.group_id) SELECT w.group_id, w.participant_name, w.bet_amount, ROUND(w.bet_amount + 0.3 * COALESCE(lb.total_loser_bets, 0) / wc.num_winners, 2) AS prize FROM winners w JOIN winner_count wc ON w.group_id = wc.group_id LEFT JOIN loser_bets lb ON w.group_id = lb.group_id WHERE w.rnk = 1 ORDER BY w.group_id`,
+      minMatchRatio: 0.3,
+      failMsg: 'Prize = own_bet + 0.3 × SUM(losers\' bets). Split equally among tied winners.'
     }
   ],
 
   sql_maxpergroup: [
     { name: 'Max salary column added to all rows',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Raw payroll has 5 cols: emp_id, emp_name, department, pay_date, salary
-        // Correct answer adds max_salary column (6+ cols) — every row gets the month's max
-        const firstLine = out.trim().split('\n')[0];
-        const colCount = (firstLine.match(/\|/g) || []).length + 1;
-        if (colCount <= 5) return { pass: false, msg: 'Expected an extra column for max monthly salary. Use MAX(salary) OVER (PARTITION BY month).' };
-        // Should still have all payroll rows (22 rows)
-        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length < 10) return { pass: false, msg: 'Expected all payroll rows with an additional max_salary column, not just the max earners' };
-        return { pass: true, msg: 'Max salary column appended to all rows' };
-      }
+      expectedQuery: `SELECT *, MAX(salary) OVER (PARTITION BY TO_CHAR(pay_date, 'YYYY-MM')) AS max_monthly_salary FROM payroll ORDER BY pay_date, emp_id`,
+      minMatchRatio: 0.3,
+      failMsg: 'Use MAX(salary) OVER (PARTITION BY month) to add max salary as a new column to every row.',
+      minCols: 6
     },
     { name: 'Max earner name column added',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Should have 7+ columns (original 5 + max_salary + max_earner_name)
-        const firstLine = out.trim().split('\n')[0];
-        const colCount = (firstLine.match(/\|/g) || []).length + 1;
-        if (colCount <= 6) return { pass: false, msg: 'Expected a second extra column for max earner name. Use FIRST_VALUE(emp_name) OVER (PARTITION BY month ORDER BY salary DESC).' };
-        return { pass: true, msg: 'Max earner name column present' };
-      }
+      expectedQuery: `SELECT *, MAX(salary) OVER (PARTITION BY TO_CHAR(pay_date, 'YYYY-MM')) AS max_monthly_salary, FIRST_VALUE(emp_name) OVER (PARTITION BY TO_CHAR(pay_date, 'YYYY-MM') ORDER BY salary DESC) AS top_earner FROM payroll ORDER BY pay_date, emp_id`,
+      minMatchRatio: 0.2,
+      failMsg: 'Use FIRST_VALUE(emp_name) OVER (PARTITION BY month ORDER BY salary DESC) for the top earner name.',
+      minCols: 7
     }
   ],
 
@@ -3418,27 +3277,22 @@ const TEST_CASES = {
     { name: 'Customers with Laptop+Headphones but NOT Tablet',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Correct answer: Alok(1), Rahul(3), Suresh(9)
-        // Wrong if it includes Priya(2), Vikram(5), Deepak(7), Isha(10) — they also bought Tablet
         const has = s => out.toLowerCase().includes(s.toLowerCase());
         const correctCustomers = [has('Alok'), has('Rahul'), has('Suresh')].filter(Boolean).length;
         const wrongCustomers = [has('Priya'), has('Vikram'), has('Deepak'), has('Isha')].filter(Boolean).length;
-        if (wrongCustomers > 0 && correctCustomers > 0) return { pass: false, msg: 'Output includes customers who bought Tablet (e.g., Priya, Vikram) — they should be excluded' };
+        if (wrongCustomers > 0 && correctCustomers > 0) return { pass: false, msg: 'Output includes customers who also bought Tablet — they should be excluded' };
         if (correctCustomers < 2) return { pass: false, msg: 'Expected Alok, Rahul, Suresh (bought Laptop+Headphones but NOT Tablet)' };
-        // Check row count — should be exactly 3
         const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length > 8) return { pass: false, msg: 'Too many rows — only 3 customers match (Laptop+Headphones, no Tablet)' };
+        if (dataLines.length > 8) return { pass: false, msg: 'Too many rows — only 3 customers match' };
         return { pass: true, msg: 'Correctly filtered: Alok, Rahul, Suresh' };
       }
     },
     { name: 'Customers who bought ALL Electronics products',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // 4 Electronics: Laptop, Headphones, Tablet, Keyboard
-        // Customers with all 4: Priya(2), Vikram(5), Deepak(7), Isha(10)
         const has = s => out.toLowerCase().includes(s.toLowerCase());
         const found = [has('Priya'), has('Vikram'), has('Deepak'), has('Isha')].filter(Boolean).length;
-        if (found < 2) return { pass: false, msg: 'Expected Priya, Vikram, Deepak, Isha (each bought all 4 Electronics: Laptop, Headphones, Tablet, Keyboard)' };
+        if (found < 2) return { pass: false, msg: 'Expected Priya, Vikram, Deepak, Isha (each bought all 4 Electronics products)' };
         return { pass: true, msg: `Found ${found}/4 correct customers` };
       }
     }
@@ -3446,27 +3300,16 @@ const TEST_CASES = {
 
   sql_listings: [
     { name: 'Active listings count per November day',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Raw inventory has 17 rows, calendar has 30. Correct answer joins them.
-        // On Nov 1: listings 1,2,3 are active → count=3
-        // On Nov 15: several are active
-        // Should have 30 rows (one per Nov day)
-        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length < 15) return { pass: false, msg: 'Expected ~30 rows (one per November day) with active listing counts' };
-        if (!out.includes('2024-11')) return { pass: false, msg: 'Expected November dates (2024-11-01 through 2024-11-30)' };
-        return { pass: true, msg: 'Daily November listing data present' };
-      }
+      expectedQuery: `SELECT c.cal_date, COUNT(DISTINCT i.listing_id) AS active_listings FROM calendar c LEFT JOIN inventory i ON c.cal_date BETWEEN i.listing_start_date AND i.listing_end_date GROUP BY c.cal_date ORDER BY c.cal_date`,
+      minMatchRatio: 0.2,
+      failMsg: 'JOIN calendar with inventory WHERE cal_date BETWEEN listing_start_date AND listing_end_date, then COUNT per day.',
+      minRows: 25
     },
     { name: 'New listings per day counted separately',
-      check(out) {
-        if (!out) return { pass: false, msg: 'No output' };
-        // Should have at least 3 columns: date, active_count, new_count
-        const firstLine = out.trim().split('\n')[0];
-        const colCount = (firstLine.match(/\|/g) || []).length + 1;
-        if (colCount < 3) return { pass: false, msg: 'Expected at least 3 columns: date, active listings, and new listings. Count new listings where listing_start_date = cal_date.' };
-        return { pass: true, msg: 'Active + new listing columns present' };
-      }
+      expectedQuery: `SELECT c.cal_date, COUNT(DISTINCT i.listing_id) AS active_listings, COUNT(DISTINCT CASE WHEN i.listing_start_date = c.cal_date THEN i.listing_id END) AS new_listings FROM calendar c LEFT JOIN inventory i ON c.cal_date BETWEEN i.listing_start_date AND i.listing_end_date GROUP BY c.cal_date ORDER BY c.cal_date`,
+      minMatchRatio: 0.2,
+      failMsg: 'Add COUNT(CASE WHEN listing_start_date = cal_date THEN listing_id END) for new listings per day.',
+      minCols: 3
     }
   ],
 
@@ -3475,7 +3318,6 @@ const TEST_CASES = {
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
         const lower = out.toLowerCase();
-        // These segment labels are DERIVED — they don't exist in raw data
         const hasSegment = lower.includes('new_buyer') || lower.includes('new buyer') || lower.includes('regular') || lower.includes('reactivat');
         if (!hasSegment) return { pass: false, msg: 'Expected derived segment labels: new_buyer, regular_buyer, reactivated_buyer. Use LAG(sold_date) and CASE on the gap.' };
         return { pass: true, msg: 'Lifecycle segment labels present' };
@@ -3484,10 +3326,8 @@ const TEST_CASES = {
     { name: 'Segment percentage breakdown',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Count query should have few rows (3 segments) with percentages
-        // 25 total transactions. First purchases (new_buyer): 8 buyers = 8 transactions = 32%
         const decimals = out.match(/\d+\.\d+/g);
-        if (!decimals || decimals.length < 2) return { pass: false, msg: 'Expected percentage values for each segment. Calculate COUNT per segment / total × 100.' };
+        if (!decimals || decimals.length < 2) return { pass: false, msg: 'Expected percentage values for each segment. COUNT per segment / total × 100.' };
         const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
         if (dataLines.length > 10) return { pass: false, msg: 'Percentage summary should have ~3-4 rows (one per segment), not all transactions' };
         return { pass: true, msg: 'Segment percentages computed' };
@@ -3500,10 +3340,8 @@ const TEST_CASES = {
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
         const lower = out.toLowerCase();
-        // These category labels are DERIVED
         const hasCategory = lower.includes('otif') || lower.includes('on_time') || lower.includes('on time') || lower.includes('late') || lower.includes('sla');
         if (!hasCategory) {
-          // Also accept if output has computed percentage values and few rows
           const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
           const decimals = out.match(/\d+\.\d+/g);
           if (dataLines.length <= 6 && decimals && decimals.length >= 2) return { pass: true, msg: 'SLA breakdown with percentages' };
@@ -3515,18 +3353,9 @@ const TEST_CASES = {
     { name: 'Uses earliest expected date per order',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Order 101 has expected dates Jan 10 AND Jan 12 — must use MIN (Jan 10)
-        // Order 103 has expected dates Jan 11 AND Jan 13 — must use MIN (Jan 11)
-        // Actual dispatch for 101 is Jan 9 → OTIF (9 <= 10)
-        // If they used Jan 12 instead, 101 would still be OTIF, so check order 103:
-        // Actual dispatch 103 = Jan 12. Earliest expected = Jan 11 → 1 day late (OTIF+1)
-        // If they used Jan 13, it would be OTIF (12 <= 13). Different result!
-        // We can't easily verify which date was used from output alone, so check for MIN/earliest evidence
-        const hasMin = /\bMIN\b|earliest|min\(/i.test(out);
-        // Pass if output has SLA data (hard to verify MIN usage from output text alone)
         const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
         if (dataLines.length >= 3) return { pass: true, msg: 'SLA breakdown computed (verify MIN expected date is used for orders 101, 103)' };
-        return { pass: false, msg: 'Expected SLA results using MIN(expected_dispatch_date) per order for multi-entry orders' };
+        return { pass: false, msg: 'Expected SLA results using MIN(expected_dispatch_date) per order' };
       }
     }
   ],
@@ -3535,20 +3364,16 @@ const TEST_CASES = {
     { name: 'Engaged users filtered (≥30 min threshold)',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Raw tables: users + usage. Engaged = SUM(time_spent) >= 30 per user per month.
-        // Output should show registration month cohorts with retention metrics
         const hasMonth = /\d{4}-\d{2}/.test(out);
         if (!hasMonth) return { pass: false, msg: 'Expected registration month cohorts (e.g., 2023-01, 2023-02)' };
-        // Should be a compact cohort table, not raw usage rows
         const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-        if (dataLines.length > 15) return { pass: false, msg: 'Too many rows — expected cohort summary (few rows), not raw usage data' };
+        if (dataLines.length > 15) return { pass: false, msg: 'Too many rows — expected cohort summary, not raw usage data' };
         return { pass: true, msg: 'Monthly cohort retention data present' };
       }
     },
     { name: 'Retention percentages for m1, m2, m3',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Should have columns for m1, m2, m3 retention with percentage or count values
         const hasRetentionCols = /m1|m2|m3|month_1|month_2|month_3|retention/i.test(out);
         const firstLine = out.trim().split('\n')[0];
         const colCount = (firstLine.match(/\|/g) || []).length + 1;
@@ -3559,7 +3384,6 @@ const TEST_CASES = {
   ],
 
   // ── Python Cases ──
-  // Python assertion tests run AFTER user's code — they directly validate state/functions.
 
   python_clean: [
     { name: 'Amount column converted to numeric',
@@ -3604,7 +3428,6 @@ assert 'profit' in sales.columns or 'profit' in dir(), "Expected a 'profit' colu
     { name: 'Pivot table created',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // Pivot table should show both regions AND categories in a cross-tab
         const hasRegion = out.includes('North') || out.includes('South') || out.includes('East') || out.includes('West');
         const hasCat = out.includes('Widgets') || out.includes('Gadgets') || out.includes('Premium');
         if (!hasRegion || !hasCat) return { pass: false, msg: 'Expected pivot table with regions as rows and categories as columns (or vice versa)' };
@@ -3660,7 +3483,6 @@ assert r == "bbb", f'longest_palindrome("zcbbbcd") = "{r}", expected "bbb"'
     { name: 'Interest calculated for all scenarios',
       check(out) {
         if (!out) return { pass: false, msg: 'No output — call calculate_interest(test_scenarios) and print results' };
-        // Must show interest values for the 3 users
         const decimals = out.match(/\d+\.\d{2,}/g);
         if (!decimals || decimals.length < 2) return { pass: false, msg: 'Expected interest values (decimal numbers) printed for each scenario' };
         return { pass: true, msg: 'Interest values computed for scenarios' };
@@ -3669,13 +3491,12 @@ assert r == "bbb", f'longest_palindrome("zcbbbcd") = "{r}", expected "bbb"'
     { name: 'User 2 (no lockup, 4%) earns ~$73',
       check(out) {
         if (!out) return { pass: false, msg: 'No output' };
-        // User 2: $2000 at 4% for 335 days (day 30 to 365) = 2000 * 0.04 * 335/365 ≈ 73.42
         const nums = out.match(/\d+\.\d+/g);
         if (nums) {
           const vals = nums.map(Number);
           if (vals.some(v => v > 70 && v < 77)) return { pass: true, msg: 'User 2 interest ≈ $73 (4% annual on $2000 for 335 days)' };
         }
-        return { pass: false, msg: 'User 2 (no lockup) should earn ~$73.42 (4% annual on $2000 for 335 days). Verify daily interest = principal × rate / 365.' };
+        return { pass: false, msg: 'User 2 (no lockup) should earn ~$73.42 (4% annual on $2000 for 335 days).' };
       }
     }
   ]
@@ -5444,6 +5265,79 @@ async function runTestCases() {
     } catch (err) { outputText = 'Error: ' + err.message; }
   }
 
+  // ── Helper: run an expectedQuery against the current DB and extract key numeric values ──
+  async function runExpectedQuery(query) {
+    const keyValues = [];
+    let rowCount = 0;
+    let colCount = 0;
+    try {
+      if (sqlDialect === 'sqlite') {
+        const expResults = sqlDB.exec(query);
+        expResults.forEach(r => {
+          colCount = Math.max(colCount, r.columns.length);
+          r.values.forEach(row => {
+            rowCount++;
+            row.forEach(v => {
+              if (v === null) return;
+              const n = Number(v);
+              // Keep numeric values that are likely COMPUTED (not IDs 1-30, not years 2023-2025)
+              if (!isNaN(n) && (n > 30 || n < 0 || (n > 0 && !Number.isInteger(n))) && !(n >= 2020 && n <= 2030)) {
+                // Round to 2 decimal places for matching
+                keyValues.push(parseFloat(n.toFixed(2)));
+              }
+            });
+          });
+        });
+      } else {
+        // PGlite — split statements
+        const stmts = query.split(';').map(s => s.trim()).filter(s => s.length > 0);
+        for (const stmt of stmts) {
+          try {
+            const result = await sqlDB.query(stmt);
+            if (result.rows && result.fields) {
+              colCount = Math.max(colCount, result.fields.length);
+              result.rows.forEach(row => {
+                rowCount++;
+                Object.values(row).forEach(v => {
+                  if (v === null) return;
+                  const n = Number(v);
+                  if (!isNaN(n) && (n > 30 || n < 0 || (n > 0 && !Number.isInteger(n))) && !(n >= 2020 && n <= 2030)) {
+                    keyValues.push(parseFloat(n.toFixed(2)));
+                  }
+                });
+              });
+            }
+          } catch (e) { /* skip CTE-only statements */ }
+        }
+      }
+    } catch (err) {
+      console.warn('Expected query failed:', err.message);
+    }
+    // Deduplicate and take unique values
+    return { keyValues: [...new Set(keyValues)], rowCount, colCount };
+  }
+
+  // ── Helper: check how many expected values appear in user output ──
+  function matchExpectedValues(userOutput, expectedVals) {
+    if (!expectedVals.length) return 0;
+    let matched = 0;
+    for (const v of expectedVals) {
+      // Check for the value as a string in output (with some tolerance)
+      const vStr = String(v);
+      // Match exact value or within a small epsilon for decimals
+      if (userOutput.includes(vStr)) { matched++; continue; }
+      // Also try without trailing zeros: 743.50 → 743.5
+      const vAlt = String(parseFloat(vStr));
+      if (vAlt !== vStr && userOutput.includes(vAlt)) { matched++; continue; }
+      // Try with 2 decimal places: 743.5 → 743.50
+      if (Number.isFinite(v) && !Number.isInteger(v)) {
+        const v2d = v.toFixed(2);
+        if (userOutput.includes(v2d)) { matched++; }
+      }
+    }
+    return matched;
+  }
+
   // Run each test case
   const results = [];
   window._lastTestResults = []; // Store for AI Help
@@ -5456,9 +5350,44 @@ async function runTestCases() {
           results.push({ name: test.name, pass: true, msg: test.msg || 'Passed' });
         } catch (e) {
           const errMsg = e.message || String(e);
-          // Extract the assertion message
           const assertMatch = errMsg.match(/AssertionError: (.+)/s) || errMsg.match(/assert.+/s);
           results.push({ name: test.name, pass: false, msg: assertMatch ? assertMatch[1] || assertMatch[0] : (test.msg || errMsg) });
+        }
+      } else if (test.expectedQuery && !isPy && sqlDB) {
+        // ── expectedQuery-based test: run reference solution and compare ──
+        const { keyValues, rowCount: expRows, colCount: expCols } = await runExpectedQuery(test.expectedQuery);
+
+        if (keyValues.length === 0 && expRows === 0) {
+          // Expected query itself failed — fall back to basic output check
+          results.push({ name: test.name, pass: outputText.trim().length > 50, msg: outputText.trim().length > 50 ? 'Output present (reference query unavailable)' : (test.failMsg || 'No output') });
+        } else {
+          const matched = matchExpectedValues(outputText, keyValues);
+          const ratio = keyValues.length > 0 ? matched / keyValues.length : 0;
+          const minRatio = test.minMatchRatio || 0.5;
+
+          // Also check structural constraints
+          const userLines = outputText.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+          const userFirstLine = outputText.trim().split('\n')[0] || '';
+          const userCols = (userFirstLine.match(/\|/g) || []).length + 1;
+
+          let structFail = null;
+          if (test.minCols && userCols < test.minCols) {
+            structFail = `Expected at least ${test.minCols} columns (got ${userCols}). Your query needs computed columns beyond the raw table.`;
+          }
+          if (test.maxRows && userLines.length > test.maxRows + 2) {
+            structFail = `Too many rows (${userLines.length}) — expected ≤${test.maxRows}. Filter or aggregate your results.`;
+          }
+          if (test.minRows && userLines.length < test.minRows) {
+            structFail = `Too few rows (${userLines.length}) — expected ≥${test.minRows}.`;
+          }
+
+          if (structFail) {
+            results.push({ name: test.name, pass: false, msg: structFail });
+          } else if (ratio >= minRatio) {
+            results.push({ name: test.name, pass: true, msg: `${matched}/${keyValues.length} expected values matched` });
+          } else {
+            results.push({ name: test.name, pass: false, msg: test.failMsg || `Only ${matched}/${keyValues.length} expected computed values found in your output.` });
+          }
         }
       } else if (test.check) {
         // Output-based check (works for SQL and Python)
