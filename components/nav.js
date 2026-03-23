@@ -239,7 +239,7 @@
                 <span class="snav-auth-profile-email" id="snavMenuEmail"></span>
               </div>
             </div>
-            <button class="snav-auth-menu-item" id="snavMyProfileBtn" onclick="window.location.href='/practice'">
+            <button class="snav-auth-menu-item" onclick="if(typeof openProfileModal==='function')openProfileModal()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile
             </button>
             <button class="snav-auth-menu-item snav-logout" onclick="window.location.href='/api/auth/logout'">Sign out</button>
@@ -292,22 +292,13 @@
     }
   });
 
-  // On practice page, override "My Profile" to open the modal instead of navigating
-  if (location.pathname === '/practice') {
-    var profBtn = document.getElementById('snavMyProfileBtn');
-    if (profBtn) {
-      profBtn.onclick = function () {
-        document.getElementById('snavAuthMenu').classList.remove('open');
-        if (typeof openProfileModal === 'function') openProfileModal();
-      };
-    }
-  }
-
+  // Store user data for profile modal access
   fetch('/api/auth/session').then(function (r) { return r.json(); }).then(function (data) {
     if (data.authenticated && data.user) {
       document.getElementById('snavSignInBtn').style.display = 'none';
       var btn = document.getElementById('snavUserBtn');
       btn.style.display = 'flex';
+      window.__snavUser = data.user;
       var name = data.user.name || data.user.email.split('@')[0];
       var pic = data.user.picture || '';
       document.getElementById('snavUserPic').src = pic;
