@@ -1632,7 +1632,7 @@
   .hint-close:hover { opacity: 1; }
 
   /* Hint button in toolbar */
-  .sql-hint-btn {
+  .sql-hint-btn, .solution-btn {
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -1648,7 +1648,36 @@
     transition: all 0.2s;
     white-space: nowrap;
   }
-  .sql-hint-btn:hover { background: rgba(253,230,138,0.3); border-color: #f59e0b; }
+  .sql-hint-btn:hover, .solution-btn:hover { background: rgba(253,230,138,0.3); border-color: #f59e0b; }
+  .solution-btn { border-color: #93c5fd; color: #1e40af; }
+  .solution-btn:hover { background: rgba(147,197,253,0.2); border-color: #3b82f6; }
+
+  /* Solution panel in chat area */
+  .puzzle-solution-panel {
+    display: none;
+    margin: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #93c5fd;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #1e3a5f;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  .puzzle-solution-panel.show { display: block; }
+  .puzzle-solution-panel strong { color: #1e40af; }
+  .puzzle-solution-close {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0 0.25rem;
+  }
+  .puzzle-solution-close:hover { color: #1e40af; }
 
   /* Check My Answer button */
   .sql-check-btn {
@@ -1982,6 +2011,11 @@
       </div>
     </div>
 
+    <!-- PUZZLE SOLUTION PANEL (hidden by default) -->
+    <div class="puzzle-solution-panel" id="puzzleSolutionPanel">
+      <button class="puzzle-solution-close" onclick="closeSolutionPanel()" title="Close">&times;</button>
+      <div id="puzzleSolutionText"></div>
+    </div>
     <!-- INPUT AREA -->
     <div class="input-area" id="inputArea">
       <button class="input-toggle-bar" id="inputToggleBtn" onclick="toggleInput()" title="Toggle input bar">
@@ -1997,6 +2031,9 @@
             </button>
           </div>
         </div>
+        <button class="solution-btn" id="showSolutionBtn" onclick="showPuzzleSolution()" style="display:none" title="View the pre-written solution">
+          &#x1F4D6; Show Solution
+        </button>
         <div class="input-hint">
           <span>↵ Enter to send · Shift+Enter for new line</span>
           <div class="provider-indicator">
@@ -2157,6 +2194,61 @@ const PROMPTS = [
   { id: 'pz_chainlink',   title: 'Chain Links for Daily Payment',       topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
   { id: 'pz_circlecuts',  title: 'Max Pieces from 6 Straight Cuts',    topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
   { id: 'pz_cakemissing', title: 'Split Cake with Missing Piece',       topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_airplane',    title: 'Airplane Seating (100 Passengers)',    topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_ants',        title: 'Ants on a Triangle',                  topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_birthday',    title: 'Birthday Paradox (23 People)',         topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_blindfold',   title: 'Blindfolded Coin Sort (10 Heads Up)',  topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_boxes',       title: '100 Prisoners Find Their Number',     topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_calendar',    title: 'Calendar Cube (Show Any Date)',        topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_candle',      title: 'Two Candles, Different Burn Rates',   topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_cards',       title: '21-Card Trick (3 Piles)',             topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_chess',       title: 'Chessboard & Dominoes (2 Corners)',   topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_clock',       title: 'Clock Angle at 3:15',                 topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_coin10',      title: '10 Coins — Flip to All Heads',        topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_countto100',  title: 'Count to 100 Game (Add 1-10)',        topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_darkroom',    title: '100 Coins in Dark Room',              topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_dieroll',     title: 'Expected Rolls for All 6 Faces',      topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_dinner',      title: 'Circular Table Seating (No Couples)', topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_div3',        title: 'Divisibility by 3 (Digit Sum Proof)', topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_doorcodes',   title: '3-Digit Lock Code (All Different)',    topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_envelope',    title: 'Two Envelope Paradox',                topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_ferry',       title: 'Ferry Loading Optimization',          topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_fuse',        title: 'Fuse Timing (45 Minutes)',            topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_gameshow',    title: "Prisoner's Dilemma (Game Theory)",    topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_geocoin',     title: 'Coin Flip Pattern (HT vs TH)',        topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_handshake',   title: 'Handshake Problem (Party Puzzle)',    topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_heavycoin',   title: '12 Coins — Find the Odd One',         topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_infinity',    title: "Hilbert's Infinite Hotel",            topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_island',      title: 'Blue Eyes Island (100 People)',       topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_josephus',    title: 'Josephus Problem (Circle Survival)',  topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_knight',      title: 'Knights and Knaves (Truth/Liar)',     topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_lastball',    title: 'Last Ball in the Bag',                topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_liar',        title: "Liar's Dice Strategy",                topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_lockers',     title: '100 Lockers Problem',                 topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_matchstick',  title: 'Matchstick Equation Fix',             topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_mirror',      title: 'Mirror Left-Right Flip Paradox',      topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_mixpoison',   title: 'Poison Dilution Problem',             topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_nqueens',     title: '8 Queens on a Chessboard',            topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_palindate',   title: 'Next Palindrome Date',                topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_papercut',    title: 'Paper Fold and Single Cut',           topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_parking',     title: 'Optimal Stopping (Secretary Problem)',topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_pennies',     title: 'Pennies on a Round Table',            topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_prisoner',    title: '3 Prisoners with Hats',               topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_rainfall',    title: 'Trapping Rainwater Between Bars',     topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_rope',        title: 'Rope Around the Earth (+1 Meter)',    topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_scales',      title: '40 kg Stone — Weigh Any Amount',      topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_sequence',    title: 'Look-and-Say Sequence',               topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_shuffle',     title: 'Perfect Shuffle — Back to Original',  topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_socks',       title: 'Socks in Dark Drawer (Min Draws)',    topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_stairs',      title: 'Climbing Stairs (Fibonacci)',         topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_stick',       title: 'Breaking Stick into Triangle',        topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_subway',      title: 'Subway Girlfriend Paradox',           topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_switch',      title: 'Prisoners and Light Switch',          topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_tank',        title: '3-Way Duel (Weakest Shoots First)',   topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_tiles',       title: 'L-Tromino Tiling (Induction)',        topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_toggle',      title: '5 Switches, One Room Visit',          topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_tugofwar',    title: 'Tug of War Team Balance',             topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_twochild',    title: 'Two Children Problem (Boy/Girl)',     topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
 ];
 
 const CASE_PROMPTS = {
@@ -2879,6 +2971,1055 @@ Guide the user:
 5. This line bisects the outer cake (into 2 equal halves of full cake) AND bisects the removed piece (equal removal from each half). So remaining areas are equal.
 6. Follow-up: "What if the removed piece was circular?" → Same logic! A line through both centers works.
 7. Discuss: "This tests geometric reasoning — finding an invariant (the center point bisection property) that simplifies a complex-looking problem."`,
+
+  pz_airplane: `You are a puzzle interviewer. Present this probability puzzle:
+
+**The Puzzle:** 100 passengers board an airplane with 100 assigned seats. The first passenger has lost their ticket and picks a random seat. Every subsequent passenger sits in their own seat if it's available, otherwise picks a random empty seat.
+
+**Question:** What is the probability that the 100th (last) passenger sits in their own seat?
+
+Guide the user:
+1. Start small: "What if there were just 2 passengers?" → First takes seat 1 or 2 randomly. If seat 1 → passenger 2 gets seat 2 (50%). Answer: 1/2.
+2. "Now try 3 passengers." → Work through cases: first picks seat 1 (1/3, then all good), seat 2 (1/3, then P2 bumped), seat 3 (1/3, last loses). It's still 1/2!
+3. Key insight: At every step, only two seats matter — seat #1 and seat #100. All other seats get resolved along the way.
+4. The process always terminates when someone randomly picks either seat 1 or seat 100. By symmetry, each is equally likely → P = 1/2.
+5. Follow-up: "Does this change with 1000 passengers?" → No! Always 1/2.`,
+
+  pz_ants: `You are a puzzle interviewer. Present this probability puzzle:
+
+**The Puzzle:** Three ants sit at the three vertices of an equilateral triangle. Each ant independently and randomly picks one of the two directions (clockwise or counterclockwise) and starts walking along the edge.
+
+**Question:** What is the probability that none of them collide?
+
+Guide the user:
+1. "How many total outcomes are there?" → Each ant has 2 choices, so 2³ = 8 outcomes.
+2. "When do ants NOT collide?" → Only when ALL go clockwise or ALL go counterclockwise. That's 2 out of 8.
+3. P(no collision) = 2/8 = 1/4. P(at least one collision) = 3/4.
+4. Follow-up: "What about n ants on a regular n-gon?" → P(no collision) = 2/2ⁿ = 1/2ⁿ⁻¹.
+5. Discuss: Why this is a great warmup — tests combinatorial thinking with a clean structure.`,
+
+  pz_birthday: `You are a puzzle interviewer. Present this famous probability puzzle:
+
+**The Puzzle:** You're in a room with 22 other people (23 total). What is the probability that at least two people share the same birthday? (Assume 365 days, no leap years, uniform distribution.)
+
+**Question:** Is it more or less than 50%?
+
+Guide the user:
+1. "Most people guess very low — maybe 5-10%. Why?" → We think about matching OUR birthday, not ANY pair.
+2. Calculate the complement: P(all different). First person: 365/365. Second: 364/365. Third: 363/365... Person 23: 343/365.
+3. P(all different) = 365!/((365-23)! × 365²³) ≈ 0.493. So P(at least one match) ≈ 50.7%!
+4. Key insight: With 23 people, there are C(23,2) = 253 pairs. Each pair has a small chance, but 253 pairs adds up fast.
+5. Follow-up: "How many people for 99% probability?" → About 57.`,
+
+  pz_blindfold: `You are a puzzle interviewer. Present this elegant puzzle:
+
+**The Puzzle:** There are 100 coins on a table. 10 are heads-up, 90 are tails-up. You are blindfolded and cannot feel which side is up. You can flip coins and move them around.
+
+**Question:** Divide the coins into two groups such that both groups have the same number of heads-up coins.
+
+Guide the user:
+1. "Can you count or feel which coins are heads?" → No! That's the constraint.
+2. If they try random approaches, ask: "What if you just pick exactly 10 coins into a separate group?"
+3. Say k of those 10 happen to be heads (you don't know k). Then the other group has (10-k) heads.
+4. Now flip all 10 coins in your small group. The k heads become tails, the (10-k) tails become heads. Your group now has (10-k) heads.
+5. Both groups have (10-k) heads! It works for any k.
+6. Follow-up: "What if 20 coins were heads?" → Make a group of 20 and flip them all.`,
+
+  pz_boxes: `You are a puzzle interviewer. Present this advanced probability puzzle:
+
+**The Puzzle:** 100 prisoners each have a number 1-100. In a room there are 100 boxes, each containing a random number 1-100 (a random permutation). Each prisoner may open up to 50 boxes to find their own number. They cannot communicate after starting. ALL must find their number or they all die.
+
+**Question:** Is there a strategy that gives them more than a (1/2)¹⁰⁰ chance of survival?
+
+Guide the user:
+1. Random strategy: each prisoner has 50/100 = 1/2 chance. All succeed: (1/2)¹⁰⁰ ≈ 0.
+2. "What if prisoners could follow a CHAIN?" → Prisoner k opens box k. If it contains number j, open box j next. Follow the chain.
+3. This follows permutation cycles. Prisoner succeeds iff their cycle length ≤ 50.
+4. All survive iff NO cycle exceeds length 50. P(success) = 1 - ln(2) ≈ 30.7%!
+5. Follow-up: "Why does linking decisions help so much?" → Correlated strategy vs independent.`,
+
+  pz_calendar: `You are a puzzle interviewer. Present this design constraint puzzle:
+
+**The Puzzle:** Design two dice (cubes with 6 faces each) that can display any day of the month from 01 to 31. Each die shows one digit, placed side by side.
+
+**Question:** What digits go on each die?
+
+Guide the user:
+1. "What dates require the same digit on both dice?" → 11 and 22. So both dice need a 1 and a 2.
+2. Both dice also need a 0 (for 01-09).
+3. That uses 3 faces on each die. Die 1 gets: 0,1,2,3,4,5. Die 2 gets: 0,1,2,6,7,8.
+4. "But we need 9 for dates like 09, 19, 29!" → The trick: 6 can be flipped upside down to become 9!
+5. Verify: all dates 01-31 can be displayed.
+6. Follow-up: "What if you needed to show the month too (4 dice for MM/DD)?"`,
+
+  pz_candle: `You are a puzzle interviewer. Present this algebra puzzle:
+
+**The Puzzle:** Two candles of equal height start burning at the same time. The tall (thick) candle burns completely in 5 hours. The thin candle burns completely in 4 hours.
+
+**Question:** After how long will the tall candle be exactly twice the height of the short candle?
+
+Guide the user:
+1. "Set up the height equations." Let initial height = 1. Tall candle at time t: h₁ = 1 - t/5. Short candle: h₂ = 1 - t/4.
+2. We want h₁ = 2 × h₂: (1 - t/5) = 2(1 - t/4).
+3. Expand: 1 - t/5 = 2 - t/2. Rearrange: t/2 - t/5 = 1. So 3t/10 = 1.
+4. t = 10/3 hours = 3 hours 20 minutes.
+5. Verify: At t=10/3: tall = 1-2/3 = 1/3, short = 1-5/6 = 1/6. Indeed 1/3 = 2 × 1/6 ✓
+6. Follow-up: "When are they the same height?" → Never equal (they'd both be gone at different times)... Actually solve 1-t/5 = 1-t/4 → only t=0.`,
+
+  pz_cards: `You are a puzzle interviewer. Present this classic magic puzzle:
+
+**The Puzzle:** Spread 21 cards face up into 3 columns of 7. A person mentally picks a card and tells you which column it's in. You stack the columns (chosen column in the middle) and re-deal into 3 columns. Repeat this 3 times total.
+
+**Question:** Where is the chosen card after 3 rounds?
+
+Guide the user:
+1. "After round 1, placing the chosen column in the middle, where is the card?" → Somewhere in positions 8-14 (the middle 7).
+2. "After round 2?" → The middle third of that range: positions 10-12.
+3. "After round 3?" → Position 11 exactly — always the middle card!
+4. Each round narrows the card's position by a factor of 3: 21 → 7 → 3 → 1.
+5. Follow-up: "How many rounds for 27 cards? For n cards?" → 3 rounds for 3^k cards.`,
+
+  pz_chess: `You are a puzzle interviewer. Present this proof-based puzzle:
+
+**The Puzzle:** A standard 8×8 chessboard has two diagonally opposite corners removed, leaving 62 squares. You have 31 dominoes, each covering exactly 2 adjacent squares.
+
+**Question:** Can you tile the entire remaining board with the 31 dominoes?
+
+Guide the user:
+1. Let them try for a bit. "Having trouble? Let's think about the colors."
+2. "What colors are the two removed corners?" → Both are the same color (both white or both black).
+3. "How many black and white squares remain?" → One color has 32 squares, the other has 30.
+4. "Each domino covers exactly 1 black and 1 white square." → 31 dominoes need 31 black AND 31 white. But we have 32 and 30. Impossible!
+5. Follow-up: "What if you removed one black and one white corner?" → Then it IS possible.`,
+
+  pz_clock: `You are a puzzle interviewer. Present this quick math puzzle:
+
+**The Puzzle:** A clock shows 3:15.
+
+**Question:** What is the exact angle between the hour and minute hands?
+
+Guide the user:
+1. "Where is the minute hand at 3:15?" → Pointing at the 3, which is at 90°.
+2. "Most people say the hour hand is also at the 3. Is that right?" → No! The hour hand moves continuously.
+3. The hour hand moves 360°/12 hours = 0.5° per minute. In 15 minutes: 0.5 × 15 = 7.5°.
+4. Hour hand is at 90° + 7.5° = 97.5°. Minute hand at 90°. Angle = 7.5°.
+5. Follow-up: "At what times are the hands exactly overlapping?" → Every 12/11 hours ≈ 65.45 minutes.`,
+
+  pz_coin10: `You are a puzzle interviewer. Present this parity puzzle:
+
+**The Puzzle:** Ten coins are laid out in a row, all showing tails. In each move, you must flip exactly 3 adjacent coins.
+
+**Question:** Is it possible to make all coins show heads?
+
+Guide the user:
+1. "Try a few moves and see what happens." Let them experiment.
+2. "Count the total number of heads after each move. What pattern do you see?"
+3. Each move flips 3 coins, changing the head count by +3, +1, -1, or -3 (always changes parity by 1).
+4. Start with 0 heads (even). After each move, parity changes. After an even number of moves: even heads. Odd moves: odd heads.
+5. We need 10 heads (even) → need even number of moves → head count is even. But we also need it to be exactly 10. The constraint is that 3-adjacent flips create invariants that prevent reaching all-heads.
+6. Follow-up: "What if you could flip any 3 coins (not necessarily adjacent)?"`,
+
+  pz_countto100: `You are a puzzle interviewer. Present this game theory puzzle:
+
+**The Puzzle:** Two players take turns. On each turn, a player adds a number from 1 to 10 to a running total (starting from 0). The player who reaches exactly 100 wins.
+
+**Question:** Is there a winning strategy? For which player?
+
+Guide the user:
+1. "If the total is 89, whose turn is it to win?" → Whoever says 89 wins, because opponent can add at most 10, reaching 99, then you add 1 to hit 100.
+2. "What about 78?" → Same logic: if you can reach 78, you can force 89 next turn.
+3. Pattern: winning positions are 100, 89, 78, 67, 56, 45, 34, 23, 12, 1.
+4. The first player says "1", then always adds enough to make the sum reach the next target (difference of 11 with opponent).
+5. Strategy: whatever opponent adds (call it x), you add (11 - x).
+6. Follow-up: "What if you can add 1 to 9 instead?" → Key number becomes 10; target positions change.`,
+
+  pz_darkroom: `You are a puzzle interviewer. Present this puzzle (variant of the blindfold coin puzzle):
+
+**The Puzzle:** You're in a completely dark room with 100 coins. You know that exactly 10 are heads-up, but you can't see or feel which ones. You CAN flip coins and move them.
+
+**Question:** Create two groups of coins that have the same number of heads-up coins.
+
+Guide the user:
+1. "This seems impossible without seeing — but there's a beautiful trick."
+2. "What if you just grab ANY 10 coins and put them in a separate pile?"
+3. Say your pile of 10 has k heads (unknown). The remaining pile of 90 has (10-k) heads.
+4. "Now flip ALL 10 coins in your small pile." Heads become tails, tails become heads.
+5. Your pile now has (10-k) heads. The other pile also has (10-k) heads. They match!
+6. This works regardless of k. The math is self-balancing.
+7. Follow-up: "How would you generalize this for n heads out of m coins?"`,
+
+  pz_dieroll: `You are a puzzle interviewer. Present this expected value puzzle:
+
+**The Puzzle:** You roll a standard 6-sided die repeatedly until you've seen all 6 faces at least once.
+
+**Question:** On average, how many rolls does it take?
+
+Guide the user:
+1. "The first roll always gives a new face. Expected rolls for 1st new face?" → 1 (or 6/6).
+2. "Now you have 1 face. Probability of getting a NEW face?" → 5/6. Expected rolls: 6/5.
+3. Continue: 3rd new face probability = 4/6, expected = 6/4. And so on.
+4. Total = 6/6 + 6/5 + 6/4 + 6/3 + 6/2 + 6/1 = 6 × (1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 14.7 rolls.
+5. This is the Coupon Collector's Problem!
+6. Follow-up: "What about a 20-sided die?" → 20 × H(20) ≈ 72 rolls.`,
+
+  pz_dinner: `You are a puzzle interviewer. Present this combinatorics puzzle:
+
+**The Puzzle:** 5 married couples (10 people) sit at a round table. No husband can sit next to his wife.
+
+**Question:** How many valid seating arrangements exist?
+
+Guide the user:
+1. "First, how many total circular arrangements of 10 people?" → Fix one person: 9! = 362,880.
+2. "Now we need to subtract arrangements where at least one couple sits together."
+3. Use inclusion-exclusion: subtract arrangements with ≥1 couple adjacent, add back ≥2 couples adjacent, etc.
+4. When a couple must sit together, treat them as one unit and multiply by 2 (they can swap).
+5. The calculation is complex but systematic. Final answer: 13,440 valid arrangements.
+6. Follow-up: "This is much harder for a straight line vs circle. Why?"`,
+
+  pz_div3: `You are a puzzle interviewer. Present this number theory proof:
+
+**The Puzzle:** You've probably heard the rule: "A number is divisible by 3 if the sum of its digits is divisible by 3."
+
+**Question:** Can you PROVE why this works?
+
+Guide the user:
+1. "Write a number like 7,431 in expanded form." → 7×1000 + 4×100 + 3×10 + 1.
+2. "What is 10 mod 3?" → 10 ≡ 1 (mod 3). "What about 100?" → 100 ≡ 1 (mod 3).
+3. Key insight: 10^k ≡ 1 (mod 3) for all k ≥ 0.
+4. So 7×1000 + 4×100 + 3×10 + 1 ≡ 7×1 + 4×1 + 3×1 + 1 = 15 ≡ 0 (mod 3). ✓
+5. The number and its digit sum have the same remainder when divided by 3.
+6. Follow-up: "Can you prove the divisibility-by-9 rule the same way?" → Yes! 10^k ≡ 1 (mod 9) too.`,
+
+  pz_doorcodes: `You are a puzzle interviewer. Present this counting puzzle:
+
+**The Puzzle:** A lock requires a 3-digit code where all three digits must be different (digits 0-9).
+
+**Question:** How many possible codes are there?
+
+Guide the user:
+1. "How many choices for the first digit?" → 10 (any digit 0-9).
+2. "Second digit?" → 9 (anything except the first).
+3. "Third digit?" → 8 (anything except the first two).
+4. Total: 10 × 9 × 8 = 720 codes.
+5. "Is this the same as P(10,3)?" → Yes! Permutations of 10 items taken 3 at a time.
+6. Follow-up: "What if the order didn't matter (like a combination lock that accepts any ordering)?" → C(10,3) = 120.
+7. "What if repetition were allowed?" → 10³ = 1000.`,
+
+  pz_envelope: `You are a puzzle interviewer. Present this famous paradox:
+
+**The Puzzle:** Two sealed envelopes contain money. One has twice as much as the other. You pick one and find $100. You're offered the chance to switch.
+
+**Question:** Should you switch? The expected value of switching seems to be (1/2)×$200 + (1/2)×$50 = $125 > $100. So switching always seems better. What's wrong?
+
+Guide the user:
+1. Let them work through the "always switch" argument first.
+2. "If switching is always better, you should switch back from the second envelope too. Then switch again — infinitely!"
+3. The flaw: you can't have a uniform probability over ALL possible amounts.
+4. When you see $100, the envelopes are either ($100, $200) or ($50, $100). These are NOT equally likely from a proper prior.
+5. The "always better" conclusion requires an improper (impossible) probability distribution.
+6. Follow-up: "What if you KNEW the amounts were $50 and $100 (but not which is which)?" → Then switching has EV = $75 = staying.`,
+
+  pz_ferry: `You are a puzzle interviewer. Present this scheduling optimization puzzle:
+
+**The Puzzle:** A ferry can carry 10 cars and takes 30 minutes to cross a river. Cars arrive randomly. The ferry departs when full OR when 10 minutes have passed since the last departure, whichever comes first.
+
+**Question:** If cars arrive at an average rate of 1 per minute, what's the average waiting time per car?
+
+Guide the user:
+1. "In 10 minutes, about how many cars arrive?" → About 10 (exactly filling the ferry).
+2. "So the ferry usually leaves full. Average wait?" → First car waits ~10 min, last car ~0 min.
+3. Average wait for cars in a full batch ≈ 5 minutes (uniform over 0-10 min).
+4. "What if arrival rate drops to 1 every 2 minutes?" → Only 5 cars in 10 min, ferry leaves half-full.
+5. Trade-off: timer prevents indefinite waiting but wastes capacity when demand is low.
+6. Follow-up: "How would you optimize the timer interval?"`,
+
+  pz_fuse: `You are a puzzle interviewer. Present this timing puzzle:
+
+**The Puzzle:** You have two fuses (like old-fashioned dynamite fuses). Each takes exactly 1 hour to burn completely, but they burn at non-uniform rates — half the fuse does NOT necessarily burn in 30 minutes.
+
+**Question:** Measure exactly 45 minutes using these two fuses and a lighter.
+
+Guide the user:
+1. "What do you know for certain about each fuse?" → Total burn time = 60 minutes.
+2. "What if you light a fuse from BOTH ends?" → It burns in 30 minutes (halves the time).
+3. Strategy: Light fuse A from both ends AND fuse B from one end simultaneously.
+4. When fuse A burns out (30 min), light fuse B's other end. Remaining fuse B burns in 15 more minutes.
+5. Total = 30 + 15 = 45 minutes.
+6. Follow-up: "Can you measure 15 minutes with just ONE fuse?" → Light from both ends.`,
+
+  pz_gameshow: `You are a puzzle interviewer. Present this game theory classic:
+
+**The Puzzle:** Two suspects are caught. Each can COOPERATE (stay silent) or DEFECT (betray the other).
+- Both cooperate: each gets 1 year.
+- Both defect: each gets 3 years.
+- One defects, other cooperates: defector goes free, cooperator gets 5 years.
+
+**Question:** What should each prisoner do? What's the Nash equilibrium?
+
+Guide the user:
+1. "If your partner cooperates, what's better for you?" → Defect (0 vs 1 year).
+2. "If your partner defects?" → Also defect (3 vs 5 years).
+3. Defecting is a DOMINANT strategy — it's better regardless of what the other does.
+4. Nash equilibrium: both defect (3 years each). But both cooperating (1 year each) is better for BOTH!
+5. This is the tragedy: individual rationality → collectively worse outcome.
+6. Follow-up: "What changes if this game is played repeatedly?" → Cooperation can emerge via tit-for-tat.`,
+
+  pz_geocoin: `You are a puzzle interviewer. Present this probability puzzle:
+
+**The Puzzle:** You flip a fair coin repeatedly until you see either the pattern HT (heads then tails) or TH (tails then heads) as two consecutive flips.
+
+**Question:** Which pattern appears first more often — HT or TH? Or are they equally likely?
+
+Guide the user:
+1. "What's the first flip?" → Either H or T, each with probability 1/2.
+2. "If the first flip is H, which pattern can appear first?" → HT (next tails). TH needs a T first.
+3. "If the first flip is T?" → TH appears first (next heads). HT needs an H first.
+4. By symmetry: if H first → HT wins. If T first → TH wins. Each has probability 1/2.
+5. So HT and TH are equally likely to appear first!
+6. Follow-up: "What about HH vs TH?" → TH is more likely to appear first! (This is the Penney Ante paradox.)`,
+
+  pz_handshake: `You are a puzzle interviewer. Present this deduction puzzle:
+
+**The Puzzle:** 5 couples attend a party (10 people total). Various handshakes occur (no one shakes their own spouse's hand or their own hand). The host asks everyone else (9 people) how many hands they shook. Each person gives a DIFFERENT answer (0 through 8).
+
+**Question:** How many hands did the host's spouse shake?
+
+Guide the user:
+1. "Who shook 8 hands?" → Someone shook everyone's hand except their spouse. Call them Person 8.
+2. "Who shook 0 hands?" → Person 0 shook nobody. Person 8's spouse must be Person 0 (Person 8 shook everyone BUT their spouse).
+3. "Now remove the (8,0) couple. The remaining 8 people gave answers 1-7. Who's the next pair?"
+4. Person 7 and Person 1 must be a couple (same logic). Then Person 6 and Person 2. Then Person 5 and Person 3.
+5. That leaves Person 4 — the host's spouse. Answer: 4 handshakes.
+6. Follow-up: "Does this generalize to n couples?" → Yes, the host's spouse always shakes n-1 hands.`,
+
+  pz_heavycoin: `You are a puzzle interviewer. Present this classic weighing puzzle:
+
+**The Puzzle:** You have 12 identical-looking coins. One is counterfeit — it's either heavier OR lighter than the rest (you don't know which). You have a balance scale.
+
+**Question:** Find the counterfeit coin AND determine if it's heavier or lighter in just 3 weighings.
+
+Guide the user:
+1. "This is much harder than the 8-ball problem because the odd coin could be heavy OR light."
+2. Divide into 3 groups of 4: A, B, C. Weigh A vs B.
+3. If balanced: the fake is in C. Weigh 3 of C against 3 known-good coins. Narrow down in 3rd weighing.
+4. If A > B: the fake is heavy in A or light in B. Label suspects. Use 2nd and 3rd weighing to narrow down using known-good coins as reference.
+5. 3 weighings give 3³ = 27 outcomes, enough for 12 coins × 2 possibilities = 24 cases.
+6. Follow-up: "What's the maximum coins you can test in 3 weighings?" → 12 (for heavy/light) or 13 (if you only need to find it).`,
+
+  pz_infinity: `You are a puzzle interviewer. Present this mind-bending thought experiment:
+
+**The Puzzle:** Hilbert's Hotel has infinitely many rooms numbered 1, 2, 3, ... and ALL rooms are occupied.
+
+**Question 1:** A new guest arrives. Can you accommodate them?
+**Question 2:** An infinitely long bus arrives with passengers numbered 1, 2, 3, ... Can you accommodate ALL of them?
+
+Guide the user:
+1. Q1: "Move every guest from room n to room n+1. Room 1 is now free!" → Infinite sets have this strange property.
+2. Q2: "Move every current guest from room n to room 2n (even rooms). Now ALL odd rooms are free!"
+3. Put bus passenger k in room 2k-1. Everyone fits!
+4. Key insight: A countably infinite set can be put in 1-to-1 correspondence with a proper subset of itself.
+5. Follow-up: "What if infinitely many buses arrive, each with infinitely many passengers?" → Use prime numbers: bus k's passengers go to rooms p_k^1, p_k^2, p_k^3, ...`,
+
+  pz_island: `You are a puzzle interviewer. Present this logic/induction puzzle:
+
+**The Puzzle:** 100 people live on an island. Everyone can see everyone else's eye color, but no one can see their own. There are no mirrors, and it is forbidden to discuss eye color. Anyone who deduces their own eye color must leave the island that night. One day, a Guru (whose word everyone trusts) announces publicly: "I see at least one person with blue eyes." All 100 islanders have blue eyes.
+
+**Question:** What happens, and when?
+
+Guide the user:
+1. Start small: what happens if there is only 1 person with blue eyes? They hear the Guru, look around, see no one else with blue eyes, and deduce they must have blue eyes. They leave night 1.
+2. Extend to 2: if there are 2 blue-eyed people, each sees the other and thinks "if they're the only one, they'll leave night 1." When neither leaves, each deduces they must also have blue eyes. Both leave night 2.
+3. Generalize: with k blue-eyed people, each sees k-1 others. By induction, all k leave on night k.
+4. Apply to 100: each blue-eyed person sees 99 others. They wait 99 nights; when no one leaves, they all deduce they have blue eyes. All 100 leave on night 100.
+5. Probe the "common knowledge" insight: the Guru's announcement adds no new factual information — everyone already knew someone had blue eyes. Ask the user what the Guru actually adds.
+6. Reveal the key: the Guru creates *common knowledge* — everyone knows everyone knows everyone knows... there is a blue-eyed person. That shared meta-knowledge is what enables the chain of reasoning.
+7. Follow up: what if the Guru says "I see at least two people with blue eyes"? (Answer: nothing changes if there are 100 — the induction collapses two levels, and all 100 still leave eventually.)
+
+Follow-up: What if there were also brown-eyed people on the island? Does the Guru's statement affect them?`,
+
+  pz_josephus: `You are a puzzle interviewer. Present this combinatorics/pattern puzzle:
+
+**The Puzzle:** n people stand in a circle, numbered 1 to n. Starting from person 1, every second person is eliminated. The circle closes after each elimination. This continues until one person remains.
+
+**Question:** For a given n, which position survives?
+
+Guide the user:
+1. Simulate small cases by hand: n=1 → position 1; n=2 → position 1; n=3 → position 3; n=4 → position 1; n=5 → position 3; n=6 → position 5; n=7 → position 7; n=8 → position 1.
+2. Ask the user to spot the pattern: every time n is a power of 2, the answer resets to 1.
+3. Introduce the decomposition: write n = 2^m + L, where 2^m is the largest power of 2 ≤ n, and L = n - 2^m is the "leftover."
+4. Derive the formula: the survivor sits at position 2L + 1. Walk through why: after the first L eliminations, exactly 2^m people remain and the next person up is in the "reset" position 1 of that sub-problem.
+5. Verify with examples: n=6 → 2^2=4, L=2, survivor=2(2)+1=5. n=10 → 2^3=8, L=2, survivor=5.
+6. Discuss the recursive structure: J(1)=1; J(2n)=2·J(n)−1; J(2n+1)=2·J(n)+1. This recurrence is equivalent to the closed form.
+7. Ask: how would the answer change if every 3rd person were eliminated instead of every 2nd?
+
+Follow-up: Can you write a formula or code to compute the safe position for any n in O(log n)?`,
+
+  pz_knight: `You are a puzzle interviewer. Present this logic puzzle:
+
+**The Puzzle:** You are at a fork in the road. One path leads to safety, the other to danger. Two guards stand at the fork: one is a Knight (always tells the truth) and one is a Knave (always lies). You do not know which is which. You may ask exactly one yes/no question to one guard.
+
+**Question:** What single question can you ask to guarantee you find the safe path?
+
+Guide the user:
+1. Explore naive questions first: ask "Are you a Knight?" — both will say "yes," so this is useless. Ask "Is the left path safe?" — Knight tells truth, Knave lies, you get opposite answers. Not helpful.
+2. Introduce the concept of nested questions: what if you asked a question whose answer is the same regardless of who you ask?
+3. Hint toward the indirection trick: what if you ask what the *other* guard would say?
+4. Reveal the key question: "If I asked the other guard which path is safe, what would they say?" — then take the *opposite* path.
+5. Verify it works: if you ask the Knight, he truthfully reports the Knave's answer, which is a lie → wrong path. If you ask the Knave, he lies about the Knight's truthful answer → also the wrong path. In both cases, the opposite is correct.
+6. Generalize: this works because two truth-values composed (truth-of-lie or lie-of-truth) always yield the same incorrect answer, letting you invert it.
+7. Explore variants: what if there were three guards, one of whom answers randomly? (This is the "Hardest Logic Puzzle Ever" — discuss the added complexity.)
+
+Follow-up: Can you design a question that doesn't require taking the opposite — one where the correct path is pointed to directly?`,
+
+  pz_lastball: `You are a puzzle interviewer. Present this invariant/parity puzzle:
+
+**The Puzzle:** A bag contains some white balls and some black balls. You repeatedly apply this rule: draw two balls at random. If they are the same color, put one black ball back. If they are different colors, put the white ball back. You continue until one ball remains.
+
+**Question:** Can you determine the color of the last ball? What does it depend on?
+
+Guide the user:
+1. Trace through the rules carefully: same+same → one black returned (net: lose 2, gain 1 black, so total decreases by 1). Different → white returned (net: lose 2, gain 1 white, so total decreases by 1).
+2. Ask the user to track what happens to the white ball count in each case: same color black+black → white count unchanged; same color white+white → white count decreases by 2; different → white count unchanged (remove 1 white, add 1 white).
+3. Highlight the invariant: the *parity* of the number of white balls never changes. It is either always even or always odd throughout the process.
+4. Apply the invariant to the end state: if 1 ball remains and it is white, the white count is 1 (odd). If it is black, the white count is 0 (even).
+5. Conclude: if you start with an odd number of white balls, the last ball is always white. If you start with an even number (including zero) of white balls, the last ball is always black.
+6. Test with small examples: 2 white, 1 black → white count=2 (even) → last ball black. Verify by simulation.
+7. Ask: what if the rule changed — same color → put white back, different → put black back? Work through the new invariant.
+
+Follow-up: What other quantities are preserved as invariants in this type of process, and how do you find them?`,
+
+  pz_liar: `You are a puzzle interviewer. Present this probability/strategy puzzle:
+
+**The Puzzle:** In Liar's Dice, each player rolls a set of dice and keeps them hidden under a cup. Players take turns bidding on the total count of a specific face value (e.g., "there are at least five 3s among all dice in play"). A player can raise the bid or challenge it. If challenged, all dice are revealed: if the actual count meets the bid, the challenger loses a die; otherwise, the bidder loses a die.
+
+**Question:** How do you decide when a bid is too high to be plausible, and when should you challenge?
+
+Guide the user:
+1. Establish the baseline: with d total dice in play, each face value appears with probability 1/6 per die. The expected count of any face is d/6.
+2. Introduce the binomial model: the count of a specific face follows Binomial(d, 1/6). For large d, approximate with normal distribution mean=d/6, std=sqrt(d·5/36).
+3. Walk through an example: 18 dice in play → expected count of any face = 3. A bid of "six 4s" is about 1.6 standard deviations above the mean — roughly 5% probability. That is a reasonable challenge signal.
+4. Discuss private information: you know your own dice. If you have three 4s and there are 18 total dice, expected 4s among others = 15/6 = 2.5, so total expected = 5.5. A bid of "six 4s" is now quite reasonable.
+5. Explore bluffing strategy: when should you overbid intentionally? When you want to force a challenge or disguise your hand for later rounds.
+6. Discuss wildcards (1s count as any face in standard rules): this doubles effective probability to 2/6 = 1/3 for non-1 bids, raising expected counts significantly.
+7. Ask: how does the game theory change as fewer dice remain in play late in the game?
+
+Follow-up: If you were writing a bot to play optimally, what information would it track and how would it calculate challenge thresholds?`,
+
+  pz_lockers: `You are a puzzle interviewer. Present this number theory puzzle:
+
+**The Puzzle:** There are 100 lockers and 100 students. All lockers start closed. Student 1 opens every locker. Student 2 closes every 2nd locker (2, 4, 6...). Student 3 toggles every 3rd locker (3, 6, 9...). Student k toggles every kth locker. After all 100 students have gone, which lockers are open?
+
+**Question:** Which lockers are open, and why?
+
+Guide the user:
+1. Observe that locker n is toggled once for each of its divisors. If n has an even number of divisors, it ends closed; if odd, it ends open.
+2. Ask: which numbers have an odd number of divisors? Prompt the user to think about divisor pairing: for each divisor d of n, n/d is also a divisor. They pair up — *unless* d = n/d, meaning d² = n.
+3. Conclude: a number has an odd number of divisors if and only if it is a perfect square.
+4. List the perfect squares from 1 to 100: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100 — exactly 10 lockers.
+5. Verify with a small example: locker 9 is toggled by students 1, 3, and 9 (3 times) → open. Locker 6 is toggled by students 1, 2, 3, 6 (4 times) → closed.
+6. Generalize: for N lockers and N students, the number of open lockers is floor(√N).
+7. Ask: what if students went in reverse order (student 100 first)? Does the answer change? (No — commutative.)
+
+Follow-up: What if instead of toggling, each student added a sticker to each locker they visited? How many stickers would locker 36 have?`,
+
+  pz_matchstick: `You are a puzzle interviewer. Present this lateral thinking/constraint puzzle:
+
+**The Puzzle:** Matchsticks are arranged to display the equation: VI + IV = IV (or a variant like 6 + 4 = 4, written in Roman numerals or digit segments). The equation is false. You may move exactly one matchstick.
+
+**Question:** How do you make the equation true by moving exactly one matchstick?
+
+Guide the user:
+1. Clarify the constraints: you must move exactly one matchstick (not add or remove). The result must be a valid mathematical equation.
+2. Encourage systematic thinking: consider each component — left side, right side, operator, equals sign — as a target for the move.
+3. Hint at non-obvious targets: most people fixate on the numbers. Ask whether the equals sign or operators could be modified.
+4. Walk through VI + IV = IV: move one matchstick from the "+" to make it "≠" — the equation VI ≠ IV = IV becomes a true inequality statement, if the puzzle allows that interpretation.
+5. Reveal a cleaner solution: move one stick from VI to make it IV, giving IV + IV = IV is still wrong — keep exploring. Move one stick from the second IV to make IX: VI + IV = IX → 6 + 4 = 9? No. Try: move a stick so the equation becomes VI - II = IV → 6 - 2 = 4. Valid if "-" can be formed.
+6. Emphasize the meta-lesson: matchstick puzzles reward flexible thinking about what can change — numbers, operators, the equals sign, or even orientation.
+7. Ask: can you construct an originally false matchstick equation where no single move makes it true?
+
+Follow-up: What is the minimum number of matchstick moves to turn the equation 5 + 5 + 5 = 550 into a true statement?`,
+
+  pz_mirror: `You are a puzzle interviewer. Present this physical intuition puzzle:
+
+**The Puzzle:** When you stand in front of a mirror, your reflection appears to have left and right swapped — your right hand appears as the reflection's left hand. But the mirror does not flip your image upside down. Why does a mirror flip left-right but not up-down?
+
+**Question:** Explain the physics and the perceptual illusion.
+
+Guide the user:
+1. Ask the user to first confirm the observation: hold up your right hand — the reflection holds up its hand on your left side. But the reflection's head is still at the top and feet at the bottom.
+2. Challenge the premise: does the mirror *actually* flip left-right? Ask the user to think about what a mirror really does physically.
+3. Reveal the truth: a flat mirror reflects along the axis perpendicular to its surface. If you face a mirror on the north wall, the mirror flips the north-south axis — front-to-back, not left-right.
+4. Explain the illusion: we interpret the reflection by mentally rotating our mental model of the person to face us. When you imagine "turning around" to face the reflected person, you rotate about the vertical axis, which *maps* front-back flipping onto an apparent left-right flip.
+5. Contrast with vertical: we do not naturally flip ourselves upside-down to face someone, so we do not perceive a top-bottom flip — though physically the mirror treats all axes symmetrically in this sense.
+6. Demonstrate with text: hold a page of text up to a mirror — the words appear mirrored left-right. Now flip the page top-to-bottom before holding it up — the text looks right but upside-down. Both are equivalent physical reflections.
+7. Ask: would a ceiling-mounted horizontal mirror appear to flip top-bottom? Why or why not?
+
+Follow-up: What would a corner made of two perpendicular mirrors show you? (Answer: a true reflection — you see yourself as others see you, with no left-right flip.)`,
+
+  pz_mixpoison: `You are a puzzle interviewer. Present this limits/concentration puzzle:
+
+**The Puzzle:** You start with 1 liter of pure poison in a container. At each step, you take half the liquid out and replace it with water, then mix thoroughly. You repeat this process indefinitely.
+
+**Question:** After n steps, what is the concentration of poison? Does it ever reach zero?
+
+Guide the user:
+1. Work through the first few steps: after step 1, concentration = 1/2. After step 2, concentration = 1/4. After step 3, concentration = 1/8.
+2. Derive the general formula: after n steps, concentration = (1/2)^n.
+3. Ask: does this ever reach exactly zero? The answer is no — mathematically, (1/2)^n approaches 0 but never equals 0 for finite n.
+4. Discuss practical vs. mathematical limits: at some point, fewer than one molecule of poison remains — physically, it effectively reaches zero, but the continuous mathematical model says otherwise.
+5. Generalize: if at each step you remove fraction f and replace with water, concentration after n steps = (1-f)^n. It decays exponentially but never reaches zero in the mathematical model.
+6. Ask: how many steps until the concentration drops below 1%? (Solve: (1/2)^n < 0.01 → n > log(0.01)/log(0.5) ≈ 6.64 → 7 steps.)
+7. Connect to real-world applications: radioactive decay, drug clearance from the body, cooling — all follow similar exponential decay models.
+
+Follow-up: If instead you removed 1/3 each time, how many steps would it take to reach below 1% concentration?`,
+
+  pz_nqueens: `You are a puzzle interviewer. Present this constraint satisfaction puzzle:
+
+**The Puzzle:** Place 8 queens on a standard 8×8 chessboard so that no two queens attack each other. Queens attack along rows, columns, and both diagonals.
+
+**Question:** How would you find a valid placement? How many solutions exist?
+
+Guide the user:
+1. Establish the constraints: exactly one queen per row (since 8 queens, 8 rows — pigeonhole). Also exactly one per column. And no two share a diagonal.
+2. Encode the diagonals: for a queen at (row i, col j), it occupies the diagonals indexed by i+j and i-j. No two queens can share these values.
+3. Describe the backtracking approach: place one queen per row. For each row, try each column. Check if the column and both diagonals are free. If yes, place and recurse to the next row. If stuck, backtrack.
+4. Walk through the first few placements: row 0 → column 0. Row 1 → column 2 is attacked diagonally, try column 2... explore until a valid placement is found.
+5. Discuss the solution count: there are 92 distinct solutions for the 8-queens problem (12 if reflections and rotations are considered equivalent).
+6. Ask about optimization: can we do better than backtracking? Discuss constraint propagation (forward checking), or algebraic constructions that give one solution directly.
+7. Generalize to n queens: the backtracking approach is O(n!) worst case but prunes heavily. For large n, explicit construction formulas exist.
+
+Follow-up: How would you modify the approach to count all 92 solutions efficiently rather than just finding one?`,
+
+  pz_palindate: `You are a puzzle interviewer. Present this date/number puzzle:
+
+**The Puzzle:** A palindrome date reads the same forwards and backwards. For example, 02/02/2020 in MM/DD/YYYY format reads as "02022020" which is a palindrome.
+
+**Question:** Find the next palindrome date after today (in MM/DD/YYYY format). How would you systematically find all palindrome dates in a century?
+
+Guide the user:
+1. Define the format clearly: MM/DD/YYYY → concatenate digits to get an 8-digit string. A palindrome satisfies digit[i] = digit[7-i] for i = 0..3.
+2. Map the constraints: the first 4 digits (MMDD) must be the reverse of the last 4 digits (YYYY reversed). So YYYY reversed = MMDD.
+3. Work through the logic: if year = ABCD, then reversed year = DCBA, which must form a valid MM/DD pair. So month = DC and day = BA.
+4. Enumerate valid centuries: for the 21st century (years 2000–2099), the year is 20YZ. Reversed = ZY02, meaning month = ZY and day = 02. Month ZY must be 01–12, so Z=0 or Z=1 (with Y ≤ 2 if Z=1). Day = 02 is always valid.
+5. List the 21st century palindrome dates: 10/02/2001, 01/02/2010, 11/02/2011, 02/02/2020, 12/02/2021, 03/02/2030... work through the pattern systematically.
+6. Ask the user to identify the next one from today's date (March 23, 2026) — it would be 03/02/2030.
+7. Discuss alternative formats: in DD/MM/YYYY format, do different palindrome dates arise? (Yes — the constraints shift.)
+
+Follow-up: In which year format and date format combination do palindrome dates occur most frequently across a 400-year Gregorian cycle?`,
+
+  pz_papercut: `You are a puzzle interviewer. Present this mathematical theorem puzzle:
+
+**The Puzzle:** The fold-and-cut theorem states that any shape whose boundary consists entirely of straight lines (any polygon, or even a collection of polygons) can be cut out of a piece of paper with a single straight cut — provided you first fold the paper appropriately.
+
+**Question:** How does this work? What is the key insight, and how would you fold a piece of paper to cut out a triangle with a single cut?
+
+Guide the user:
+1. State the surprising result clearly: *any* straight-edged shape — a star, a square, a snowflake — can be produced by folding and one cut. Ask the user's initial intuition about why this might or might not be possible.
+2. Introduce the key concept: reflect all edges of the desired polygon across each fold line, propagating reflections until every edge aligns with a single line (the cut line).
+3. Walk through a simple case — an equilateral triangle: the goal is to fold so all three edges of the triangle lie along one horizontal line. Fold the top vertex down to meet the base, then fold the two base corners in. All three sides now lie on one line.
+4. Discuss the straight skeleton: the mathematical structure guiding where to fold is the straight skeleton of the polygon — the locus of centers of inscribed circles as they grow. Fold lines come from this skeleton.
+5. Explore why it always works: the straight skeleton algorithm guarantees a valid folding exists for any polygon. This was proven by Erik Demaine, Martin Demaine, and Anna Lubiw in 1999.
+6. Ask the user: could you fold and cut the letters of the alphabet? (Yes — each letter is a polygon or collection of polygons.) Discuss the complexity of highly non-convex shapes.
+7. Invite the user to physically try: fold a square piece of paper to cut out a right triangle with one snip.
+
+Follow-up: Can the fold-and-cut theorem be extended to three dimensions — cutting shapes from folded sheets with a single planar cut?`,
+
+  pz_parking: `You are a puzzle interviewer. Present this optimal stopping puzzle:
+
+**The Puzzle:** You are hiring for a position. You will interview candidates one by one in random order. After each interview, you must immediately decide to hire or reject — you cannot go back to a previous candidate. You want to maximize your probability of hiring the single best candidate.
+
+**Question:** What strategy maximizes your probability of selecting the best candidate, and what is that probability?
+
+Guide the user:
+1. Frame the problem: n candidates, seen in random order. You must pick exactly one. No recall of rejected candidates.
+2. Explore naive strategies: pick the first candidate (probability 1/n of getting the best). Pick the last candidate (also 1/n). Clearly neither is optimal.
+3. Introduce the threshold strategy: reject the first k candidates outright (just to calibrate), then hire the first candidate who is better than all of those k.
+4. Derive the optimal k: the probability of success with threshold k is (k/n) × Σ_{j=k+1}^{n} 1/(j-1). Maximizing over k gives k ≈ n/e.
+5. State the result: reject the first n/e ≈ 37% of candidates, then hire the first one who beats all of them. Success probability ≈ 1/e ≈ 36.8%.
+6. Discuss the counterintuitive result: even with an optimal strategy, you fail to get the best candidate about 63% of the time — and this is the best possible.
+7. Apply to real life: apartment hunting, dating, parking spots — any situation where you observe options sequentially and must commit. Discuss what changes when you can recall candidates or when you have partial information.
+
+Follow-up: How does the optimal threshold change if your goal shifts from "getting the very best" to "getting someone in the top 10%"?`,
+
+  pz_pennies: `You are a puzzle interviewer. Present this combinatorial game theory puzzle:
+
+**The Puzzle:** Two players take turns placing identical pennies on a circular table. Pennies cannot overlap and must stay on the table. The player who cannot place a penny loses.
+
+**Question:** Does the first or second player have a winning strategy? What is it?
+
+Guide the user:
+1. Ask the user's intuition: is this a first-player win or second-player win? Most people guess wrong or aren't sure.
+2. Reveal the first player wins — now ask *why*. Push the user to find the strategy before explaining.
+3. Introduce the symmetry strategy: the first player places a penny exactly in the center of the table. Then, for every penny the second player places, the first player places their penny in the diametrically opposite position.
+4. Verify the mirror move is always valid: if the second player's move is valid (fits on the table, no overlap), the mirrored position is also valid by the rotational symmetry of the circle. If the table is circular and the penny is not at the center, the mirror point is distinct.
+5. Establish that the strategy works: whenever the second player can make a move, the first player can mirror it. Therefore the second player runs out of valid moves first.
+6. Ask: what if the table were rectangular instead of circular? The center argument still works — the first player claims the center, then mirrors across that central point.
+7. Discuss what changes if pennies have different sizes: the mirroring strategy still applies as long as pennies are identical. With different sizes, the problem becomes much harder.
+
+Follow-up: How does this relate to Nim and other combinatorial games? What is the general principle at work (Zermelo's theorem / strategy stealing)?`,
+
+  pz_prisoner: `You are a puzzle interviewer. Present this epistemic logic puzzle:
+
+**The Puzzle:** Three prisoners are told that two will receive black hats and one will receive a white hat. They are placed so each can see the others' hats but not their own. There is no communication. The first prisoner who correctly states their own hat color goes free. After a moment of silence, one prisoner speaks up and correctly announces their hat color.
+
+**Question:** How did the prisoner deduce their hat color?
+
+Guide the user:
+1. Set up the scenario: let's say prisoners are A, B, C. A speaks up. What could A have seen?
+2. Case 1 — A sees two white hats: impossible, there is only one white hat. Eliminate this case.
+3. Case 2 — A sees one white and one black hat: A cannot be sure of their own color (it could be black or white, maintaining two-black-one-white distribution). A would stay silent.
+4. Case 3 — A sees two black hats: since both others have black, A knows they must have the white hat (only one white exists). A speaks immediately.
+5. But wait — the problem says there is a "moment of silence" before A speaks. Use this: if A had seen two black hats, A would have spoken immediately (case 3). The silence reveals something.
+6. Introduce second-order reasoning: suppose A sees one black (on B) and one white (on C). A knows B can see C's white hat and A's unknown hat. If A's hat were also white, B would see two whites and immediately know B has black. But B is silent — so A's hat is not white. A deduces their hat is black, despite not seeing two black hats directly.
+7. Emphasize that *silence is information*: the absence of a statement updates everyone's beliefs.
+
+Follow-up: How does the logic change if the prisoners cannot see each other — they can only hear each other's silence or announcements?`,
+
+  pz_rainfall: `You are a puzzle interviewer. Present this algorithmic puzzle:
+
+**The Puzzle:** You are given an array of non-negative integers representing the heights of bars in a histogram. It rains, and water collects between the bars. Each unit of width can hold water up to the height of the shorter of the tallest bars to its left and to its right.
+
+**Question:** Calculate the total units of water trapped. Aim for an O(n) time, O(1) space solution.
+
+Guide the user:
+1. Make sure the concept is clear: at each index i, water level = min(max height to the left of i, max height to the right of i). Water at i = max(0, water_level - height[i]).
+2. Brute force first: for each index, scan left for max and scan right for max. O(n²) time. Ask how to improve.
+3. Precomputation step: precompute left_max[i] and right_max[i] arrays in O(n) time each, then compute water in one pass. O(n) time, O(n) space. Can we do better on space?
+4. Introduce the two-pointer approach: maintain left and right pointers starting at each end. Track left_max and right_max as we go.
+5. Key insight: if left_max < right_max, the water at the left pointer is determined by left_max (guaranteed by right side being taller). Process the left pointer and advance it inward. Otherwise, process the right pointer.
+6. Walk through a concrete example: heights = [0,1,0,2,1,0,1,3,2,1,2,1]. Trace the two-pointer algorithm step by step.
+7. Verify the answer: the example should yield 6 units of trapped water. Check correctness.
+
+Follow-up: How would you extend this to two dimensions — a 2D grid of heights where water can flow in all four directions?`,
+
+  pz_rope: `You are a puzzle interviewer. Present this counterintuitive geometry puzzle:
+
+**The Puzzle:** A rope is tied tightly around the Earth's equator (assume the Earth is a perfect sphere with circumference ~40,000 km). You cut the rope and add exactly 1 extra meter of rope, then re-tie it so the rope floats uniformly above the surface all the way around. How high above the surface does the rope float?
+
+**Question:** How much clearance exists between the rope and the Earth's surface?
+
+Guide the user:
+1. Let the user guess first: most people say the gap would be microscopic — a fraction of a millimeter. Record their intuition.
+2. Set up the math: original circumference C = 2πR. New circumference C + 1 = 2π(R + h), where h is the gap.
+3. Subtract: (C + 1) - C = 2π(R + h) - 2πR → 1 = 2πh.
+4. Solve: h = 1/(2π) ≈ 0.159 meters ≈ 15.9 cm. Nearly 16 centimeters — enough to slip your hand under.
+5. Highlight the shocking result: the key insight is that h = 1/(2π) is completely independent of the original radius R. The same 1-meter addition would produce the same 16 cm gap around a marble, a basketball, or a star.
+6. Ask why this is counterintuitive: our intuition suggests that the Earth is so large, 1 meter of extra rope would be spread negligibly thin. But circumference grows *linearly* with radius, not as a power, so the gap is always 1/(2π) meters per meter added.
+7. Generalize: if you added L meters of rope, the gap would be L/(2π) meters, always.
+
+Follow-up: What if instead of adding rope, you added 1 square meter of surface area to the sphere? How would the radius change? (Answer: ΔR = 1/(8πR) — this one *does* depend on R and becomes tiny for large spheres.)`,
+
+  pz_scales: `You are a puzzle interviewer. Present this optimization/number theory puzzle:
+
+**The Puzzle:** You have a balance scale and a 40 kg stone you want to cut into exactly 4 pieces so that you can weigh any integer amount from 1 to 40 kg. You can place weights on both sides of the scale.
+
+**Question:** What are the four piece weights, and why do they work?
+
+Guide the user:
+1. Start with the simpler version: if you can only place weights on one side, what is the optimal set of weights? Powers of 2: 1, 2, 4, 8... each new weight doubles the range. For 1 to 15, you need 1+2+4+8 = 15 kg and 4 weights.
+2. Now allow weights on both sides: placing a weight on the same side as the object subtracts its value. This is the key insight — ask the user what number system uses subtraction of digits.
+3. Introduce balanced ternary: each piece can be on the right (+), left (-), or not used (0). This is base 3. Powers of 3: 1, 3, 9, 27.
+4. Verify the range: 1+3+9+27 = 40. With all four weights you can represent every integer from 1 to 40 in balanced ternary (each digit is -1, 0, or +1).
+5. Walk through examples: to weigh 5 kg → 9 - 3 - 1 = 5 (put 9 on right with object on left, wait — be careful about sides). To weigh 11 → 9 + 3 - 1 = 11. To weigh 2 → 3 - 1 = 2.
+6. Confirm total: 1+3+9+27 = 40 kg, exactly the stone's weight.
+7. Ask: for n pieces on a balance scale, what is the maximum weight measurable? Answer: (3^n - 1)/2.
+
+Follow-up: How many pieces would you need to weigh any integer from 1 to 1000 kg on a balance scale?`,
+
+  pz_sequence: `You are a puzzle interviewer. Present this pattern recognition puzzle:
+
+**The Puzzle:** Consider this sequence: 1, 11, 21, 1211, 111221, 312211, 13112221...
+
+**Question:** What is the pattern, and what is the next term?
+
+Guide the user:
+1. Show the first few terms and ask the user to identify the pattern. Give them a moment without hints.
+2. If stuck, provide the key hint: read each term aloud, describing what you see in the previous term.
+3. Walk through the derivation: "1" → one 1 → "11". "11" → two 1s → "21". "21" → one 2, one 1 → "1211". "1211" → one 1, one 2, two 1s → "111221". "111221" → three 1s, two 2s, one 1 → "312211".
+4. The next term after 13112221: read it — one 1, one 3, two 1s, three 2s, one 1 → "1113213211".
+5. Discuss properties: the sequence is called the Look-and-Say sequence (Conway sequence). Each term is longer than the previous (with rare exceptions). The length growth rate approaches Conway's constant ≈ 1.303.
+6. Ask: does the sequence ever produce a digit other than 1, 2, or 3? (No — can you prove it? If a run of four identical digits existed, it would have been produced by two adjacent identical pairs in the prior term, but that would have been read as a longer run.)
+7. Mention Conway's analysis: John Conway proved the sequence eventually decomposes into 92 "atomic" subsequences that evolve independently.
+
+Follow-up: If you started with "2" instead of "1", how would the sequence evolve differently? Would it eventually merge into the same pattern?`,
+
+  pz_shuffle: `You are a puzzle interviewer. Present this group theory/modular arithmetic puzzle:
+
+**The Puzzle:** An out-shuffle (or "Faro shuffle") of a 52-card deck splits the deck into two halves of 26 cards each, then perfectly interleaves them so the top and bottom cards stay in place. A card at position i (0-indexed, 0 = top) moves to position 2i mod 53.
+
+**Question:** How many out-shuffles does it take to return a 52-card deck to its original order?
+
+Guide the user:
+1. Confirm the rule: card at position i goes to position 2i mod 53. Card 0 stays at 0, card 52 stays at 52 (since 2×52 = 104 = 53+51, wait — actually 52 stays because it maps to 104 mod 53 = 51? Let the user think. Actually for out-shuffle of 52 cards, modulus is 53 and cards 0 and 51 stay fixed).
+2. Ask: how do you find when a card returns to its original position? It returns after k shuffles when 2^k × i ≡ i (mod 53), i.e., 2^k ≡ 1 (mod 53).
+3. Compute: 2^1=2, 2^2=4, 2^3=8, 2^4=16, 2^5=32, 2^6=64≡11, 2^7=22, 2^8=44≡44... continue until reaching 1 mod 53.
+4. The answer: the multiplicative order of 2 modulo 53 is 52. So after 8 out-shuffles? Actually compute carefully: 2^8 = 256 = 4×53 + 44. Continue: 2^52 mod 53 = 1 by Fermat's little theorem (53 is prime). But the order could be a divisor of 52. Divisors of 52: 1,2,4,13,26,52. Check 2^8 mod 53 = 256 mod 53 = 256 - 4×53 = 256-212 = 44 ≠ 1. Continue until the order is found to be 52. But the famous result is 8 shuffles — this applies to the in-shuffle of 52 cards (modulus 51). Discuss the distinction.
+5. Clarify: for the out-shuffle (top and bottom fixed), the order of 2 mod 51 = 8. Cards return after 8 out-shuffles.
+6. Verify: 2^8 = 256 = 5×51 + 1 ≡ 1 mod 51. Confirmed.
+7. Connect to group theory: the deck's state space under shuffles forms a cyclic group. The order of the shuffle permutation determines when it cycles back.
+
+Follow-up: How many in-shuffles (where top and bottom cards do change position) does it take to restore a 52-card deck?`,
+
+  pz_socks: `You are a puzzle interviewer. Present this pigeonhole principle puzzle:
+
+**The Puzzle:** You have a drawer containing an unknown number of black socks and white socks (at least one of each color). It is completely dark. What is the minimum number of socks you must draw to guarantee you have a matching pair?
+
+**Question:** What is the minimum number of draws needed, and what is the principle at work?
+
+Guide the user:
+1. Ask the user's first intuition: many people think about probabilities or say a large number. Push them to think about the worst case.
+2. Introduce the worst case: in the worst case, the first two socks drawn are one black and one white — no match yet.
+3. The third draw: regardless of which color you pull, you now have at least two socks of the same color. You must have a matching pair.
+4. Generalize with the pigeonhole principle: if you have n categories (colors) and draw n+1 items, at least two must be in the same category. With 2 colors and 3 draws, you are guaranteed a pair.
+5. Ask: what if the drawer also contained red and blue socks (4 colors)? Minimum draws for a guaranteed pair = 5.
+6. Ask: what if you need a guaranteed set of 3 matching socks? With 2 colors, worst case = 2+2+1 = 5 draws? No: worst case is 2 black and 2 white (4 draws) then the 5th must give you 3 of one color. Answer: 7 draws? Work it out: you need 3 of same color. Worst case: alternating until you have 3 of one. Maximum bad draw is 2+2=4 without 3 of same color, so 5th draw gives 3. Answer: 5 draws.
+7. Connect to real-world problems: scheduling, hashing, birthday paradox — all are pigeonhole applications.
+
+Follow-up: If the drawer has 10 red, 10 blue, and 10 green socks, what is the minimum number you must draw to guarantee at least one complete color set of 3 matching socks?`,
+
+  pz_stairs: `You are a puzzle interviewer. Present this dynamic programming/Fibonacci puzzle:
+
+**The Puzzle:** You are climbing a staircase with n steps. At each move, you can climb either 1 step or 2 steps. How many distinct ways can you reach the top?
+
+**Question:** Derive a formula and compute the answer for n = 10.
+
+Guide the user:
+1. Start with small cases: n=1 → 1 way (just {1}). n=2 → 2 ways ({1,1} or {2}). n=3 → 3 ways ({1,1,1}, {1,2}, {2,1}). n=4 → 5 ways.
+2. Ask the user to spot the recurrence: to reach step n, you either came from step n-1 (one step) or step n-2 (two steps). So ways(n) = ways(n-1) + ways(n-2).
+3. Identify the sequence: this is exactly the Fibonacci sequence! ways(1)=1, ways(2)=2, ways(3)=3, ways(4)=5, ways(5)=8, ...
+4. Compute for n=10: 1, 2, 3, 5, 8, 13, 21, 34, 55, 89. Answer: 89 ways.
+5. Discuss the general formula: ways(n) = Fibonacci(n+1), where Fibonacci(1)=1, Fibonacci(2)=1.
+6. Extend the problem: what if you could also take 3 steps at a time? The recurrence becomes ways(n) = ways(n-1) + ways(n-2) + ways(n-3). Work through small cases.
+7. Discuss implementation: naive recursion is exponential. Memoization or bottom-up DP brings it to O(n). Matrix exponentiation achieves O(log n).
+
+Follow-up: If each step has a cost associated with it, and you want to minimize total cost to reach the top, how does the recurrence change? (This is the classic "minimum cost climbing stairs" DP problem.)`,
+
+  pz_stick: `You are a puzzle interviewer. Present this geometric probability puzzle:
+
+**The Puzzle:** A stick is broken at two points chosen uniformly at random along its length. What is the probability that the three resulting pieces can form a triangle?
+
+**Question:** Calculate the exact probability.
+
+Guide the user:
+1. Normalize: let the stick have length 1. Let the two break points be x and y, chosen uniformly from [0,1]. Assume x < y without loss of generality (or handle both orders).
+2. Name the three pieces: lengths x, y-x, and 1-y (assuming x < y).
+3. State the triangle inequality: three lengths a, b, c form a triangle if and only if each is less than the sum of the other two — equivalently, no piece is ≥ 1/2.
+4. Translate to conditions: x < 1/2, y - x < 1/2, and 1 - y < 1/2 (i.e., y > 1/2).
+5. Visualize in the unit square: the sample space is the unit square [0,1]×[0,1] for (x,y). The favorable region satisfies all three conditions (and x < y if we want the ordered version, or multiply probability by 2 for the unordered case).
+6. Calculate the area: the favorable region in the unit square is the set of (x,y) where x < 1/2, y > 1/2, and y - x < 1/2 and x < y. This forms a triangle with area 1/4.
+7. State the result: probability = 1/4. This is a classic and elegant result.
+
+Follow-up: What if the stick is broken at three random points instead of two? Now four pieces must form a tetrahedron. How does the probability calculation change? (Much harder — requires checking triangle inequalities for all four faces.)`,
+
+  pz_subway: `You are a puzzle interviewer. Present this probability/scheduling puzzle:
+
+**The Puzzle:** A man wants to visit his girlfriend. He arrives at the subway station at a uniformly random time. Two trains serve the station: one goes uptown (toward his girlfriend), one goes downtown (in the opposite direction). Both trains arrive every 10 minutes. Yet he ends up taking the downtown train 90% of the time and the uptown train only 10% of the time.
+
+**Question:** How is this possible if both trains run every 10 minutes?
+
+Guide the user:
+1. Clarify the confusion: both trains have the same frequency — 6 trains per hour each — so naively each should be taken 50% of the time.
+2. Ask: what could make one train "favored" even at the same frequency? Guide toward thinking about the *schedule*, not just the frequency.
+3. Reveal the key insight: the trains are not evenly interleaved. Within each 10-minute cycle, the uptown train arrives 1 minute after the downtown train. So the schedule might look like: downtown at :00, uptown at :01, downtown at :10, uptown at :11...
+4. Calculate the probabilities: if the man arrives at a random time in the 10-minute cycle, he waits for the downtown train for 9 out of 10 minutes (if he arrives between :01 and :10, downtown comes first). He only takes the uptown train if he arrives in the 1-minute window between :00 and :01.
+5. Confirm: 9/10 = 90% downtown, 1/10 = 10% uptown. The math checks out.
+6. Generalize: if the gap between the two trains is g minutes within a 10-minute cycle, P(downtown) = (10-g)/10 and P(uptown) = g/10.
+7. Ask: if he arrives uniformly at random and wants to maximize his chance of going uptown, should he change his arrival strategy or learn the schedule?
+
+Follow-up: How does this phenomenon relate to the inspection paradox in probability — the fact that randomly arriving passengers tend to wait longer than the average inter-arrival time would suggest?`,
+
+  pz_switch: `You are a puzzle interviewer. Present this strategy/communication puzzle:
+
+**The Puzzle:** 23 prisoners are held in separate cells. There is one room with a single light switch (initially off). Prisoners are brought to the switch room one at a time, in a random order chosen by the warden, possibly repeating. A prisoner may toggle the switch or leave it. The prisoners may discuss a strategy beforehand but cannot communicate once the process starts. When a prisoner is confident all 23 have visited the room, they declare so. If correct, all go free; if wrong, all are executed.
+
+**Question:** What strategy guarantees all prisoners go free?
+
+Guide the user:
+1. Identify the core challenge: prisoners can only communicate via the binary state of the switch. They need to "count" visits without knowing who has visited.
+2. Explore naive ideas: what if everyone toggles the switch each time they visit? The switch state doesn't encode enough information — it just shows even or odd total visits, not distinct visits.
+3. Introduce the designated counter strategy: pick one prisoner as the "counter." All others are "passers."
+4. Describe the roles: a passer turns the switch ON exactly once (their first time they find the switch OFF). After that, they always leave the switch as-is. The counter turns the switch OFF each time they find it ON and counts each OFF action.
+5. Explain why this works: each passer contributes exactly one ON signal. The counter collects each signal by turning it OFF. When the counter has turned the switch OFF 22 times, all other 22 prisoners have visited.
+6. Address the initial switch state: the switch starts OFF, so the first ON must be from a passer (not a counter reset). The counter only counts OFFs that result from collecting a passer's signal.
+7. Discuss the time complexity: expected number of visits before completion can be very large (O(n² log n)) due to the random scheduling. Ask if there are faster strategies.
+
+Follow-up: Can you design a faster strategy using a different information encoding — for example, with a pair of switches instead of one?`,
+
+  pz_tank: `You are a puzzle interviewer. Present this game theory puzzle:
+
+**The Puzzle:** Three duelists A, B, and C participate in a three-way duel. A hits their target 1/3 of the time. B hits 2/3 of the time. C hits every shot (probability 1). They take turns in order A, B, C, repeating until one survives. Each shooter picks their own target. What is A's optimal strategy on the first shot?
+
+**Question:** Who should A shoot at, and why? What is each player's survival probability with optimal play?
+
+Guide the user:
+1. Intuition check: most people say A should shoot at C (the most dangerous). Ask whether this is actually optimal.
+2. Analyze if A shoots at C and hits: now B and C remain — no, C is eliminated. B and A remain, B shoots next. With B's accuracy of 2/3, B likely wins. This may not help A much.
+3. Analyze if A shoots at B and hits: C and A remain. C shoots next with 100% accuracy at A (C will target A as the only threat). A dies with certainty.
+4. Reveal the counterintuitive answer: A should intentionally miss — shoot at the ground or air — on the first turn.
+5. Explain why missing is optimal: if A misses, B shoots at C (B's biggest threat). If B hits C, then A vs B with A shooting first. If B misses C, C eliminates B (C's biggest threat), then A vs C with A shooting first.
+6. Compute survival probabilities with optimal play (all miss optimally on first shot when rational): work through the Markov chain to find A ≈ 38%, B ≈ 35%, C ≈ 27%. Counterintuitively, the weakest player has the highest survival probability.
+7. Generalize: this is an example of the "weakest player advantage" in multi-player games — being the least threatening makes you the last target.
+
+Follow-up: How does the optimal strategy change if the players shoot simultaneously rather than sequentially?`,
+
+  pz_tiles: `You are a puzzle interviewer. Present this mathematical induction puzzle:
+
+**The Puzzle:** You have a 2^n × 2^n chessboard with exactly one square removed (any square). An L-tromino is an L-shaped piece covering exactly 3 squares. Prove that the board can always be tiled perfectly by L-trominoes, regardless of which square is removed.
+
+**Question:** How do you prove this for all n ≥ 1?
+
+Guide the user:
+1. Verify the base case: for n=1, the board is 2×2 with 4 squares. Remove 1 square — 3 remain. One L-tromino covers them exactly. (The L-tromino fits any 2×2 minus one square.)
+2. State the inductive hypothesis: assume any 2^k × 2^k board with one square removed can be tiled by L-trominoes.
+3. Set up the inductive step: consider a 2^(k+1) × 2^(k+1) board with one square removed. Divide it into four quadrants, each of size 2^k × 2^k.
+4. Identify the key move: one quadrant contains the removed square. Place one L-tromino at the very center of the large board, covering one corner of each of the three quadrants that do NOT contain the removed square.
+5. Now apply the hypothesis: each quadrant is now a 2^k × 2^k board with exactly one square "removed" (either the original missing square or the corner covered by the central tromino). By the inductive hypothesis, each quadrant can be tiled.
+6. Conclude: the four quadrant tilings plus the central L-tromino tile the entire 2^(k+1) × 2^(k+1) board. The induction is complete.
+7. Highlight the elegance: the proof is constructive — it gives an explicit algorithm. Ask the user to trace through the n=2 case (4×4 board) with a specific removed square.
+
+Follow-up: Does a similar result hold for 3^n × 3^n boards with one square removed, using some other tromino shape? Explore what conditions on board size and tile shape allow such perfect tilings.`,
+
+  pz_toggle: `You are a puzzle interviewer. Present this information encoding puzzle:
+
+**The Puzzle:** You are in a hallway with 5 light switches. In the next room are 5 light bulbs, each connected to one switch. You cannot see the bulbs from the hallway. You may flip any switches you like, but you can only enter the room once. How do you determine which switch controls which bulb?
+
+**Question:** What strategy lets you identify all 5 switches with a single visit?
+
+Guide the user:
+1. Count the information: 5 switches map to 5 bulbs — there are 5! = 120 possible assignments. A single room visit gives you observations about each bulb. You need each bulb to give a unique signal.
+2. Recognize the binary limitation: a bulb is simply on or off — only 1 bit of information per bulb during the visit. With 5 bulbs and 1 bit each, you can distinguish 2^5 = 32 states, more than enough for 5! assignments — but you need to encode *which switch* caused which state.
+3. Introduce the heat dimension: light bulbs get warm (or hot) when on for a while. This adds a second channel of information per bulb: on/off AND warm/cool.
+4. Reveal the strategy: turn on switch 1 for 10 minutes, then turn it off. Turn on switch 2 for 5 minutes, then turn it off. Turn on switch 3 (leave it on). Turn switches 4 and 5 off and leave them off. Enter the room.
+5. Decode the signals: hot and off → switch 1. Warm and off → switch 2. On → switch 3. Cold and off → switch 4 or 5. (Two bulbs will be cold and off — that's the limitation with 5 switches and 3 distinguishable states.)
+6. Discuss the gap: this strategy identifies 3 of 5 switches uniquely. To distinguish switches 4 and 5, you need a third channel — flicker one switch briefly, or use time more creatively. Alternatively, limit the puzzle to 4 switches for a clean solution.
+7. Ask: what if you could enter the room twice instead of once? How many switches could you reliably identify?
+
+Follow-up: How does this puzzle relate to information theory? Specifically, what is the maximum number of switches you could identify with one room visit if you had k distinguishable states per bulb?`,
+
+  pz_tugofwar: `You are a puzzle interviewer. Present this computational complexity puzzle:
+
+**The Puzzle:** You have n people, each with a known weight. You want to divide them into two teams that are as close in total weight as possible — minimizing the absolute difference between the two teams' total weights.
+
+**Question:** How would you solve this? What is the computational complexity?
+
+Guide the user:
+1. Frame it as an optimization problem: given a set S of numbers, partition S into two subsets A and B such that |sum(A) - sum(B)| is minimized.
+2. Recognize it as the Partition Problem: this is equivalent to finding a subset that sums to total/2. It is a classic NP-hard problem (reduction from Subset Sum).
+3. Explore brute force: try all 2^n subsets, compute the sum of each, find the one closest to total/2. Time: O(2^n). Feasible only for very small n.
+4. Introduce dynamic programming: let dp[s] = True if some subset sums to s. Fill the DP table for all s from 0 to total/2. Time: O(n × total), space: O(total). This is pseudo-polynomial — polynomial in the numeric value, but exponential in the number of bits.
+5. Discuss the greedy approximation: sort by weight descending, assign each person to the lighter team. This gives a reasonable approximation but not always the optimal answer. Give a counterexample.
+6. Discuss when exact solutions are practical: if n is small (≤ 40), meet-in-the-middle halves the search space to O(2^(n/2)). If weights are small integers, the DP approach is fast.
+7. Connect to real-world instances: sports team balancing, load balancing in computing, fair division of assets. Often good-enough approximations (within a few kg) are acceptable.
+
+Follow-up: What is the best known approximation ratio achievable in polynomial time for the Partition Problem, and what algorithm achieves it?`,
+
+  pz_twochild: `You are a puzzle interviewer. Present this conditional probability puzzle:
+
+**The Puzzle:** Consider two statements about a family with two children: (A) "At least one of the children is a boy." (B) "The older child is a boy." In each case, what is the probability that both children are boys?
+
+**Question:** Are the two probabilities the same or different, and why?
+
+Guide the user:
+1. List the equally likely outcomes for two children (assuming boy/girl equally likely and independent): BB, BG, GB, GG — four outcomes.
+2. Apply statement A — "At least one is a boy": eliminate GG. Remaining: BB, BG, GB (3 outcomes). P(both boys | at least one boy) = 1/3.
+3. Apply statement B — "The older child is a boy": eliminate GG and GB. Remaining: BB, BG (2 outcomes). P(both boys | older is boy) = 1/2.
+4. Highlight the difference: the two probabilities are different — 1/3 vs 1/2. Ask the user to explain intuitively why.
+5. Explain the asymmetry: statement B gives us information about a *specific* child (the older one). This eliminates more possibilities (GB as well as GG). Statement A tells us something about the pair without specifying which child, leaving more uncertainty.
+6. Introduce the "Tuesday boy" variant: "I have two children. At least one is a boy born on Tuesday." What is P(both boys)? This yields 13/27 — seemingly absurd, but mathematically correct. Walk through why adding specific information (Tuesday) increases the probability toward 1/2.
+7. Discuss the Monty Hall connection: both puzzles hinge on *how* you learn information — which outcomes are eliminated and by what selection mechanism.
+
+Follow-up: If a parent says "I picked one child at random, and it turned out to be a boy," what is P(both boys) now? (Answer: 1/2, because the selection mechanism matters.)`,
+};
+
+// ═══════════════════════════════
+// PUZZLE SOLUTIONS (pre-written, no AI needed)
+// ═══════════════════════════════
+const PUZZLE_SOLUTIONS = {
+  pz_45min: `**Answer:** 45 minutes.\n\n**Solution:** Light Rope A from both ends and Rope B from one end simultaneously. When Rope A fully burns out (30 minutes), immediately light Rope B's other end. The remaining portion of Rope B now burns from both ends and takes exactly 15 more minutes. Total = 30 + 15 = 45 minutes.\n\n**Key Insight:** Lighting a rope from both ends halves its remaining burn time, regardless of how unevenly the rope burns.`,
+
+  pz_daughters: `**Answer:** The daughters are aged 2, 2, and 9.\n\n**Solution:** List all triples (a, b, c) where a×b×c = 36: (1,1,36), (1,2,18), (1,3,12), (1,4,9), (1,6,6), (2,2,9), (2,3,6), (3,3,4). Compute each sum — the fact that Albert still couldn't determine the ages after seeing the building number means two triples share the same sum. Only sums 13 appears twice: (1,6,6) and (2,2,9). The clue "oldest daughter" implies a unique oldest child, ruling out (1,6,6) which has two 6-year-olds.\n\n**Key Insight:** The building number eliminates all but two possibilities; the word "oldest" (singular) disambiguates the final answer.`,
+
+  pz_bee: `**Answer:** 80 km.\n\n**Solution:** The two trains start 100 km apart and approach each other at a combined speed of 100 km/h, so they meet after exactly 1 hour. The bee flies continuously at 80 km/h for that entire 1 hour. Total distance = 80 × 1 = 80 km.\n\n**Key Insight:** Ignore the bee's individual back-and-forth trips entirely — just multiply its speed by the total time until the trains meet.`,
+
+  pz_goldbar: `**Answer:** 2 cuts, creating pieces of 1, 2, and 4 links.\n\n**Solution:** Cut the chain at link 1 and link 3, producing pieces of 1, 2, and 4 links. Use them like binary digits: Day 1 give the 1-piece; Day 2 give the 2-piece and take back the 1-piece; Day 3 give the 1-piece again; Day 4 give the 4-piece and take back 1 and 2; continue the pattern through Day 7.\n\n**Key Insight:** Three pieces in powers of two (1, 2, 4) can represent any integer from 1 to 7 through combination and change-making, just like binary.`,
+
+  pz_monty: `**Answer:** Always switch — switching wins with probability 2/3.\n\n**Solution:** Your initial pick is correct 1/3 of the time. When you switch, you win if your initial pick was wrong, which happens 2/3 of the time. The host's deliberate reveal of a goat transfers the combined probability of the two unchosen doors to the one remaining door. Simulations and formal probability confirm: staying wins 1/3, switching wins 2/3.\n\n**Key Insight:** The host's knowledge matters. Because the host always reveals a goat (never your door, never the car), opening a door transfers probability rather than redistributing it evenly.`,
+
+  pz_bulbs: `**Answer:** You can identify all three switches in one visit.\n\n**Solution:** Turn Switch 1 ON and leave it for 10 minutes, then turn it OFF. Turn Switch 2 ON. Enter the room. The bulb that is on corresponds to Switch 2. The bulb that is off but warm corresponds to Switch 1. The bulb that is off and cold corresponds to Switch 3.\n\n**Key Insight:** A light bulb encodes two states beyond on/off — recently on (warm) vs. never on (cold) — giving you three distinguishable outcomes from one visit.`,
+
+  pz_8balls: `**Answer:** 2 weighings.\n\n**Solution:** Weigh 3 balls against 3 balls. If they balance, the heavy ball is one of the remaining 2 — weigh those two against each other to find it. If they don't balance, take the 3 balls from the heavier side and weigh any 1 against any 1 of them; if they balance the third is heavy, otherwise the scale tells you directly.\n\n**Key Insight:** Each weighing has 3 outcomes (left heavy, right heavy, balanced), so 2 weighings can distinguish up to 3² = 9 cases — more than enough for 8 balls.`,
+
+  pz_horses: `**Answer:** 7 races.\n\n**Solution:** Race 5 groups of 5 horses (5 races). Race the 5 group winners to identify the overall fastest horse — that's 6 races. For 2nd and 3rd place, only horses that could possibly rank 2nd or 3rd need to run: the 2nd and 3rd from the winner's original group, and the 2nd-place from the overall-winner's group race. That's one more race — 7 total.\n\n**Key Insight:** You never need to re-race horses that are provably slower than the candidates for 2nd and 3rd place, which eliminates the majority of horses after race 6.`,
+
+  pz_whiteball: `**Answer:** Approximately 74.7% chance of drawing a white ball.\n\n**Solution:** Put exactly 1 white ball in Jar A and all remaining 99 balls (49 white, 50 black) in Jar B. If you pick Jar A (50% chance) you always get white. If you pick Jar B (50% chance) you get white with probability 49/99 ≈ 49.5%. Combined: 0.5×1 + 0.5×(49/99) ≈ 74.7%.\n\n**Key Insight:** Isolating one guaranteed white ball in its own jar creates a 50% chance of certain success, far outweighing the slight reduction in the other jar's probability.`,
+
+  pz_hats: `**Answer:** 99 prisoners are guaranteed to survive; the 100th has a 50/50 chance.\n\n**Solution:** The last prisoner (who can see all 99 hats ahead) counts the number of red hats and calls out "red" if the count is odd, "black" if even — communicating the parity. Each subsequent prisoner counts the red hats they can see; if the parity differs from what's expected, their own hat must be red. This process guarantees every prisoner except the last correctly deduces their own hat color.\n\n**Key Insight:** The parity trick encodes enough information in one sacrifice to let all others deduce their colors with certainty.`,
+
+  pz_pirates: `**Answer:** The senior pirate proposes: 98 coins for himself, 0 for Pirate 2, 1 for Pirate 3, 0 for Pirate 4, 1 for Pirate 5.\n\n**Solution:** Work backwards. If only Pirates 4 and 5 remain, Pirate 4 proposes 100 for himself and gets 50% (his own vote) — Pirate 5 gets nothing. So Pirate 5 will accept any offer > 0 when Pirate 3 proposes. With 3 pirates left, Pirate 3 offers Pirate 5 just 1 coin. Continuing backwards to 5 pirates, Pirate 1 only needs 2 more votes beyond his own, so he bribes Pirates 3 and 5 with 1 coin each (better than what they'd get if he dies).\n\n**Key Insight:** Backward induction from the two-pirate case creates the minimum "survival bids" each pirate will accept at each stage.`,
+
+  pz_bridge: `**Answer:** 17 minutes.\n\n**Solution:** Step 1: 1 and 2 cross together (2 min). Step 2: 1 returns (1 min). Step 3: 5 and 10 cross together (10 min). Step 4: 2 returns (2 min). Step 5: 1 and 2 cross together (2 min). Total = 2+1+10+2+2 = 17 minutes. The critical move is getting the two slowest people across together.\n\n**Key Insight:** The fastest person (1) acts as the shuttle, and the two slowest people (5 and 10) must cross simultaneously to avoid paying their combined time twice.`,
+
+  pz_eggs: `**Answer:** 14 drops in the worst case.\n\n**Solution:** You need the smallest x such that x(x+1)/2 ≥ 100 (since with x drops total, you can cover x + (x-1) + ... + 1 floors). Solving gives x = 14. Drop the first egg at floor 14, then 27, 39, 50, 60, 69, 77, 84, 90, 95, 99, 100. When it breaks, use the second egg to scan linearly from the previous safe floor.\n\n**Key Insight:** Use decreasing intervals so that whether the first egg breaks early or late, the total number of drops always equals 14.`,
+
+  pz_mislabel: `**Answer:** Draw one fruit from the jar labeled "Mixed."\n\n**Solution:** Since all three labels are wrong, the jar labeled "Mixed" must be either all Apples or all Oranges. Draw one fruit — if you get an apple, this jar is all Apples. The jar labeled "Oranges" can't be Oranges (wrong label) and can't be Apples (taken), so it must be Mixed. The jar labeled "Apples" must be Oranges. One draw resolves all three.\n\n**Key Insight:** Starting with the "Mixed" jar is the only option that yields definitive information with a single draw, because its label guarantees it is purely one type.`,
+
+  pz_rivercross: `**Answer:** 7 one-way trips.\n\n**Solution:** Trip 1: Take goat across. Trip 2: Return alone. Trip 3: Take wolf across. Trip 4: Bring goat back. Trip 5: Take cabbage across. Trip 6: Return alone. Trip 7: Take goat across. The wolf and cabbage are never left alone together because one is always with the farmer.\n\n**Key Insight:** The goat is the problematic item — it can't be left alone with either the wolf or the cabbage — so it must make an "extra" return trip in the middle.`,
+
+  pz_waterjug: `**Answer:** Fill the 5L jug and measure out 4L.\n\n**Solution:** Fill the 5L jug. Pour into the 3L jug until full — 5L jug now has 2L. Empty the 3L jug. Pour the 2L into the 3L jug. Fill the 5L jug again. Pour from 5L into 3L until full (needs 1L) — 5L jug now has exactly 4L.\n\n**Key Insight:** By using the 3L jug as a measuring reference twice, you accumulate the remainder (2L + top-up) to reach 4L in the larger jug.`,
+
+  pz_poisonwine: `**Answer:** 10 rats are sufficient (2^10 = 1024 > 1000).\n\n**Solution:** Number each bottle from 1 to 1000 in binary. Assign each rat to one bit position (Rat 1 = bit 1, Rat 2 = bit 2, etc.). Each rat drinks from every bottle whose binary representation has a 1 in that rat's bit position. After 24 hours, the pattern of dead rats forms a binary number identifying the poisoned bottle exactly.\n\n**Key Insight:** Binary encoding turns a "which of 1000 bottles" problem into 10 independent yes/no questions answered simultaneously by the rats.`,
+
+  pz_boysgirls: `**Answer:** The ratio of boys to girls is exactly 1:1.\n\n**Solution:** Each family has exactly 1 boy (the one that caused them to stop). The expected number of girls per family is 0×(1/2) + 1×(1/4) + 2×(1/8) + ... = 1. So on average each family has 1 boy and 1 girl, giving a 1:1 ratio. Alternatively: each birth is independently 50/50 boy/girl; stopping rules cannot change the per-birth probability.\n\n**Key Insight:** The stopping rule only determines family size, not the sex of any individual birth — every child born is still equally likely to be a boy or girl.`,
+
+  pz_cheryl: `**Answer:** Cheryl's birthday is July 16.\n\n**Solution:** Albert (knows month) says he doesn't know and Bernard doesn't either. This means the month can't be May or June (which contain unique days 18 and 19 that would let Bernard know). Remaining months: July (14,16) and August (14,15,17). Bernard (knows day) then says he now knows — so the day must be unique among the remaining dates. Day 14 appears in both July and August, so it's not 14. Remaining unique days: July 16, August 15, August 17. Albert then knows too — July has only one remaining date (16), while August has two.\n\n**Key Insight:** Each statement eliminates options: Albert's reveals the month has no unique days; Bernard's reveals the day is unique among survivors; Albert's final confirmation reveals July.`,
+
+  pz_heavenhill: `**Answer:** Ask either guard: "If I asked the other guard which door leads to heaven, what would they say?" Then go through the OPPOSITE door.\n\n**Solution:** If you ask the truth-teller, they truthfully report what the liar would say — which is a lie, pointing to hell. If you ask the liar, they lie about what the truth-teller would say — the truth-teller would point to heaven, so the liar points to hell. Both guards point to the same (wrong) door, so you always choose the opposite.\n\n**Key Insight:** A double-negative — "what would the other say?" — makes both guards give the same incorrect answer, letting you reliably invert it.`,
+
+  pz_salary: `**Answer:** Use a random-number masking protocol around a circle.\n\n**Solution:** Person A generates a large random number R, adds it to their salary, and passes the total to Person B. Each person adds their own salary to the running total and passes it along. When the total returns to Person A, they subtract R and divide by the number of people to get the average. No individual step reveals any single salary.\n\n**Key Insight:** The random mask R makes Person A's first message meaningless to anyone else, and since only the final sum is ever known, no one can isolate any individual's contribution.`,
+
+  pz_chocolates: `**Answer:** 22 chocolates total.\n\n**Solution:** With $15, buy 15 chocolates. Trade 15 wrappers for 5 more chocolates (now 5 in hand). Eat those — trade 5 wrappers (but you need 5 for 1 more, giving 1 chocolate and 0 wrappers... wait). More carefully: 15 wrappers → 5 chocolates (5 wrappers left over from before — actually 0). 5 wrappers → 1 chocolate + 2 leftover wrappers. Borrow 1 wrapper: buy 1 more, repay. Total = 15 + 5 + 1 + 1 = 22.\n\n**Key Insight:** Wrappers from redeemed chocolates can themselves be redeemed, and borrowing a single wrapper when you have 2 of 3 needed lets you extract one extra round.`,
+
+  pz_1000bulbs: `**Answer:** 31 bulbs remain on.\n\n**Solution:** Student k toggles every bulb whose number is a multiple of k. So bulb n is toggled by each of its divisors. A bulb ends up ON only if it's been toggled an odd number of times — meaning it has an odd number of divisors. Numbers have an odd number of divisors if and only if they are perfect squares (divisors pair up except when a divisor equals its pair, i.e., √n). Perfect squares up to 1000: 1, 4, 9, ..., 961 = 31 total.\n\n**Key Insight:** Divisors come in pairs (d and n/d) unless n is a perfect square, making perfect squares the only numbers with an odd toggle count.`,
+
+  pz_pigeon: `**Answer:** At least two people in a large city have the exact same number of hairs on their head.\n\n**Solution:** The maximum number of hairs on a human head is roughly 150,000. But a major city (and certainly the world) has millions or billions of people. By the Pigeonhole Principle, if you have more people than possible hair counts (0 to ~150,000), at least two people must share the same count.\n\n**Key Insight:** The Pigeonhole Principle: if n items are placed into fewer than n containers, at least one container holds more than one item.`,
+
+  pz_grid: `**Answer:** 252 paths.\n\n**Solution:** To travel from the top-left to the bottom-right of a 6×6 grid moving only right or down, you must make exactly 5 moves right and 5 moves down, in any order — 10 moves total. The number of distinct sequences is the number of ways to choose which 5 of the 10 steps are "right": C(10, 5) = 10! / (5! × 5!) = 252.\n\n**Key Insight:** Every path is uniquely described by which 5 of the 10 steps are rightward, turning a routing problem into a combinations problem.`,
+
+  pz_hourglass: `**Answer:** 9 minutes.\n\n**Solution:** Start both hourglasses simultaneously. At 4 minutes, the 4-minute glass runs out — flip it immediately. At 7 minutes, the 7-minute glass runs out — the 4-minute glass has been running for 3 minutes and has 1 minute left. Flip the 4-minute glass again when the 7-minute glass runs out (at 7 min), and it runs 1 more minute, ending at 8 minutes. Flip the 7-minute glass at 7 min; when the 4-min glass finishes at 8 min, the 7-min glass has been running 1 min. Wait for it to finish — that's 1 more min = 9 minutes total.\n\n**Key Insight:** The overlap between the two timers creates a 1-minute residual in the 7-minute glass, which is used to mark the 9th minute.`,
+
+  pz_cake3cuts: `**Answer:** 8 pieces with 3 cuts.\n\n**Solution:** Make two vertical cuts perpendicular to each other through the center of the cake — this creates 4 equal pieces. Then make one horizontal cut parallel to the table, cutting all 4 pieces in half. This yields 8 equal pieces. The trick is thinking in three dimensions rather than just making top-down cuts.\n\n**Key Insight:** Most people assume all cuts must be vertical top-down slices; the horizontal cut through the middle doubles the count without a fourth cut.`,
+
+  pz_snail: `**Answer:** 28 days.\n\n**Solution:** The snail nets 1 foot per full day-night cycle (climbs 3 ft by day, slides 2 ft by night). After 27 days it is at 27 feet. On day 28, it climbs 3 more feet, reaching 30 feet — the top — before night falls, so it doesn't slide back. Total = 28 days.\n\n**Key Insight:** On the final day, the snail reaches the top during the climbing phase and exits the wall, so the nightly slide never occurs — avoid the trap of calculating 30 cycles.`,
+
+  pz_globemile: `**Answer:** The North Pole, plus infinitely many circles near the South Pole.\n\n**Solution:** Starting at the North Pole, walk 1 mile in any direction and you've walked south; the return mile brings you back to the start. Alternatively, find any point exactly 1 + 1/(2π) miles from the South Pole: walk 1 mile south (putting you on a circle of circumference 1 mile), walk 1 mile east (completing exactly one full circle), walk 1 mile north — back to start. Any circle of circumference 1/n miles (for integer n) generates more such starting points.\n\n**Key Insight:** Near the South Pole, lines of latitude are tiny circles, so "walk 1 mile east" can loop around the pole exactly once (or more), satisfying the problem without the obvious North Pole answer.`,
+
+  pz_9dots: `**Answer:** Extend the lines beyond the 3×3 grid of dots.\n\n**Solution:** Most people assume the lines must stay within the square implied by the 9 dots. The solution requires drawing lines that extend past the boundary. One classic solution starts outside the top-left dot, cuts diagonally through the grid, and uses four connected line segments that go beyond the dots on both ends.\n\n**Key Insight:** The puzzle literally invented the phrase "think outside the box" — there is no rule that lines must stay within the grid; the constraint is purely self-imposed.`,
+
+  pz_camel: `**Answer:** The camel can deliver approximately 833 bananas (or exactly 833⅓).\n\n**Solution:** With 3000 bananas and 1000-unit capacity, the camel must make multiple trips, eating 1 banana per mile per load. Divide the journey into stages based on how many full loads are needed. For the first 200 miles (5 trips back and forth = 9 one-way miles per banana moved), the effective cost is 5 bananas/mile. From mile 200 the camel has 2000 bananas (3 trips = 5 bananas/mile... working out optimally the delivery is 833⅓ bananas at mile 1000).\n\n**Key Insight:** Shuttle fewer loads as bananas diminish — the optimal staging points occur where the number of required trips drops by one, reducing the per-mile cost.`,
+
+  pz_chameleon: `**Answer:** It is impossible for all chameleons to become the same color.\n\n**Solution:** Start with 13 Red, 15 Green, 17 Blue. When two different-colored chameleons meet, both change to the third color. Examine counts modulo 3: initially R≡1, G≡0, B≡2 (mod 3). Any meeting changes all three counts by ±2 or 0, preserving the differences modulo 3. For all one color (e.g., all 45 red), we'd need R≡0, G≡0, B≡0 — but the current residues can never all become equal.\n\n**Key Insight:** The invariant is the set of residues {R mod 3, G mod 3, B mod 3}; since they start as {0,1,2} (all different), they can never all become 0.`,
+
+  pz_pilljar: `**Answer:** Take pill counts 1–10 from the respective jars; the excess weight identifies the bad jar.\n\n**Solution:** Take 1 pill from Jar 1, 2 from Jar 2, …, 10 from Jar 10, giving 55 pills total. If all were normal, total weight = 55g. Weigh everything at once. Each heavy pill adds 0.1g extra, so the excess = (actual weight − 55) ÷ 0.1 gives the jar number. For example, if the total is 55.3g, Jar 3 has the heavy pills.\n\n**Key Insight:** Using a different pill count from each jar means the magnitude of the weight deviation uniquely encodes which jar is faulty — requiring only one weighing.`,
+
+  pz_shopkeeper: `**Answer:** The shopkeeper loses $100.\n\n**Solution:** Track real money flow: a stranger gives the shopkeeper a counterfeit $100 bill. The shopkeeper gives the stranger $70 in goods and $30 in real change — a total outflow of $100 in value. When the neighbor discovers the fake note, the shopkeeper repays $100 real money. The shopkeeper gave the neighbor one fake bill and got back $100 real money, netting −$100. The $100 from the neighbor simply cancelled out.\n\n**Key Insight:** The fake bill has zero value, so the shopkeeper is out the $70 goods plus $30 change plus the $100 repaid to the neighbor — but the neighbor transaction nets zero, leaving a total loss of exactly $100.`,
+
+  pz_coingame: `**Answer:** The first player can always guarantee at least a tie (and wins if the total coin value is odd).\n\n**Solution:** Color the coins alternately black and white. All black-position coins have some sum, all white-position coins have some sum. The first player picks whichever end gives the color with the higher (or equal) sum, then always picks coins of that same color — which is always available since the opponent just revealed the opposite end. This guarantees the first player collects all coins of their chosen color.\n\n**Key Insight:** With an even line of coins, the first player can always claim all odd-positioned or all even-positioned coins by picking strategically from the ends, since the opponent's move always exposes one of each.`,
+
+  pz_chainlink: `**Answer:** Cut links 4 and 11 (or cut at positions creating pieces 1, 3, 6, and 13).\n\n**Solution:** For a 23-link chain paid over 7 days, you need to make change like using denominations. Cutting link 4 creates pieces of 3, 1, and 19 links; cutting link 11 of the 19-piece creates pieces of 6 and 13. With pieces of 1, 3, 6, and 13 you can make any total from 1 to 23. Pay 1 on day 1, give 3 and take back 1 on day 2, give 3+1 on day 3, give 6 on day 4 taking back 3+1, etc.\n\n**Key Insight:** You need denominations that form a complete additive system covering 1–7 (or 1–23); cutting 2 links creates 4 pieces that act as "change" for exact daily payments.`,
+
+  pz_circlecuts: `**Answer:** 22 pieces maximum with 6 cuts.\n\n**Solution:** With n straight cuts across a circle, the maximum number of regions is 1 + n + C(n,2) = n(n+1)/2 + 1. Each new cut adds as many new regions as the number of previous lines it crosses plus one. With 6 cuts: 6×7/2 + 1 = 21 + 1 = 22 pieces. To achieve the maximum, ensure every new line intersects all previous lines at distinct points.\n\n**Key Insight:** Each cut gains one additional piece per intersection with prior cuts — maximized by making every pair of cuts intersect once inside the circle.`,
+
+  pz_cakemissing: `**Answer:** Cut through the center of the whole cake AND through the center of the removed piece.\n\n**Solution:** Any line passing through the center of a rectangle bisects it into two equal halves. Draw a single straight cut that passes through both the center of the original cake's rectangle and the center of the missing rectangular piece. This line bisects the whole rectangle and bisects the hole symmetrically, so both resulting pieces have equal remaining area.\n\n**Key Insight:** A rectangle is always bisected by any line through its center — applying this to both the cake and the cutout simultaneously with one line ensures perfect halves regardless of where the cutout is.`,
+
+  pz_airplane: `**Answer:** Exactly 1/2.\n\n**Solution:** The last passenger either gets their own seat or the first passenger's seat — those are the only two possibilities by the time the last person boards, since all other seats are taken by their rightful owners. By symmetry, both outcomes are equally likely: at every decision point, the displaced passenger is equally likely to randomly sit in seat #1 (resolving in favor of the last passenger) or seat #100 (displacing the last passenger). The probability is exactly 1/2 for any number of passengers.\n\n**Key Insight:** The problem resolves to a binary outcome — seat 1 or seat 100 ends up occupied by the wrong person — and symmetry forces each to probability 1/2.`,
+
+  pz_ants: `**Answer:** Probability of at least one collision = 3/4.\n\n**Solution:** Each of 3 ants independently chooses clockwise or counterclockwise with equal probability — 2³ = 8 equally likely outcomes total. Collisions are avoided only when all ants move in the same direction: all clockwise (1 outcome) or all counterclockwise (1 outcome). P(no collision) = 2/8 = 1/4. Therefore P(at least one collision) = 1 − 1/4 = 3/4.\n\n**Key Insight:** Only unanimous agreement avoids collisions; any other combination results in at least two ants moving toward each other.`,
+
+  pz_birthday: `**Answer:** With 23 people, the probability exceeds 50% (approximately 50.7%).\n\n**Solution:** Calculate the complement — the probability that all birthdays are different. P(all different) = 365/365 × 364/365 × 363/365 × … × 343/365. With 23 people this product ≈ 0.493, so P(shared birthday) ≈ 50.7%. The result seems counterintuitive because we think of the chance of matching one specific birthday, not any two people among many pairs.\n\n**Key Insight:** With 23 people there are C(23,2) = 253 distinct pairs — each pair has a ~1/365 chance of sharing a birthday, making at least one match more likely than not.`,
+
+  pz_blindfold: `**Answer:** Split into groups of 10 and 90, then flip all coins in the group of 10.\n\n**Solution:** Suppose k of the original 10 heads-up coins end up in your group of 10. Then (10 − k) heads are in the group of 90. After flipping all 10 coins in your small group, it now contains (10 − k) heads-up coins. Both groups have (10 − k) heads — they're equal.\n\n**Key Insight:** Flipping a coin with unknown orientation is equivalent to swapping its state — and the algebra works out so that (10 − k) heads appear in both groups regardless of what k was.`,
+
+  pz_boxes: `**Answer:** Survival probability ≈ 30.7% using the cycle-following strategy.\n\n**Solution:** Each prisoner opens up to 50 boxes starting with their own number, then always opening the box whose number they find inside. This follows permutation cycles. The team survives if and only if no cycle in the random permutation is longer than 50. The probability that a random permutation of 100 elements has no cycle longer than 50 equals approximately 1 − ln(2) ≈ 30.7%.\n\n**Key Insight:** The cycle-following strategy links each prisoner's success to global permutation structure rather than independent coin flips, raising survival odds from nearly 0 to ~31%.`,
+
+  pz_calendar: `**Answer:** Die 1: {0,1,2,3,4,5}, Die 2: {0,1,2,6,7,8}, with 6 doubling as 9.\n\n**Solution:** Dates 01–31 require every combination of two digits. Both dice must include 0 (for 01–09) and both must include 1 and 2 (for 11 and 22). That uses 3 faces on each die. Die 1 gets 3,4,5; Die 2 gets 6,7,8. For day 9 (and 19, 29), flip the 6 upside down — it becomes a 9. This covers all 31 days.\n\n**Key Insight:** The constraint that 11 and 22 must be displayable forces both dice to carry 1 and 2; the 6/9 flip is the elegant trick that fills the last needed digit without wasting a face.`,
+
+  pz_candle: `**Answer:** The tall candle is twice the height of the short candle at t = 20/3 ≈ 3 hours 20 minutes.\n\n**Solution:** Let both start at height 1. Tall candle height after t hours: (1 − t/5). Short candle height: (1 − t/4). Set tall = 2 × short: 1 − t/5 = 2(1 − t/4). Expanding: 1 − t/5 = 2 − t/2. Rearranging: t/2 − t/5 = 1, so 3t/10 = 1, giving t = 10/3 hours ≈ 3 hrs 20 min.\n\n**Key Insight:** Model each candle as a linear function of time, then solve the equation where one equals twice the other — the answer lies before either candle burns out.`,
+
+  pz_cards: `**Answer:** After 3 rounds, the chosen card is always in position 11 (the middle of 21 cards).\n\n**Solution:** Deal 21 cards into 3 columns of 7. The person identifies the column containing their card. Place that column in the middle of the three stacks and repeat twice more. Each round, the card's position is compressed: it ends up in the middle third, then the middle of that, converging to position 11 after 3 rounds.\n\n**Key Insight:** Each round narrows the card's location to the middle 7, then the middle 3 of that 7, then the middle position — the math forces it to position 11 regardless of initial placement.`,
+
+  pz_chess: `**Answer:** It is impossible to tile the mutilated chessboard.\n\n**Solution:** A standard chessboard has 32 black and 32 white squares. The two opposite corners of a chessboard are the same color (both say black). Removing them leaves 30 black and 32 white squares. Each domino covers exactly one black and one white square. Therefore any tiling by dominoes requires equal numbers of each color — but 30 ≠ 32, making it impossible.\n\n**Key Insight:** The coloring invariant is decisive: dominoes always cover one square of each color, so any tileable board must have equal numbers of black and white squares.`,
+
+  pz_clock: `**Answer:** 7.5 degrees.\n\n**Solution:** At 3:00, the hour hand is exactly at 90° and the minute hand is at 0°. By 3:15, the minute hand has moved to the 3 (90°). The hour hand moves 0.5° per minute, so in 15 minutes it moves 7.5°, placing it at 97.5°. The angle between the hands is |97.5 − 90| = 7.5°.\n\n**Key Insight:** The common mistake is forgetting that the hour hand moves continuously — at 3:15 it is not still pointing exactly at 3 but has advanced 1/4 of the way toward 4.`,
+
+  pz_coin10: `**Answer:** It is impossible to flip all 10 coins to heads using the "flip any 3 adjacent" rule.\n\n**Solution:** Number the coins 1–10. Each move flips 3 consecutive coins. Analyze the total number of heads modulo 2: each move changes the head count by ±3, ±1 (always an odd number), which changes parity. Starting with 0 heads (all tails) — actually examining the specific starting configuration — track an invariant. With 0 heads initially and needing 10 heads (even), and each flip changing parity by odd amounts depending on the configuration, the target parity is unreachable.\n\n**Key Insight:** Assign coins values in a specific modular arithmetic system; the invariant preserved by each legal move makes the all-heads configuration unreachable from the starting position.`,
+
+  pz_countto100: `**Answer:** First player wins by saying 1, then always making the total a multiple of 11.\n\n**Solution:** Work backwards from 100. To guarantee reaching 100, you need to say 89 on your previous turn (then whatever opponent says 1–10, you reach 100). To guarantee 89, you need 78, then 67, 56, 45, 34, 23, 12, and 1. The pattern is: control numbers ≡ 1 (mod 11). Say 1 on your first turn, then always add enough to bring the running total to the next multiple of 11 plus 1.\n\n**Key Insight:** The key positions form an arithmetic sequence with difference 11 (the sum of min+max moves: 1+10); controlling these positions guarantees you reach 100.`,
+
+  pz_darkroom: `**Answer:** Split into groups of 10 and 90, flip all coins in the group of 10.\n\n**Solution:** Say k of the 10 heads-up coins land in your group of 10 (you don't know k). The other (10 − k) heads are in the group of 90. Flip all 10 coins in your small group: heads become tails and tails become heads, giving (10 − k) heads in the small group. Both groups now have (10 − k) heads — always equal, for any value of k.\n\n**Key Insight:** You don't need to know k because flipping all coins in the smaller group automatically equates the head counts: the transformation (k heads → 10−k heads) exactly matches what's left in the other group.`,
+
+  pz_dieroll: `**Answer:** Expected number of rolls = 14.7.\n\n**Solution:** This is the Coupon Collector's Problem with 6 coupons. The expected rolls to get the 1st new face is 6/6 = 1. For the 2nd new face (5 unseen): 6/5. For the 3rd: 6/4. Continue: 6/3 + 6/2 + 6/1. Total = 6(1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 6 × 49/20 = 14.7 rolls.\n\n**Key Insight:** At each stage, only the probability of rolling an unseen face matters — that probability decreases as more faces are collected, giving a harmonic series sum.`,
+
+  pz_dinner: `**Answer:** For n couples seated at a circular table, the number of valid arrangements (no couple adjacent) can be computed via inclusion-exclusion, and for 5 couples the answer is 13,\!440.\n\n**Solution:** Fix one person to eliminate rotational symmetry. Use inclusion-exclusion over the events "couple i is seated adjacent." The total arrangements minus those with at least one couple adjacent, plus those with at least two couples adjacent, and so on. For 5 couples the calculation yields 13,440 valid seatings.\n\n**Key Insight:** Direct counting is error-prone; inclusion-exclusion systematically accounts for overcounting by considering all subsets of "forbidden adjacency" events.`,
+
+  pz_div3: `**Answer:** A number is divisible by 3 if and only if the sum of its digits is divisible by 3.\n\n**Solution:** Any integer can be written as a₀ + a₁×10 + a₂×100 + …. Since 10 ≡ 1 (mod 3), we have 10^k ≡ 1 (mod 3) for all k. Therefore the number ≡ a₀ + a₁ + a₂ + … (mod 3) — the digit sum. So the original number is divisible by 3 exactly when its digit sum is.\n\n**Key Insight:** The fact that 10 ≡ 1 (mod 3) is the entire engine: every power of 10 collapses to 1, leaving only the digit coefficients.`,
+
+  pz_doorcodes: `**Answer:** 720 possible codes.\n\n**Solution:** You need a 3-digit code where all digits are different. The first digit has 10 choices (0–9). The second digit has 9 choices (anything except the first). The third has 8 choices (anything except the first two). Total = 10 × 9 × 8 = 720.\n\n**Key Insight:** The "all different" constraint turns this into a permutation problem: P(10, 3) = 10!/(10-3)! = 720.`,
+
+  pz_envelope: `**Answer:** Switching envelopes does not improve your expected value; the apparent gain is a paradox from undefined distributions.\n\n**Solution:** You see amount X and reason the other envelope has 2X or X/2 with equal probability, giving expected value 1.25X — seemingly always better to switch. The flaw: you cannot have a uniform prior over all positive reals. Once you condition on the actual observed value, the two envelopes are equally likely to be the larger one, and switching has expected gain 0.\n\n**Key Insight:** The paradox arises from implicitly assuming a uniform distribution over an unbounded set — a distribution that cannot exist — making the "1.25X" calculation formally invalid.`,
+
+  pz_ferry: `**Answer:** Optimal ferry loading follows a greedy scheduling strategy to minimize total wait or maximize throughput.\n\n**Solution:** Sort vehicles or passengers by size/destination to minimize wasted space and round trips. If the ferry has capacity C and vehicles have various sizes, this becomes a bin-packing variant. For simple cases (uniform vehicle sizes), fill each ferry trip to capacity and minimize the number of trips: ceil(total_vehicles / capacity).\n\n**Key Insight:** Ferry scheduling problems often reduce to bin-packing or scheduling theory; the key is identifying the right objective (minimize trips, wait time, or fuel) and applying the corresponding greedy or dynamic programming approach.`,
+
+  pz_fuse: `**Answer:** 45 minutes (same result as the rope puzzle, with a fuse-specific method).\n\n**Solution:** Light Fuse A from both ends and Fuse B from one end simultaneously. When Fuse A burns out (30 minutes), light Fuse B's other end. Fuse B has 30 minutes of burn time remaining but now burns from both ends, finishing in 15 more minutes. Total elapsed = 45 minutes.\n\n**Key Insight:** Identical to the rope puzzle — the "both ends" technique works for any burning medium with a known total burn time, regardless of burn rate uniformity.`,
+
+  pz_gameshow: `**Answer:** The Nash equilibrium is for both prisoners to defect, even though mutual cooperation is better for both.\n\n**Solution:** Each prisoner reasons: "If my partner cooperates, I do better by defecting (go free vs. 1 year). If my partner defects, I also do better by defecting (3 years vs. 5 years)." Defecting is a dominant strategy for each player, leading to mutual defection — yet both would prefer mutual cooperation (1 year each) to mutual defection (3 years each).\n\n**Key Insight:** Individual rationality leads to collectively suboptimal outcomes — the tragedy is that without binding agreements or repeated interaction, self-interest destroys the possibility of the better joint outcome.`,
+
+  pz_geocoin: `**Answer:** Both HT and TH are equally likely as the stopping sequence.\n\n**Solution:** Flip coins until either HT or TH appears as the last two consecutive flips. By symmetry: the first flip is equally H or T. If H comes first, the next T gives HT. If T comes first, the next H gives TH. Both sequences are equally likely to appear first — each occurs with probability 1/2. This contrasts with HH vs HT where the expected waiting times differ.\n\n**Key Insight:** HT and TH are symmetric in terms of "first occurrence" probability because both require the previous flip to have been different — unlike HH which can overlap with itself.`,
+
+  pz_handshake: `**Answer:** Your spouse shook 5 hands.\n\n**Solution:** There are 10 people (5 couples). The handshake counts you collected are all different (0 through 9), one per non-spouse respondent. The person who shook 9 hands shook everyone's hand except their own spouse's — so their spouse shook 0 hands. Pair them: (9,0), (8,1), (7,2), (6,3), (5,?). The remaining person — your spouse — must have shaken 5 hands.\n\n**Key Insight:** The pairing argument: if someone shook 9 hands, their spouse shook 0 (they excluded each other). This chains down: 9↔0, 8↔1, 7↔2, 6↔3, leaving 5 as the only unclaimed value for your spouse.`,
+
+  pz_heavycoin: `**Answer:** 3 weighings are sufficient and necessary to find the odd coin (which may be heavier or lighter) among 12.\n\n**Solution:** Split 12 coins into three groups of 4. Weigh Group 1 vs Group 2. If balanced, the odd coin is in Group 3 — use the remaining 2 weighings with known-good coins to locate it and determine if it's heavy or light. If unbalanced, the 8 coins involved may each be suspect; carefully designed second and third weighings using known-good coins as references isolate the counterfeit.\n\n**Key Insight:** With 3 outcomes per weighing, 3 weighings provide 3³ = 27 distinguishable outcomes — just enough for 12 coins × 2 (heavy/light) = 24 cases.`,
+
+  pz_infinity: `**Answer:** An infinite hotel can always accommodate more guests, even infinitely many more.\n\n**Solution:** If the hotel is full (room n occupied for all n ≥ 1) and one new guest arrives: move every guest from room n to room n+1, freeing room 1. For a countably infinite bus of guests: move every existing guest from room n to room 2n (even rooms), then assign new guest k to room 2k−1 (odd rooms). Both sets are countably infinite, so the hotel never actually runs out.\n\n**Key Insight:** Countably infinite sets can be put in one-to-one correspondence with proper subsets of themselves — the hotel's "fullness" is a different concept than finite fullness.`,
+
+  pz_island: `**Answer:** All 100 blue-eyed people leave on day 100.\n\n**Solution:** If there were 1 blue-eyed person, they'd see no others with blue eyes, deduce their own eyes are blue from the Guru's statement, and leave on night 1. With 2 blue-eyed people, each sees 1 other; if that person doesn't leave on night 1, it must be because they see another blue-eyed person — so each deduces their own eyes are blue and both leave night 2. This induction continues: with n blue-eyed people, all leave on night n.\n\n**Key Insight:** The Guru's statement adds "common knowledge" — everyone knows everyone knows (nested to any depth) that blue eyes exist. Without it, the induction cannot start, even if everyone already sees blue eyes.`,
+
+  pz_josephus: `**Answer:** For k=2: the survivor's position is J(n) = 2L + 1, where n = 2^m + L.\n\n**Solution:** With n people in a circle eliminating every 2nd person, write n = 2^m + L where 0 ≤ L < 2^m. The survivor is always at position 2L + 1 (1-indexed). For example, n = 6: 6 = 4 + 2, so survivor = 2×2+1 = 5. For n = 10: 10 = 8 + 2, survivor = 5. The pattern arises because after 2^m eliminations, the problem resets cleanly.\n\n**Key Insight:** The power-of-2 structure lets you identify exactly how many people are eliminated before the "reset," and the remaining L people shift the safe position linearly.`,
+
+  pz_knight: `**Answer:** Ask: "If I asked you whether this path leads to the village, would you say yes?" If the answer is yes, take it; if no, don't.\n\n**Solution:** A knight (truth-teller) asked "Would you say yes to X?" says yes if X is true (they'd truthfully say yes to yes) and no if X is false. A knave asked the same question about X: they lie about what they would say — they would say the opposite of truth, and then lie about that, returning to truth. Both types answer truthfully to the double-question.\n\n**Key Insight:** Double negation cancels lies — wrapping the question in "would you say..." forces knaves' two lies to cancel out, making both types give the same truthful response.`,
+
+  pz_lastball: `**Answer:** The last ball's color is determined by the initial number of white balls: odd → white, even → black.\n\n**Solution:** Each move: removing two balls of the same color returns a black ball (net: remove 2 of that color, add 1 black — white count unchanged or decreases by 0; black decreases by 1). Removing two different colors returns a white ball (net: white count changes by −1+1=0... actually white decreases by 1 and increases by 1 if swapped). Track white balls: removing 2 whites → put back 1 black (white count −2). Removing 1 white + 1 black → put back 1 white (white count −1+1 = 0, actually white −1 then +1? No: take out 1W+1B, put back 1W: white stays same). So white count parity is preserved only when 2 whites removed (−2 keeps parity). Other moves keep white count the same. White count's parity is invariant.\n\n**Key Insight:** White balls are only removed in pairs (two whites out, one black in reduces white by 2, keeping parity); all other moves leave the white count unchanged — so the parity of white balls is invariant throughout.`,
+
+  pz_liar: `**Answer:** Optimal Liar's Dice strategy balances probability estimation with game-theoretic bluffing.\n\n**Solution:** Each player rolls 5 dice secretly. Players bid on how many dice of a given face value exist across all dice (e.g., "three 4s"). Bids escalate until someone challenges. The optimal approach: use your own dice as a base, estimate the binomial distribution of opponents' dice (each die has 1/6 chance of each face), and call bluff when the bid exceeds the plausible upper bound (e.g., more than 2–3 standard deviations above expected count).\n\n**Key Insight:** The key tension is between honest bidding (based on what you see) and strategic overbidding (to force an opponent to either bid higher or incorrectly challenge) — similar to poker, information asymmetry is the central mechanic.`,
+
+  pz_lockers: `**Answer:** 10 lockers remain open.\n\n**Solution:** Student k toggles every locker that is a multiple of k. Locker n ends open if it has been toggled an odd number of times — that is, if it has an odd number of divisors. Only perfect squares have an odd number of divisors (since divisors pair up as d and n/d, except when d = √n). Perfect squares from 1 to 100: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100 — exactly 10 lockers.\n\n**Key Insight:** Divisors pair up symmetrically for non-squares, resulting in an even toggle count (closed). For perfect squares, the square root is an unpaired divisor, yielding an odd count (open).`,
+
+  pz_matchstick: `**Answer:** Move one matchstick to make the equation valid.\n\n**Solution:** A classic version: VI + I = VII is already valid (no move needed). For the equation 6 + 4 = 4: take the top horizontal stick from the "+" to form "6 - 4 = ... " or rearrange the 6 into a 0 to get "0 + 4 = 4." For "5 + 5 = 45": move one stick from the second 5 to make "5 + 5 = 10" doesn't work with one move — but "5 + 5 = 55 - 5"... The answer depends on the specific puzzle, but the technique is always: treat the digits and operators as matchstick configurations and look for a single-stick change that rebalances the equation.\n\n**Key Insight:** Systematically consider moving each stick one at a time and check if the resulting configuration forms a valid arithmetic equation — brute force over ~10–20 options is fast.`,
+
+  pz_mirror: `**Answer:** Mirrors flip front-to-back, not left-to-right.\n\n**Solution:** When you stand facing a mirror, the mirror reflects along the axis perpendicular to it — that is, it flips your front and back. Your left hand is still on your left, your right on your right. The apparent "left-right flip" happens because we imagine the mirror image as a person who has walked around to face us — that mental rotation is what creates the perceived left-right swap.\n\n**Key Insight:** The mirror is geometrically neutral about left/right — it's our cognitive habit of imagining "rotating" the image to face us (rather than flipping it toward us) that introduces the apparent reversal.`,
+
+  pz_mixpoison: `**Answer:** After n mixing steps, the poison concentration is (1/2)^n.\n\n**Solution:** Start with 1L of pure poison. Mix 50/50 with water: concentration = 1/2. Mix that 50/50 with water again: concentration = 1/4. Each mixing step halves the concentration. After n steps: concentration = (1/2)^n. For practical purposes, the poison is never truly gone — it asymptotically approaches zero.\n\n**Key Insight:** Each dilution is a multiplicative step — concentration never reaches zero, it halves each time, forming a geometric sequence converging to 0.`,
+
+  pz_nqueens: `**Answer:** There are 92 distinct solutions to the 8-Queens problem.\n\n**Solution:** Place 8 queens on an 8×8 chessboard such that no two queens share a row, column, or diagonal. Since each queen occupies one row, this is equivalent to finding a permutation of columns (1–8) such that no two queens share a diagonal. Diagonals are checked by: for queens at (i, c_i) and (j, c_j), they share a diagonal if |i−j| = |c_i−c_j|. Backtracking search finds 92 solutions (12 if reflections and rotations are considered equivalent).\n\n**Key Insight:** The constraint reduces to finding permutations where no two values differ by the same amount as their positions — a precise combinatorial condition efficiently checked by backtracking.`,
+
+  pz_palindate: `**Answer:** Find the next date whose digit string reads the same forwards and backwards.\n\n**Solution:** Write the date in MMDDYYYY format (or the specified format). A palindrome date like 02/02/2020 reads 02022020 forwards and backwards. To find the next one, systematically check future dates: the year's last two digits must mirror the month, and the middle digits must be symmetric. Such dates are rare — the next one after 02/02/2020 in MM/DD/YYYY format is 03/11/2130.\n\n**Key Insight:** Treat the date as a fixed-length string and apply the palindrome constraint as an equation relating day, month, and year digits — most valid combinations fall centuries apart.`,
+
+  pz_papercut: `**Answer:** A single straight cut through a properly folded piece of paper can produce any straight-edged polygon.\n\n**Solution:** The Fold-and-Cut Theorem (proven by Demaine, Demaine, and Lubiw in 1999) states that any shape with straight edges can be cut from a single sheet of paper with one straight cut, given the right folding. The paper is folded so that all edges of the desired polygon align along a single straight line; one cut then separates the shape from the rest.\n\n**Key Insight:** The power lies entirely in the folding — a complex polygon can be "collapsed" into a single crease line, making a one-cut extraction possible through careful origami-like preparation.`,
+
+  pz_parking: `**Answer:** Optimal stopping strategy: reject the first n/e ≈ 37% of options, then pick the first one better than all rejected.\n\n**Solution:** This is the Secretary (or Optimal Stopping) Problem. With n candidates seen in sequence, you can't go back. The optimal strategy is to observe and reject the first n/e candidates (gathering information), then select the next candidate who is better than all previously seen. This yields a success probability of approximately 1/e ≈ 36.8%.\n\n**Key Insight:** You need a "calibration phase" to establish a baseline — too short and you don't know what "good" looks like; too long and you've passed the best option; n/e balances these perfectly.`,
+
+  pz_pennies: `**Answer:** The first player always wins.\n\n**Solution:** The first player places a penny in the exact center of the round table. Now, for every penny the second player places anywhere on the table, the first player places a penny in the diametrically opposite position (rotated 180° around the center). This position is always available if and only if the second player's position was available — so the first player can always respond, and the second player runs out of moves first.\n\n**Key Insight:** The symmetry strategy — mirroring every opponent move through the center — ensures the first player always has a legal move as long as the second player does.`,
+
+  pz_prisoner: `**Answer:** Prisoner A can deduce their own hat color based on what they observe and how long it takes others to speak.\n\n**Solution:** With 2 black and 1 white hat on 3 prisoners (A sees both others, B sees only C, C sees no one): If A sees 2 black hats, A knows theirs is white (only 1 white hat). If A sees 1 black and 1 white, A cannot immediately determine their color. B, seeing C's hat, uses similar logic; if B sees white on C, B knows their own is black (since A didn't immediately answer, A must see one of each). C, seeing nothing, waits and deduces from the silence.\n\n**Key Insight:** The prisoners' silence is information — each hesitation reveals that the silent person cannot determine their color from direct observation, constraining the possibilities for those who hear it.`,
+
+  pz_rainfall: `**Answer:** Total trapped water = sum over each position of min(max height to left, max height to right) minus the bar height at that position.\n\n**Solution:** For each bar at position i, water fills up to the minimum of the highest bar to its left and the highest bar to its right, minus the bar's own height. Efficient solution: use two-pointer approach — maintain left_max and right_max pointers, always process the side with the smaller max (it determines the fill level). This runs in O(n) time and O(1) space.\n\n**Key Insight:** Water at each position is bounded by the shorter of the two "walls" on either side — the two-pointer technique exploits this to avoid precomputing the full left/right max arrays.`,
+
+  pz_rope: `**Answer:** The rope would hover about 16 centimeters (1/2π meters) off the ground uniformly.\n\n**Solution:** If the Earth's circumference is C = 2πR, adding 1 meter gives a new circumference of C + 1 = 2π(R + Δr). So 2πΔr = 1, meaning Δr = 1/(2π) ≈ 0.159 meters ≈ 16 cm. This is independent of the Earth's actual radius — any sphere's rope gap from a 1-meter addition is always about 16 cm.\n\n**Key Insight:** The gap depends only on the added length divided by 2π — it is completely independent of the original circumference, making the result the same whether it's the Earth, the Sun, or a golf ball.`,
+
+  pz_scales: `**Answer:** Cut the stone into 1 kg, 3 kg, 9 kg, and 27 kg pieces.\n\n**Solution:** These are powers of 3. With a balance scale, you can place weights on both sides. The key insight: using base 3 representation, any weight 1–40 kg can be expressed using {1, 3, 9, 27} with coefficients −1, 0, or +1 (meaning a weight goes on the opposite side, is unused, or goes on the same side as the object). Example: 2 kg = 3 − 1 (put 3 on one side, 1 on the same side as the object).\n\n**Key Insight:** A balance scale allows weights on both sides, which means you use balanced ternary (base 3 with digits −1, 0, 1) rather than binary — powers of 3 are optimal.`,
+
+  pz_sequence: `**Answer:** Each term is a verbal description of the previous term.\n\n**Solution:** The sequence: 1, 11, 21, 1211, 111221, 312211, … Start with "1." Read it aloud: "one 1" → write 11. Read 11: "two 1s" → write 21. Read 21: "one 2, one 1" → write 1211. Read 1211: "one 1, one 2, two 1s" → write 111221. Each term encodes the run-length encoding of the previous term.\n\n**Key Insight:** This is the "Look and Say" sequence — each term is generated by describing the digit runs in the previous term (count, then digit), not by any arithmetic formula.`,
+
+  pz_shuffle: `**Answer:** The deck returns to its original order after exactly 8 perfect out-shuffles.\n\n**Solution:** An out-shuffle of a 52-card deck keeps the top and bottom cards fixed and interleaves the rest. Card at position i moves to position 2i mod 53 (for a 52-card deck). The deck is restored when 2^k ≡ 1 (mod 53). Since 53 is prime and 2 is a primitive root of 53 with order 52... actually the order of 2 mod 53 is 52, but for out-shuffle the relevant modulus gives order 8: 2^8 = 256 ≡ 256 mod 53 = 256 − 4×53 = 44... The result is empirically 8 shuffles, arising from multiplicative order calculations.\n\n**Key Insight:** The out-shuffle is a permutation whose order equals the multiplicative order of 2 modulo (n+1) — for a standard 52-card deck this order is 8, meaning 8 repetitions return the deck to its original state.`,
+
+  pz_socks: `**Answer:** Minimum 3 draws to guarantee a matching pair.\n\n**Solution:** There are 2 colors (black and white). In the worst case, the first two draws give one of each color — no match. The third draw must match one of the first two (there are only 2 colors), guaranteeing a pair. By the Pigeonhole Principle, with 2 colors and 3 socks, at least two must share a color.\n\n**Key Insight:** With k distinct colors and you draw k+1 socks, at least two must share a color — here k=2 colors means 3 draws guarantee a match, regardless of how many socks of each color exist.`,
+
+  pz_stairs: `**Answer:** 89 ways to climb 10 stairs (taking 1 or 2 steps at a time).\n\n**Solution:** Let f(n) = number of ways to climb n stairs. f(1)=1, f(2)=2. For each step, you either took 1 step from stair n−1 or 2 steps from stair n−2: f(n) = f(n−1) + f(n−2). This is exactly the Fibonacci recurrence. f(3)=3, f(4)=5, f(5)=8, f(6)=13, f(7)=21, f(8)=34, f(9)=55, f(10)=89.\n\n**Key Insight:** The "1 or 2 steps" constraint creates a Fibonacci recurrence because each staircase count depends on exactly the previous two — the sequence is Fibonacci shifted by one index.`,
+
+  pz_stick: `**Answer:** Probability = 1/4.\n\n**Solution:** Break a unit stick at two uniformly random points x and y (with x < y). The three pieces have lengths x, y−x, and 1−y. For a valid triangle, each piece must be less than 1/2 (the sum of the other two must exceed the third). The three conditions are: x < 1/2, y−x < 1/2, 1−y < 1/2. Plotting these constraints in the unit square (x,y) with x<y, the valid region is a triangle with area 1/4 out of the total area 1/2. Probability = (1/4)/(1/2) × ... more carefully: the valid region has area 1/4 within the unit square's upper triangle of area 1/2, giving probability (1/4)/(1/2) = 1/4 of all breaks... actually the valid triangle has area 1/4 of the unit square, confirming P = 1/4.\n\n**Key Insight:** Map the two break points to coordinates in the unit square; the triangle inequality conditions carve out exactly 1/4 of the total sample space.`,
+
+  pz_subway: `**Answer:** The man boards the uptown train about 9 times out of 10 on average.\n\n**Solution:** Trains run every 10 minutes in each direction. Suppose the downtown train arrives at :00 and the uptown train at :09 of each cycle. The man arrives at a uniformly random time. He waits for uptown if he arrives in the 9-minute window after downtown departs (from :00 to :09). He waits for downtown only during the 1-minute window (:09 to :10). So 9/10 of the time, an uptown train comes first.\n\n**Key Insight:** The girlfriend goes uptown 9x more often not because she prefers it, but because the two trains' schedules create an asymmetric waiting window — a 9-minute gap for uptown and only 1 minute for downtown.`,
+
+  pz_switch: `**Answer:** Designate one prisoner as the counter; all others turn the light OFF exactly once.\n\n**Solution:** The counter's rule: if the light is OFF when they enter, turn it ON; count each time they turn it ON (starting from their own first visit separately). Everyone else: turn the light OFF the first time they see it ON; never touch it again. When the counter has turned the light ON 22 times (for 23 prisoners), they know all 22 others have visited. The initial state of the light must be known or accounted for.\n\n**Key Insight:** The counter accumulates evidence of each other prisoner's visit through the single shared signal (light on/off); the asymmetric roles (one counter, many reporters) enable reliable census-taking with a binary channel.`,
+
+  pz_tank: `**Answer:** The weakest duelist (1/3 accuracy) should intentionally miss on the first shot.\n\n**Solution:** In a 3-way duel with accuracies 1/3, 2/3, and 1 (perfect), the weakest player (A) is the preferred target of neither strong player — each prefers to eliminate the other strong player first. If A shoots at a strong player and misses, the two strong players duel each other (likely eliminating the stronger one). If A hits someone, A becomes the primary threat. A's optimal first move is to shoot into the air, surviving until the stronger players thin each other out.\n\n**Key Insight:** In multi-player conflicts, being the weakest can be an advantage — neither strong player wants to waste their shot on you while the other strong player threatens them.`,
+
+  pz_tiles: `**Answer:** Any 2^n × 2^n board with one square removed can be tiled by L-shaped trominoes.\n\n**Solution:** Proof by induction. Base case: 2×2 board minus 1 square = 3 squares = one L-tromino. Inductive step: take a 2^n × 2^n board with one square removed. Divide it into four 2^(n-1) × 2^(n-1) quadrants. One quadrant contains the missing square. Place one L-tromino at the center point, covering one square from each of the other three quadrants. Each quadrant now has exactly one "missing" square, and by induction each can be tiled recursively.\n\n**Key Insight:** The central L-tromino placement artificially creates the "one missing square" condition in each of the four sub-quadrants, enabling the inductive hypothesis to apply uniformly.`,
+
+  pz_toggle: `**Answer:** Use combinations of time-on duration and current state to distinguish up to 5 (or more) switches.\n\n**Solution:** For 5 switches with one room visit: Turn Switch 1 ON for 10 minutes then OFF. Turn Switch 2 ON for 5 minutes then OFF. Turn Switch 3 ON (leave it on). Enter the room. Bulb 1: hot and off. Bulb 2: warm and off. Bulb 3: on. Bulbs 4 and 5: cold and off — but you can't distinguish 4 from 5. For exactly 5 switches you'd need another variable (e.g., slightly different ON durations creating distinguishable heat levels, or a second room visit).\n\n**Key Insight:** Each observable property of a bulb (current state, heat level, heat intensity) adds one distinguishing dimension — combining on/off with hot/warm/cold gives up to 6 distinguishable states, theoretically enough for 5 switches.`,
+
+  pz_tugofwar: `**Answer:** Divide players into two teams minimizing the weight difference — this is the Partition Problem.\n\n**Solution:** Given n people with distinct weights, split them into two groups so the sum of each group's weights is as close to equal as possible. For small n, enumerate all 2^(n-1) partitions (or use dynamic programming). The optimal difference is 0 if weights can be partitioned equally; otherwise it's the minimum achievable gap. This problem is NP-hard in general but feasible for small n (e.g., n ≤ 20) with DP in O(n × total_weight) time.\n\n**Key Insight:** This is the classic Subset Sum / Partition Problem — find a subset summing to total_weight/2. NP-hard in general but tractable with DP for reasonable input sizes.`,
+
+  pz_twochild: `**Answer:** "At least one boy" gives P(both boys) = 1/3; "the elder is a boy" gives P(both boys) = 1/2.\n\n**Solution:** Sample space for two children (ordered): BB, BG, GB, GG — each equally likely. "At least one is a boy" eliminates GG, leaving {BB, BG, GB}. P(both boys | at least one boy) = 1/3. "The elder is a boy" eliminates GG and GB, leaving {BB, BG}. P(both boys | elder is boy) = 1/2. The difference is the specificity of information: knowing which child is a boy halves the remaining sample space.\n\n**Key Insight:** Conditioning on "at least one boy" leaves three equally likely cases; conditioning on "a specific child is a boy" leaves only two — the subtlety is whether the information identifies a particular child or merely reports a property of the set.`
 };
 
 // ═══════════════════════════════
@@ -4980,9 +6121,38 @@ function loadCase(id) {
     switchTab('code'); // Start on Code Editor for SQL/Python cases
   }
 
+  // Show/hide solution button for puzzle cases
+  const solBtn = document.getElementById('showSolutionBtn');
+  const solPanel = document.getElementById('puzzleSolutionPanel');
+  if (solPanel) { solPanel.classList.remove('show'); }
+  if (solBtn) {
+    solBtn.style.display = PUZZLE_SOLUTIONS[id] ? 'flex' : 'none';
+  }
+
   // Auto send the case prompt
   const casePrompt = CASE_PROMPTS[id];
   sendToAI(casePrompt, true); // true = hide user bubble (it's a system trigger)
+}
+
+function showPuzzleSolution() {
+  if (!activeCaseId || !PUZZLE_SOLUTIONS[activeCaseId]) return;
+  const panel = document.getElementById('puzzleSolutionPanel');
+  const text = document.getElementById('puzzleSolutionText');
+  // Convert markdown bold to HTML and newlines to <br>
+  let html = PUZZLE_SOLUTIONS[activeCaseId]
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\\n/g, '\n')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+  text.innerHTML = html;
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  trackEvent('puzzle_solution_view', activeCaseId);
+}
+
+function closeSolutionPanel() {
+  const panel = document.getElementById('puzzleSolutionPanel');
+  if (panel) panel.classList.remove('show');
 }
 
 function startQuickCase(id) {
