@@ -22,11 +22,24 @@
         border-bottom: 1px solid #e2e8f2;
         box-shadow: 0 1px 12px rgba(37,99,235,0.07);
       }
-      #snav .snav-logo {
-        font-family: 'Bebas Neue', monospace; font-size: 1.55rem;
-        letter-spacing: 2px; color: #0f172a; text-decoration: none;
+      #snav .snav-profile {
+        display: flex; align-items: center; gap: 0.65rem;
+        text-decoration: none; color: #0f172a;
       }
-      #snav .snav-logo span { color: #1d4ed8; }
+      #snav .snav-profile-photo {
+        width: 36px; height: 36px; border-radius: 50%;
+        object-fit: cover; border: 2px solid #2563eb;
+        flex-shrink: 0;
+      }
+      #snav .snav-profile-info { display: flex; flex-direction: column; line-height: 1.15; }
+      #snav .snav-profile-name {
+        font-family: 'Bebas Neue', monospace; font-size: 1.15rem;
+        letter-spacing: 1.5px; color: #0f172a;
+      }
+      #snav .snav-profile-title {
+        font-family: 'DM Sans', sans-serif; font-size: 0.65rem;
+        color: #2563eb; font-weight: 600; letter-spacing: 0.3px;
+      }
       #snav .snav-links {
         display: flex; gap: 1.8rem; list-style: none; align-items: center;
         margin: 0; padding: 0;
@@ -62,6 +75,9 @@
       }
 
       @media (max-width: 768px) {
+        #snav .snav-profile-photo { width: 32px; height: 32px; }
+        #snav .snav-profile-title { display: none; }
+        #snav .snav-profile-name { font-size: 1.05rem; }
         #snav .snav-hamburger { display: flex; }
 
         #snav .snav-links {
@@ -137,7 +153,13 @@
   document.currentScript.insertAdjacentHTML('afterend', `
     <div class="snav-overlay" id="snavOverlay"></div>
     <nav id="snav">
-      <a href="/" class="snav-logo">ALOK<span>.</span>ANALYST</a>
+      <a href="/" class="snav-profile">
+        <img src="/alok-photo.jpeg" alt="Alok" class="snav-profile-photo" />
+        <div class="snav-profile-info">
+          <span class="snav-profile-name">ALOK ANALYST</span>
+          <span class="snav-profile-title">Lead Data Analyst</span>
+        </div>
+      </a>
       <ul class="snav-links">
         ${liHTML}
         <li><a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" target="_blank" rel="noopener" class="snav-cta">Subscribe</a></li>
