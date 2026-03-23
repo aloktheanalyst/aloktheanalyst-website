@@ -89,7 +89,7 @@ export async function onRequest(context) {
   // Build Resend payload
   const emailPayload = {
     from: 'Feedback <onboarding@resend.dev>',
-    to: ['info@aloktheanalyst.com'],
+    to: ['aloktheanalyst@gmail.com'],
     subject: `Feedback: ${page || '/'}`,
     html,
   };
