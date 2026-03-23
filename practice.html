@@ -2117,6 +2117,18 @@ const PROMPTS = [
 
   { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'storytelling',  title: 'Data Storytelling for Stakeholders',   topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+
+  // ── Puzzles ──
+  { id: 'pz_45min',       title: 'Measure 45 Minutes (Two Wires)',       topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_daughters',   title: 'Find the Ages of Three Daughters',    topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_bee',         title: 'Total Distance Travelled by a Bee',   topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_goldbar',     title: 'Pay an Employee with a Gold Bar',     topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_monty',       title: 'The Monty Hall Problem',              topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_bulbs',       title: '3 Bulbs and 3 Switches',              topic: 'puzzles', difficulty: 'easy',   tag: 'Puzzle' },
+  { id: 'pz_8balls',      title: 'Find the Heavier Ball (8 Balls)',     topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_horses',      title: 'Find the Fastest 3 from 25 Horses',   topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
+  { id: 'pz_whiteball',   title: 'Maximize Probability of White Ball',  topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
+  { id: 'pz_hats',        title: '100 Prisoners with Red/Black Hats',   topic: 'puzzles', difficulty: 'hard',   tag: 'Puzzle' },
 ];
 
 const CASE_PROMPTS = {
@@ -2169,6 +2181,211 @@ const CASE_PROMPTS = {
   // ── Visualization prompts ──
   viz_choose:    'Give me a data visualization case study. Describe a dataset and business question, then ask me to choose the right chart type and justify my choice.',
   storytelling:  'Give me a data storytelling case study. Ask me to present a complex analysis to a non-technical C-suite audience.',
+
+  // ── Puzzle prompts ──
+  pz_45min: `You are a puzzle interviewer. Present this puzzle clearly:
+
+**The Puzzle:** You have two ropes (or wires). Each rope takes exactly 1 hour to burn from one end to the other. However, the ropes burn at inconsistent rates — meaning half the rope does NOT necessarily take 30 minutes. The ropes are not identical in length or burn pattern.
+
+**Your task:** Using only these two ropes and a lighter, measure exactly 45 minutes.
+
+Guide the user step by step:
+1. First ask: "What do you know for sure about each rope?" (answer: total burn time = 60 min, nothing else)
+2. If stuck, hint: "What happens if you light a rope from BOTH ends simultaneously?"
+3. If still stuck: "If rope A burns from both ends, it takes 30 minutes. Now you have rope B still unlit..."
+4. Walk them to the answer: Light rope A from both ends AND rope B from one end simultaneously. When rope A is fully burned (30 min elapsed), light rope B's other end. Rope B's remaining portion now takes 15 min. Total = 45 min.
+5. Ask follow-up: "Can you measure 15 minutes with one rope? What about with 3 ropes — could you measure 52.5 minutes?"
+
+Be encouraging. If they get it, congratulate them and discuss the key insight: lighting from both ends halves the remaining burn time.`,
+
+  pz_daughters: `You are a puzzle interviewer. Present this classic number puzzle:
+
+**The Puzzle:** Two colleagues are chatting. One says: "I have three daughters. The product of their ages is 36, and the sum of their ages equals our office building number."
+
+The second colleague thinks for a moment and says: "I still can't figure out their ages."
+
+The first replies: "Oh right — my oldest daughter loves chocolate."
+
+**Question:** What are the ages of the three daughters?
+
+Guide the user step by step:
+1. Ask them to list ALL sets of three positive integers whose product is 36.
+   (1,1,36), (1,2,18), (1,3,12), (1,4,9), (1,6,6), (2,2,9), (2,3,6), (3,3,4)
+2. Calculate the sum for each: 38, 21, 16, 14, 13, 13, 11, 10
+3. Ask: "Why couldn't the second person determine the ages after knowing the sum?"
+   → Because the sum was 13, shared by TWO combinations: (1,6,6) and (2,2,9)
+4. Ask: "The clue is 'my OLDEST daughter' — what does this tell you?"
+   → There must be a unique oldest. (1,6,6) has twin oldest — no single oldest. So the answer is (2,2,9).
+5. Follow-up: "Why is this puzzle popular in interviews?" → It tests structured enumeration and using ALL clues.
+
+Be encouraging and let them work through the enumeration themselves before revealing.`,
+
+  pz_bee: `You are a puzzle interviewer. Present this classic distance-rate-time puzzle:
+
+**The Puzzle:** Two trains are 100 km apart, heading toward each other. Train A moves at 40 km/h and Train B moves at 60 km/h. A bee starts at Train A and flies toward Train B at 80 km/h. When it reaches Train B, it immediately turns around and flies back toward Train A, and keeps going back and forth until the trains collide.
+
+**Question:** What is the total distance the bee travels?
+
+Guide the user:
+1. Many candidates try the hard approach: calculate each leg of the bee's zigzag journey (infinite geometric series). Let them try if they want — it works but is complex.
+2. Then ask: "Is there a simpler way to think about this?"
+3. The elegant insight: How long until the trains meet? They close the 100 km gap at (40+60) = 100 km/h, so they meet in exactly 1 hour.
+4. The bee flies for that entire hour at 80 km/h. Total distance = 80 km. Done.
+5. Ask follow-up: "What if the bee flew at 120 km/h? What if the trains were the same speed?"
+6. Discuss: "This puzzle tests whether you can find the simple approach before diving into complex math — a key skill in data analytics."`,
+
+  pz_goldbar: `You are a puzzle interviewer. Present this classic division puzzle:
+
+**The Puzzle:** You hire a worker for 7 days. You have a single gold bar that is 7 units long. You must pay the worker exactly 1 unit per day at the end of each day. The worker needs to have the correct accumulated payment each evening.
+
+You are allowed to make only **2 cuts** to the gold bar. The worker can give change (return pieces).
+
+**Question:** Where do you make the 2 cuts, and how do you pay each day?
+
+Guide the user:
+1. Ask: "With 2 cuts, how many pieces do you get?" → 3 pieces.
+2. Ask: "What sizes should those 3 pieces be to represent any value from 1 to 7?"
+3. Hint: Think in powers of 2 — like binary. Pieces of 1, 2, and 4 can make any number from 1 to 7.
+4. Walk through the payment schedule:
+   - Day 1: Give the 1-unit piece (worker has 1)
+   - Day 2: Give the 2-unit piece, get 1-unit back (worker has 2)
+   - Day 3: Give the 1-unit piece (worker has 3)
+   - Day 4: Give the 4-unit piece, get 1+2 back (worker has 4)
+   - Day 5: Give the 1-unit piece (worker has 5)
+   - Day 6: Give the 2-unit piece, get 1-unit back (worker has 6)
+   - Day 7: Give the 1-unit piece (worker has 7)
+5. Follow-up: "What if you had 15 days and 3 cuts? What about 31 days?" → Binary pattern: 1, 2, 4, 8...
+
+Discuss the connection to binary representation — relevant for data analysts working with bit flags and encoding.`,
+
+  pz_monty: `You are a puzzle interviewer. Present the famous Monty Hall Problem:
+
+**The Puzzle:** You're on a game show. There are 3 doors. Behind one door is a car (the prize). Behind the other two are goats. You pick a door — say Door 1. The host, who KNOWS what's behind each door, opens another door — say Door 3 — revealing a goat. The host always opens a door with a goat and always offers you the choice to switch.
+
+**Question:** Should you switch to Door 2, or stick with Door 1? Does it matter?
+
+Guide the user through the counter-intuitive answer:
+1. Most people say "50/50, doesn't matter." Ask why they think that.
+2. Ask: "When you first picked Door 1, what was the probability you were right?" → 1/3
+3. "So the probability that the car is behind one of the OTHER doors was..." → 2/3
+4. "The host opened Door 3 (goat). Did this change the probability you were originally right?" → No, still 1/3.
+5. "So where did the 2/3 probability go?" → It all concentrated on Door 2, because Door 3 was eliminated.
+6. **Switching wins 2/3 of the time. Sticking wins only 1/3.**
+7. If they're still skeptical, walk through all 3 scenarios explicitly:
+   - Car behind Door 1: you picked 1 → switching LOSES
+   - Car behind Door 2: you picked 1, host opens 3 → switching WINS
+   - Car behind Door 3: you picked 1, host opens 2 (but showed 3, so car can't be here) → Actually host opens 2 → switching to 3 WINS
+   2 out of 3 scenarios: switching wins.
+8. Follow-up: "What if there were 100 doors, you pick 1, host opens 98 doors showing goats, leaving one closed? Would you switch?" → Makes the 99/100 vs 1/100 very intuitive.
+
+Discuss: "This is directly relevant to Bayesian thinking in data analysis — how new evidence should update your prior beliefs."`,
+
+  pz_bulbs: `You are a puzzle interviewer. Present this practical logic puzzle:
+
+**The Puzzle:** You are standing outside a closed room. Inside the room are 3 light bulbs, all currently OFF. Outside the room are 3 switches — each controls exactly one bulb, but you don't know which switch controls which bulb.
+
+You may flip the switches however you like, but you can only enter the room **once**.
+
+**Question:** How do you determine which switch controls which bulb?
+
+Guide the user:
+1. Ask: "If you just turn on one switch and walk in, how many bulbs can you identify?" → Only 1 (the one that's on).
+2. Ask: "You need more information. What other property does a light bulb have besides on/off?"
+3. Hint: "A bulb that has been on for a while becomes..." → WARM/HOT.
+4. The solution:
+   - Turn Switch 1 ON and wait 5 minutes.
+   - Turn Switch 1 OFF, then immediately turn Switch 2 ON.
+   - Enter the room.
+   - The bulb that is ON → Switch 2
+   - The bulb that is OFF but WARM → Switch 1
+   - The bulb that is OFF and COLD → Switch 3
+5. Follow-up: "What if there were 4 bulbs and 4 switches, still one trip?" → Hint: use brightness (dim vs bright using a dimmer or quick on/off) or combine warm+on states.
+6. Discuss: "This puzzle tests thinking beyond the obvious binary state. In data, we often need to encode more information than appears possible — timestamps, heat maps, and multi-dimensional analysis."`,
+
+  pz_8balls: `You are a puzzle interviewer. Present this classic weighing puzzle:
+
+**The Puzzle:** You have 8 balls that look identical. One ball is slightly heavier than the rest. You have a balance scale (not a digital one — it only tells you which side is heavier or if they're equal).
+
+**Question:** What is the minimum number of weighings needed to find the heavier ball? Walk me through the strategy.
+
+Guide the user:
+1. Ask: "If you split into groups of 4 vs 4 and weigh, then what?" → That works but takes up to 3 weighings.
+2. Ask: "Can we do better? What if we split into groups of 3?"
+3. The optimal strategy (2 weighings):
+   - **Weighing 1:** Put 3 balls on each side, keep 2 aside.
+     - If balanced → heavy ball is one of the 2 set aside. One more weighing finds it. (2 total)
+     - If unbalanced → heavy ball is in the heavier group of 3.
+   - **Weighing 2:** From the heavier group of 3, weigh 1 vs 1, keep 1 aside.
+     - If balanced → the one aside is heavy.
+     - If unbalanced → the heavier one is it.
+4. Follow-up: "What about 9 balls? 27 balls?" → Each weighing gives 3 outcomes (left heavy, right heavy, balanced), so with N weighings you can distinguish 3^N balls. 2 weighings → 9 balls, 3 weighings → 27 balls.
+5. Discuss: "This is the information theory foundation — each weighing gives log₂(3) ≈ 1.58 bits of information. In data, understanding how much information each test gives you is key to efficient debugging."`,
+
+  pz_horses: `You are a puzzle interviewer. Present this optimization puzzle:
+
+**The Puzzle:** You have 25 horses and a racetrack that fits 5 horses per race. You have no stopwatch — you can only observe the ORDER in which horses finish within a single race (1st, 2nd, 3rd, 4th, 5th).
+
+**Question:** What is the minimum number of races needed to find the 3 fastest horses overall?
+
+Guide the user step by step:
+1. Ask: "What's the obvious first step?" → Run 5 races of 5 horses each. That's 5 races.
+2. "Now you know the ranking within each group. Can you eliminate any horses?"
+   → Yes! The 4th and 5th place in EVERY group can never be in the top 3. Eliminate 10 horses. 15 remain.
+3. "Race the 5 group winners (Race 6). Now what do you know?"
+   → The winner of this race is the overall fastest horse (guaranteed). But who's 2nd and 3rd?
+4. "Which horses COULD still be 2nd or 3rd overall?" This is the key insight:
+   → The 2nd and 3rd from the winner's original group
+   → The 2nd from the runner-up's original group
+   → The runner-up (2nd place in Race 6)
+   → The 3rd place finisher in Race 6
+   That's 5 horses. Race them (Race 7).
+5. The top 2 from Race 7 are the 2nd and 3rd fastest overall. **Answer: 7 races.**
+6. Follow-up: "Why can't the 3rd horse from the runner-up's group be top 3?" → Because at least 3 horses are faster (Race 6 winner, runner-up, and that group's 2nd).`,
+
+  pz_whiteball: `You are a puzzle interviewer. Present this probability optimization puzzle:
+
+**The Puzzle:** You have 50 white balls and 50 black balls, and two identical urns (jars). You must place ALL 100 balls into the two urns — any distribution you like, but every ball must go in one urn.
+
+Then someone will randomly pick one of the two urns (50/50 chance) and randomly draw one ball from that urn.
+
+**Question:** How should you distribute the balls to maximize the probability of drawing a white ball?
+
+Guide the user:
+1. Ask: "What's the probability if you put 50 white in one urn and 50 black in the other?" → 50% (0.5 × 1 + 0.5 × 0 = 0.5)
+2. Ask: "What about 25 white + 25 black in each urn?" → Also 50% (0.5 × 0.5 + 0.5 × 0.5 = 0.5)
+3. "Can you do better than 50%? Think about extreme distributions."
+4. The optimal strategy:
+   - Put exactly 1 white ball in Urn A.
+   - Put the remaining 49 white + 50 black balls in Urn B.
+   - P(white) = 0.5 × (1/1) + 0.5 × (49/99) = 0.5 + 0.2475 ≈ **74.75%**
+5. Ask: "Why does this work?" → Urn A guarantees white (probability 1.0). Urn B still has decent odds (~49.5%).
+6. Follow-up: "What distribution minimizes the probability?" → Put 1 black ball alone. Same logic, reversed.
+7. Discuss: "This connects to stratification in sampling — how you split groups affects your estimates. It's also related to A/B test design — unequal group sizes can be strategically optimal."`,
+
+  pz_hats: `You are a puzzle interviewer. Present this strategy/logic puzzle:
+
+**The Puzzle:** 100 prisoners stand in a line, one behind the other. Each prisoner is randomly assigned either a RED or BLACK hat. Each prisoner can see all the hats IN FRONT of them, but NOT their own hat or any hat behind them.
+
+Starting from the BACK of the line (the person who can see 99 hats), each prisoner must guess their own hat color. They say either "Red" or "Black" — everyone hears every guess. A correct guess = they survive. An incorrect guess = they don't.
+
+They can strategize beforehand, but once the hats are placed, the only thing they can say is "Red" or "Black."
+
+**Question:** What strategy guarantees saving at least 99 out of 100 prisoners?
+
+Guide the user:
+1. Ask: "Can the last person (who sees 99 hats) always save themselves?" → No, they have 50/50 odds.
+2. Ask: "But can they encode information in their guess to help others?"
+3. Hint: "What if the last person counts the red hats they see?"
+4. The strategy:
+   - Last person counts the number of RED hats they see. If it's ODD, they say "Red." If EVEN, they say "Black." (50/50 for themselves)
+   - Person 99 heard the last person's answer and can see 98 hats ahead. They count the red hats they see, compare with the parity info, and deduce their own hat color with certainty.
+   - Person 98 has heard answers from 99 and 100, counts visible red hats, knows the running parity, and deduces their own color.
+   - This continues all the way to person 1.
+5. Walk through a small example: 4 prisoners, hats are B, R, R, B (from front to back).
+   - Person 4 sees B, R, R → 2 red (even) → says "Black" (happens to be right, but could be wrong)
+   - Person 3 knows parity is even, sees B, R ahead (1 red), heard "Black" → 1 red seen + parity even → they must be Red ✓
+   - Continue forward...
+6. Discuss: "This is about encoding maximum information in a binary signal — the foundation of error-correcting codes used in data transmission and storage."`,
 };
 
 // ═══════════════════════════════
