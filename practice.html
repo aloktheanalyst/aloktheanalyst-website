@@ -77,16 +77,17 @@
   /* ── FOCUS MODE (fullscreen): hide chrome, dim non-essentials ── */
   :fullscreen .topbar,
   :fullscreen footer { display: none !important; }
-  :fullscreen .sidebar { opacity: 0.2; transition: opacity 0.3s; }
-  :fullscreen .sidebar:hover { opacity: 1; }
-  :fullscreen .chat-header { opacity: 0.25; transition: opacity 0.3s; }
-  :fullscreen .chat-header:hover { opacity: 1; }
-  :fullscreen .schema-sidebar > .schema-title,
-  :fullscreen #schemaContent { opacity: 0.2; transition: opacity 0.3s; }
-  :fullscreen .schema-sidebar:hover > .schema-title,
-  :fullscreen .schema-sidebar:hover #schemaContent { opacity: 1; }
-  :fullscreen .sql-toolbar { opacity: 0.5; transition: opacity 0.3s; }
-  :fullscreen .sql-toolbar:hover { opacity: 1; }
+  /* Only dim elements when a case study is active */
+  :fullscreen.case-active .sidebar { opacity: 0.2; transition: opacity 0.3s; }
+  :fullscreen.case-active .sidebar:hover { opacity: 1; }
+  :fullscreen.case-active .chat-header { opacity: 0.25; transition: opacity 0.3s; }
+  :fullscreen.case-active .chat-header:hover { opacity: 1; }
+  :fullscreen.case-active .schema-sidebar > .schema-title,
+  :fullscreen.case-active #schemaContent { opacity: 0.2; transition: opacity 0.3s; }
+  :fullscreen.case-active .schema-sidebar:hover > .schema-title,
+  :fullscreen.case-active .schema-sidebar:hover #schemaContent { opacity: 1; }
+  :fullscreen.case-active .sql-toolbar { opacity: 0.5; transition: opacity 0.3s; }
+  :fullscreen.case-active .sql-toolbar:hover { opacity: 1; }
 
   .topbar {
     display: flex;
@@ -3744,6 +3745,7 @@ function populateModelSelects() {
 // ═══════════════════════════════
 function loadCase(id) {
   activeCaseId = id;
+  document.documentElement.classList.add('case-active');
   renderPromptList(activeFilter);
   const p = PROMPTS.find(x => x.id === id);
   trackEvent('case_load', id, { tag: p.tag, difficulty: p.difficulty });
@@ -4212,6 +4214,7 @@ function resetChat() {
 
   conversationHistory = [];
   activeCaseId = null;
+  document.documentElement.classList.remove('case-active');
   renderPromptList(activeFilter);
   const msgs = document.getElementById('messages');
   msgs.innerHTML = `
