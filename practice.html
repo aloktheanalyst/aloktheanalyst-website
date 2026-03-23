@@ -5227,9 +5227,10 @@ async function runTestCases() {
 
   trackEvent('test_cases_run', null, { dialect: sqlDialect, case_id: activeCaseId });
 
-  // Run user's code and capture ALL output
+  // Run user's code and capture output — per-statement for SQL, combined for Python
   let outputText = '';
   const isPy = sqlDialect === 'python';
+  const perStatementOutputs = []; // Each element = output of one user SQL statement
 
   if (isPy) {
     if (!pyodideInstance) { resultsEl.innerHTML = `<div class="sql-error">Python engine not loaded. Please wait or refresh.</div>`; return; }
@@ -5242,22 +5243,25 @@ async function runTestCases() {
     try {
       if (sqlDialect === 'sqlite') {
         const results = sqlDB.exec(code);
+        // SQLite exec returns one result per SELECT statement
         results.forEach(r => {
-          outputText += r.columns.join(' | ') + '\n';
-          r.values.forEach(row => { outputText += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n'; });
-          outputText += '\n';
+          let stmtOut = r.columns.join(' | ') + '\n';
+          r.values.forEach(row => { stmtOut += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n'; });
+          perStatementOutputs.push(stmtOut.trim());
+          outputText += stmtOut + '\n';
         });
       } else {
-        // PGlite: split multi-statement SQL and capture ALL results
+        // PGlite: split multi-statement SQL and capture per-statement output
         const stmts = code.split(';').map(s => s.trim()).filter(s => s.length > 0);
         for (const stmt of stmts) {
           try {
             const result = await sqlDB.query(stmt);
             if (result.rows && result.fields && result.fields.length > 0) {
               const cols = result.fields.map(f => f.name);
-              outputText += cols.join(' | ') + '\n';
-              result.rows.forEach(row => { outputText += cols.map(c => row[c] === null ? 'NULL' : String(row[c])).join(' | ') + '\n'; });
-              outputText += '\n';
+              let stmtOut = cols.join(' | ') + '\n';
+              result.rows.forEach(row => { stmtOut += cols.map(c => row[c] === null ? 'NULL' : String(row[c])).join(' | ') + '\n'; });
+              perStatementOutputs.push(stmtOut.trim());
+              outputText += stmtOut + '\n';
             }
           } catch (stmtErr) { outputText += 'Error: ' + stmtErr.message + '\n'; }
         }
@@ -5338,6 +5342,32 @@ async function runTestCases() {
     return matched;
   }
 
+  // ── Auto-match: for expectedQuery tests, find which user statement best matches each test ──
+  // Pre-compute expected key values for all expectedQuery tests
+  const expectedQueryTests = tests.map((t, i) => ({ test: t, index: i })).filter(t => t.test.expectedQuery && !isPy && sqlDB);
+  const testExpectedData = []; // { index, keyValues, rowCount, colCount }
+  for (const { test, index } of expectedQueryTests) {
+    const data = await runExpectedQuery(test.expectedQuery);
+    testExpectedData.push({ index, ...data });
+  }
+
+  // For each expectedQuery test, find the best-matching user statement output
+  // If user wrote multiple statements, auto-map each test to its best match
+  function findBestMatchOutput(keyValues) {
+    if (perStatementOutputs.length <= 1) return outputText; // Single query: use combined
+    let bestOutput = outputText; // Default: combined
+    let bestScore = matchExpectedValues(outputText, keyValues);
+    // Try each individual statement
+    for (const stmtOut of perStatementOutputs) {
+      const score = matchExpectedValues(stmtOut, keyValues);
+      if (score > bestScore) {
+        bestScore = score;
+        bestOutput = stmtOut;
+      }
+    }
+    return bestOutput;
+  }
+
   // Run each test case
   const results = [];
   window._lastTestResults = []; // Store for AI Help
@@ -5354,20 +5384,25 @@ async function runTestCases() {
           results.push({ name: test.name, pass: false, msg: assertMatch ? assertMatch[1] || assertMatch[0] : (test.msg || errMsg) });
         }
       } else if (test.expectedQuery && !isPy && sqlDB) {
-        // ── expectedQuery-based test: run reference solution and compare ──
-        const { keyValues, rowCount: expRows, colCount: expCols } = await runExpectedQuery(test.expectedQuery);
+        // ── expectedQuery-based test with auto-matching ──
+        const expData = testExpectedData.find(d => d.index === tests.indexOf(test));
+        const keyValues = expData ? expData.keyValues : [];
+        const expRows = expData ? expData.rowCount : 0;
+        const expCols = expData ? expData.colCount : 0;
 
         if (keyValues.length === 0 && expRows === 0) {
-          // Expected query itself failed — fall back to basic output check
           results.push({ name: test.name, pass: outputText.trim().length > 50, msg: outputText.trim().length > 50 ? 'Output present (reference query unavailable)' : (test.failMsg || 'No output') });
         } else {
-          const matched = matchExpectedValues(outputText, keyValues);
+          // Auto-match: find the user statement whose output best matches this test
+          const targetOutput = findBestMatchOutput(keyValues);
+
+          const matched = matchExpectedValues(targetOutput, keyValues);
           const ratio = keyValues.length > 0 ? matched / keyValues.length : 0;
           const minRatio = test.minMatchRatio || 0.5;
 
-          // Also check structural constraints
-          const userLines = outputText.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
-          const userFirstLine = outputText.trim().split('\n')[0] || '';
+          // Structural constraints against the matched output
+          const userLines = targetOutput.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+          const userFirstLine = targetOutput.trim().split('\n')[0] || '';
           const userCols = (userFirstLine.match(/\|/g) || []).length + 1;
 
           let structFail = null;
@@ -5390,8 +5425,9 @@ async function runTestCases() {
           }
         }
       } else if (test.check) {
-        // Output-based check (works for SQL and Python)
-        const r = test.check(outputText);
+        // Output-based check — also use auto-matching for multi-statement SQL
+        const targetOutput = (!isPy && perStatementOutputs.length > 1) ? outputText : outputText;
+        const r = test.check(targetOutput);
         results.push({ name: test.name, pass: r.pass, msg: r.msg });
       } else if (test.assertion && isPy) {
         results.push({ name: test.name, pass: false, msg: 'Python engine not available' });
