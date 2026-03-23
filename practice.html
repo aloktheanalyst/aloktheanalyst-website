@@ -188,6 +188,26 @@
   }
   .auth-dropdown-item:hover { background: var(--surface2); }
   .auth-dropdown-item.logout { color: #ef4444; }
+  .auth-profile-header {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.6rem 0.75rem 0.5rem; border-bottom: 1px solid var(--border);
+    margin-bottom: 0.3rem;
+  }
+  .auth-profile-header img {
+    width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--accent);
+  }
+  .auth-profile-header .auth-profile-details {
+    display: flex; flex-direction: column; min-width: 0;
+  }
+  .auth-profile-header .auth-profile-name {
+    font-weight: 600; font-size: 0.82rem; color: var(--white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .auth-profile-header .auth-profile-email {
+    font-size: 0.7rem; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
 
   /* PROVIDER SELECTOR — Compact pill + dropdown */
   .provider-selector { position: relative; }
@@ -1745,8 +1765,16 @@
         <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 4l3 3 3-3"/></svg>
       </button>
       <div class="auth-dropdown-menu" id="authDropdownMenu">
-        <div class="auth-dropdown-item" id="authUserEmail" style="color:var(--muted); font-size:0.72rem; cursor:default;"></div>
-        <button class="auth-dropdown-item" onclick="openProfileModal()">My Profile</button>
+        <div class="auth-profile-header">
+          <img id="authMenuPic" src="" alt="" />
+          <div class="auth-profile-details">
+            <span class="auth-profile-name" id="authMenuName"></span>
+            <span class="auth-profile-email" id="authMenuEmail"></span>
+          </div>
+        </div>
+        <button class="auth-dropdown-item" onclick="openProfileModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile
+        </button>
         <button class="auth-dropdown-item logout" onclick="window.location.href='/api/auth/logout'">Sign out</button>
       </div>
     </div>
@@ -5448,9 +5476,13 @@ function showSignedIn(user) {
   document.getElementById('authSignInBtn').style.display = 'none';
   const userBtn = document.getElementById('authUserBtn');
   userBtn.style.display = 'flex';
-  document.getElementById('authUserPic').src = user.picture || '';
-  document.getElementById('authUserName').textContent = user.name || user.email.split('@')[0];
-  document.getElementById('authUserEmail').textContent = user.email;
+  const name = user.name || user.email.split('@')[0];
+  const pic = user.picture || '';
+  document.getElementById('authUserPic').src = pic;
+  document.getElementById('authUserName').textContent = name;
+  document.getElementById('authMenuPic').src = pic;
+  document.getElementById('authMenuName').textContent = name;
+  document.getElementById('authMenuEmail').textContent = user.email;
 }
 
 function showSignedOut() {

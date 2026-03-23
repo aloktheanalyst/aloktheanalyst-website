@@ -92,6 +92,26 @@
       }
       #snav .snav-auth-menu-item:hover { background: #f1f5f9; }
       #snav .snav-auth-menu-item.snav-logout { color: #ef4444; }
+      #snav .snav-auth-profile-header {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.6rem 0.75rem 0.5rem; border-bottom: 1px solid #e2e8f2;
+        margin-bottom: 0.3rem;
+      }
+      #snav .snav-auth-profile-header img {
+        width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+        border: 2px solid #2563eb;
+      }
+      #snav .snav-auth-profile-header .snav-auth-profile-details {
+        display: flex; flex-direction: column; min-width: 0;
+      }
+      #snav .snav-auth-profile-header .snav-auth-profile-name {
+        font-weight: 600; font-size: 0.82rem; color: #0f172a;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      #snav .snav-auth-profile-header .snav-auth-profile-email {
+        font-size: 0.7rem; color: #64748b;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
       /* Hamburger button — hidden on desktop */
       #snav .snav-hamburger {
         display: none; background: none; border: none; cursor: pointer;
@@ -212,7 +232,16 @@
             <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 4l3 3 3-3"/></svg>
           </button>
           <div class="snav-auth-menu" id="snavAuthMenu">
-            <div class="snav-auth-menu-item" id="snavUserEmail" style="color:#64748b; font-size:0.72rem; cursor:default;"></div>
+            <div class="snav-auth-profile-header">
+              <img id="snavMenuPic" src="" alt="" />
+              <div class="snav-auth-profile-details">
+                <span class="snav-auth-profile-name" id="snavMenuName"></span>
+                <span class="snav-auth-profile-email" id="snavMenuEmail"></span>
+              </div>
+            </div>
+            <button class="snav-auth-menu-item" id="snavMyProfileBtn" onclick="window.location.href='/practice'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile
+            </button>
             <button class="snav-auth-menu-item snav-logout" onclick="window.location.href='/api/auth/logout'">Sign out</button>
           </div>
         </div>
@@ -263,14 +292,29 @@
     }
   });
 
+  // On practice page, override "My Profile" to open the modal instead of navigating
+  if (location.pathname === '/practice') {
+    var profBtn = document.getElementById('snavMyProfileBtn');
+    if (profBtn) {
+      profBtn.onclick = function () {
+        document.getElementById('snavAuthMenu').classList.remove('open');
+        if (typeof openProfileModal === 'function') openProfileModal();
+      };
+    }
+  }
+
   fetch('/api/auth/session').then(function (r) { return r.json(); }).then(function (data) {
     if (data.authenticated && data.user) {
       document.getElementById('snavSignInBtn').style.display = 'none';
       var btn = document.getElementById('snavUserBtn');
       btn.style.display = 'flex';
-      document.getElementById('snavUserPic').src = data.user.picture || '';
-      document.getElementById('snavUserName').textContent = data.user.name || data.user.email.split('@')[0];
-      document.getElementById('snavUserEmail').textContent = data.user.email;
+      var name = data.user.name || data.user.email.split('@')[0];
+      var pic = data.user.picture || '';
+      document.getElementById('snavUserPic').src = pic;
+      document.getElementById('snavUserName').textContent = name;
+      document.getElementById('snavMenuPic').src = pic;
+      document.getElementById('snavMenuName').textContent = name;
+      document.getElementById('snavMenuEmail').textContent = data.user.email;
     }
   }).catch(function () {});
 }());
