@@ -5545,15 +5545,35 @@ async function aiHelp() {
     }
   }
 
+  // Build question context with actual table names and schema
+  const questionText = dataset.question ? dataset.question.replace(/<[^>]+>/g, '') : '';
+  let schemaText = '';
+  if (dataset.schema) {
+    schemaText = '\n\nAvailable tables:\n' + dataset.schema.map(t =>
+      `• ${t.name}(${t.columns.map(c => c.name + ' ' + c.type).join(', ')})`
+    ).join('\n');
+  }
+  if (dataset.setupCode) {
+    // For Python cases, include setup context
+    const setupLines = dataset.setupCode.split('\n').filter(l => l.includes('=') || l.includes('import')).slice(0, 10);
+    if (setupLines.length) schemaText = '\n\nSetup code provides:\n```python\n' + setupLines.join('\n') + '\n```';
+  }
+
   const message = `Please score and review my ${langLabel} solution for the "${dataset.label}" exercise.
 
+**Question:**
+${questionText}${schemaText}
+
+**My code:**
 \`\`\`${codeBlock}
 ${code}
 \`\`\`
 
-Output:
+**Output:**
 \`\`\`
 ${resultsText || '(empty — 0 rows returned)'}\`\`\`${emptyWarning}${errorWarning}${testContext}
+
+IMPORTANT: Use the EXACT table and column names from the schema above in any suggested code. Do NOT use generic names.
 
 Please provide your feedback in this exact format:
 1. **Score: X/10**
