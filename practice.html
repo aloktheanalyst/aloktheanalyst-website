@@ -1090,16 +1090,6 @@
     font-size: 0.75rem; color: var(--green); margin-top: 0.4rem;
     font-family: 'JetBrains Mono', monospace; min-height: 1.2em;
   }
-  .profile-btn {
-    display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.4rem 0.85rem; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--surface); font-size: 0.78rem; font-weight: 600;
-    font-family: 'DM Sans', sans-serif; color: var(--text);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .profile-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .profile-btn svg { width: 14px; height: 14px; }
-
   /* ── IDLE TOAST ── */
   .dyk-toast {
     position: fixed;
@@ -1778,12 +1768,6 @@
         <button class="auth-dropdown-item logout" onclick="window.location.href='/api/auth/logout'">Sign out</button>
       </div>
     </div>
-
-    <!-- My Profile -->
-    <button class="profile-btn" onclick="openProfileModal()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      My Profile
-    </button>
 
     <!-- API Key Config -->
     <button class="apikey-btn" id="apiKeyBtn" onclick="openModal()">
