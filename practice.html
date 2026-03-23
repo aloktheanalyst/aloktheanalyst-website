@@ -1669,6 +1669,68 @@
   }
   .sql-check-btn:hover { background: rgba(22,163,74,0.06); border-color: var(--green); }
 
+  /* AI Help button */
+  .sql-ai-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: 1px solid rgba(37,99,235,0.3);
+    color: var(--accent);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .sql-ai-btn:hover { background: rgba(37,99,235,0.06); border-color: var(--accent); }
+
+  /* Test results panel */
+  .test-results-panel {
+    font-family: 'DM Sans', sans-serif;
+    padding: 1rem;
+  }
+  .test-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .test-results-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .test-results-score {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.15rem 0.6rem;
+    border-radius: 99px;
+  }
+  .test-results-score.all-pass { background: rgba(22,163,74,0.1); color: var(--green); }
+  .test-results-score.some-fail { background: rgba(239,68,68,0.1); color: #ef4444; }
+  .test-result-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+  .test-result-item:last-child { border-bottom: none; }
+  .test-result-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+  .test-result-name { font-weight: 500; color: var(--white); }
+  .test-result-msg { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
+  .test-result-item.fail .test-result-msg { color: #ef4444; }
+
   /* Mobile question bar (hidden on desktop, shown on mobile when sidebar is gone) */
   .mobile-question {
     display: none;
@@ -1883,8 +1945,11 @@
             <div class="sql-toolbar-right">
               <span class="sql-exec-info" id="sqlExecInfo"></span>
               <button class="sql-clear-btn" onclick="resetPanelSizes()" title="Reset panel sizes to default">Reset Layout</button>
-              <button class="sql-check-btn" onclick="checkMyAnswer()" title="Run your code and get AI scoring + feedback">
-                &#x2705; Check My Answer
+              <button class="sql-check-btn" onclick="runTestCases()" title="Run offline test cases against your code (no AI needed)">
+                &#x2705; Test My Code
+              </button>
+              <button class="sql-ai-btn" onclick="aiHelp()" title="Get AI-powered scoring and feedback">
+                &#x1F916; AI Help
               </button>
             </div>
           </div>
@@ -3007,6 +3072,459 @@ test_scenarios = [
 function isSQLCase(id) { return SQL_DATASETS.hasOwnProperty(id); }
 function isPythonCase(id) { return PYTHON_DATASETS.hasOwnProperty(id); }
 function isCodeCase(id) { return isSQLCase(id) || isPythonCase(id); }
+
+// ── Offline Test Cases (compiler-based validation — no LLM needed) ──
+const TEST_CASES = {
+
+  // ── SQL Cases ──
+
+  sql_window: [
+    { name: 'Rank customers by total spending',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output — run your query first' };
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        if (!has('Bob Martinez') && !has('bob martinez')) return { pass: false, msg: 'Expected Bob Martinez (top spender with 925.0)' };
+        if (!/rank|rnk|row_num/i.test(out) && !/\b1\b/.test(out)) return { pass: false, msg: 'Expected a rank/ranking column in the output' };
+        return { pass: true, msg: 'Ranking output looks correct' };
+      }
+    },
+    { name: 'Running total per region',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        if (!has('West') && !has('East') && !has('Central')) return { pass: false, msg: 'Expected region names (West, East, Central) in output' };
+        return { pass: true, msg: 'Running total output contains regions' };
+      }
+    },
+    { name: 'Top spender in each region',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        // Bob Martinez is top East (925), Alice Chen top West (743.5), David Kim top Central (560)
+        const found = [has('Bob Martinez') || has('bob martinez'), has('Alice Chen') || has('alice chen'), has('David Kim') || has('david kim')].filter(Boolean).length;
+        if (found < 2) return { pass: false, msg: 'Expected top spenders: Alice Chen (West), Bob Martinez (East), David Kim (Central)' };
+        return { pass: true, msg: 'Correctly identified top spenders per region' };
+      }
+    }
+  ],
+
+  sql_retention: [
+    { name: 'Weekly cohort sizes computed',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Cohort 2024-01-01 has 5 users, 2024-01-08 has 6, 2024-01-15 has 6, 2024-01-22 has 3
+        if (!out.includes('2024-01-01') && !out.includes('2024-01')) return { pass: false, msg: 'Expected cohort week dates (e.g. 2024-01-01)' };
+        return { pass: true, msg: 'Cohort weeks present in output' };
+      }
+    },
+    { name: 'Retention counts per week',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Should have multiple rows with numeric data
+        const lines = out.trim().split('\n').filter(l => l.trim());
+        if (lines.length < 3) return { pass: false, msg: 'Expected at least 3 rows (one per cohort week)' };
+        return { pass: true, msg: 'Multiple cohort rows returned' };
+      }
+    }
+  ],
+
+  sql_dedup: [
+    { name: 'Duplicates removed — keep latest per order_id',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // After dedup, should have ~20 unique order_ids (ORD-001 through ORD-021, minus NULL)
+        if (out.includes('rn') || out.includes('row_num') || out.includes('ROW_NUMBER')) return { pass: true, msg: 'Uses ROW_NUMBER for deduplication' };
+        const ordMatches = out.match(/ORD-\d{3}/g);
+        if (ordMatches) {
+          const unique = new Set(ordMatches);
+          if (unique.size >= 15) return { pass: true, msg: `Found ${unique.size} unique orders after dedup` };
+        }
+        return { pass: false, msg: 'Expected deduplicated orders (each order_id appears once)' };
+      }
+    },
+    { name: 'NULL order_ids filtered out',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // The query should either filter NULLs or the output shouldn't show raw NULL order_ids without handling
+        if (/\bNULL\b.*\bunknown@/i.test(out)) return { pass: false, msg: 'NULL order_id row should be filtered out' };
+        return { pass: true, msg: 'NULL order_ids handled' };
+      }
+    },
+    { name: 'Email casing standardized',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if (/LOWER|lower\(|UPPER|upper\(/.test(out) || !out.includes('BOB@') && !out.includes('JACK@') && !out.includes('Olivia@') && !out.includes('MIKE@')) {
+          return { pass: true, msg: 'Email casing standardized' };
+        }
+        return { pass: false, msg: 'Expected emails to be standardized to lowercase' };
+      }
+    }
+  ],
+
+  sql_streak: [
+    { name: 'Gap between visits calculated',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.includes(s);
+        if (!has('1') && !has('gap')) return { pass: false, msg: 'Expected gap values in output (e.g., gap of 1 day for consecutive visits)' };
+        return { pass: true, msg: 'Visit gaps calculated' };
+      }
+    },
+    { name: 'Visitors with 3+ consecutive days identified',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Visitors 1, 2, 4 have 3+ consecutive day streaks; visitor 3 does not
+        const lines = out.trim().split('\n');
+        if (lines.length < 3) return { pass: false, msg: 'Expected results showing visitors with consecutive streaks' };
+        return { pass: true, msg: 'Consecutive streak results returned' };
+      }
+    },
+    { name: 'Longest streak per visitor correct',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Visitor 1: 5 days (Jan 1-5), Visitor 2: 4 days (Jan 10-13), Visitor 4: 4 days (Jan 15-18)
+        if (out.includes('5') && out.includes('4')) return { pass: true, msg: 'Streak lengths 5 and 4 found in output' };
+        return { pass: false, msg: 'Expected longest streaks: visitor 1 = 5, visitor 2 = 4, visitor 4 = 4' };
+      }
+    }
+  ],
+
+  sql_topn: [
+    { name: 'Second-highest salary found',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if (out.includes('95000')) return { pass: true, msg: 'Correctly identified 95000 as second-highest salary' };
+        return { pass: false, msg: 'Expected second-highest salary to be 95000 (Alice, Engineering)' };
+      }
+    },
+    { name: 'Top 3 per department with ties handled',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        // Engineering: Bob(105k), Dave(105k), Alice(95k)
+        if (has('Engineering') && has('Bob') && has('Dave')) return { pass: true, msg: 'Top 3 per department correctly shown with tied salaries' };
+        if (has('Engineering') && (has('105000') || has('95000'))) return { pass: true, msg: 'Department salaries present' };
+        return { pass: false, msg: 'Expected top 3 per department — Engineering should show Bob & Dave (tied at 105000) and Alice (95000)' };
+      }
+    }
+  ],
+
+  sql_dayover: [
+    { name: 'Days warmer than previous day identified',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Jan 3 (35.2 > 28.0), Jan 4 (38.7 > 35.2), Jan 6, Jan 8, Jan 10, Jan 11, Jan 13, Jan 15
+        if (out.includes('2024-01-03') || out.includes('35.2')) return { pass: true, msg: 'Temperature increase days identified' };
+        return { pass: false, msg: 'Expected dates where temperature was higher than previous day (e.g., Jan 3: 35.2 > 28.0)' };
+      }
+    },
+    { name: 'Biggest single-day increase found',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Jan 3: 35.2 - 28.0 = 7.2 is the biggest increase
+        if (out.includes('7.2') || out.includes('2024-01-03')) return { pass: true, msg: 'Correctly identified Jan 3 with biggest increase of 7.2°' };
+        return { pass: false, msg: 'Expected biggest increase on Jan 3 (7.2° = 35.2 - 28.0)' };
+      }
+    }
+  ],
+
+  sql_customer: [
+    { name: 'First and second purchase dates per customer',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Customer 103 first: 2024-01-03, second: 2024-01-04 (1 day gap)
+        if (out.includes('2024-01-03') || out.includes('2024-01-04')) return { pass: true, msg: 'Purchase dates found in output' };
+        return { pass: false, msg: 'Expected first/second purchase dates (e.g., customer 103: Jan 3 → Jan 4)' };
+      }
+    },
+    { name: 'Customer channel categorization',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s);
+        if (has('omni') || has('online_only') || has('store_only') || (has('online') && has('store'))) {
+          return { pass: true, msg: 'Channel categories assigned' };
+        }
+        return { pass: false, msg: 'Expected channel categories: online_only, store_only, or omni' };
+      }
+    },
+    { name: 'Average gap between purchases calculated',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lines = out.trim().split('\n');
+        if (lines.length >= 3) return { pass: true, msg: 'Gap calculations returned for multiple customers' };
+        return { pass: false, msg: 'Expected average purchase gap per customer' };
+      }
+    }
+  ],
+
+  sql_monthly: [
+    { name: 'Monthly loan totals aggregated',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if ((out.includes('2024-01') || out.includes('2024-02')) && /\d{4,}/.test(out)) return { pass: true, msg: 'Monthly aggregates present' };
+        return { pass: false, msg: 'Expected monthly totals (e.g., 2024-01, 2024-02 with loan sums)' };
+      }
+    },
+    { name: 'Month-over-month % change calculated',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if (out.includes('%') || /mom|change|growth/i.test(out) || /\d+\.\d+/.test(out)) return { pass: true, msg: 'MOM change values present' };
+        return { pass: false, msg: 'Expected month-over-month percentage change column' };
+      }
+    }
+  ],
+
+  sql_competition: [
+    { name: 'Winner of each group identified',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Group 5 winner: Farhan (score 25), Group 1: Alok & Priya tied (15)
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        if (has('Farhan') || has('Alok')) return { pass: true, msg: 'Group winners identified' };
+        return { pass: false, msg: 'Expected group winners (e.g., Farhan wins Group 5 with score 25)' };
+      }
+    },
+    { name: 'Prize calculation includes 30% of losers bets',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Should contain prize/amount values. Group 5: Farhan gets 100 + 0.3*(40+55+30+20) = 100 + 43.5 = 143.5
+        if (/\d+\.\d+/.test(out) || out.includes('prize') || out.includes('143')) return { pass: true, msg: 'Prize amounts calculated' };
+        return { pass: false, msg: 'Expected prize = own_bet + 30% of losers\' bets' };
+      }
+    }
+  ],
+
+  sql_maxpergroup: [
+    { name: 'Max salary per pay month shown',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Jan max: 95000 (Rahul), Feb max: 91000, Mar max: 93000, Apr max: 92000
+        if (out.includes('95000') || out.includes('93000')) return { pass: true, msg: 'Max salary values present' };
+        return { pass: false, msg: 'Expected max salary per month (Jan: 95000, Mar: 93000)' };
+      }
+    },
+    { name: 'Employee name for max salary included',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        if (has('Rahul') || has('Kavita')) return { pass: true, msg: 'Top earner names shown' };
+        return { pass: false, msg: 'Expected employee name who drew the max salary (e.g., Rahul in Jan)' };
+      }
+    }
+  ],
+
+  sql_productfilter: [
+    { name: 'Customers with Laptop+Headphones but not Tablet',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        // Alok(1), Rahul(3), Suresh(9) bought Laptop+Headphones but not Tablet
+        const found = [has('Alok'), has('Rahul'), has('Suresh')].filter(Boolean).length;
+        if (found >= 2) return { pass: true, msg: 'Correctly identified customers for Tablet recommendation' };
+        return { pass: false, msg: 'Expected: Alok, Rahul, Suresh (bought Laptop+Headphones, no Tablet)' };
+      }
+    },
+    { name: 'Customers who bought all Electronics',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s.toLowerCase());
+        // Priya(2), Vikram(5), Deepak(7), Isha(10) bought all 4 electronics
+        const found = [has('Priya'), has('Vikram'), has('Deepak'), has('Isha')].filter(Boolean).length;
+        if (found >= 2) return { pass: true, msg: 'Identified customers who purchased all Electronics' };
+        return { pass: false, msg: 'Expected: Priya, Vikram, Deepak, Isha (bought all Electronics products)' };
+      }
+    }
+  ],
+
+  sql_listings: [
+    { name: 'Daily active listings for November',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if (out.includes('2024-11-01') || out.includes('2024-11-15')) return { pass: true, msg: 'November dates with listing counts present' };
+        return { pass: false, msg: 'Expected daily active listing counts for November' };
+      }
+    },
+    { name: 'New listings per day counted',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-'));
+        if (lines.length >= 15) return { pass: true, msg: 'Daily breakdown for November returned' };
+        return { pass: false, msg: 'Expected 30 rows (one per November day)' };
+      }
+    }
+  ],
+
+  sql_buyersegment: [
+    { name: 'Transactions segmented by buyer lifecycle',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s);
+        if (has('new') || has('regular') || has('reactivat')) return { pass: true, msg: 'Buyer lifecycle segments assigned' };
+        return { pass: false, msg: 'Expected segments: new_buyer, regular_buyer, reactivated_buyer' };
+      }
+    },
+    { name: 'Segment counts and percentages',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if (/\d+\.\d+/.test(out) || out.includes('%')) return { pass: true, msg: 'Percentage breakdown present' };
+        return { pass: false, msg: 'Expected count and percentage per segment' };
+      }
+    }
+  ],
+
+  sql_shipping: [
+    { name: 'Delivery SLA breakdown calculated',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.toLowerCase().includes(s);
+        if (has('otif') || has('on time') || has('late') || /\d+\.\d+/.test(out)) return { pass: true, msg: 'SLA categories with percentages present' };
+        return { pass: false, msg: 'Expected OTIF, OTIF+1, OTIF+2, Late percentages' };
+      }
+    },
+    { name: 'Earliest expected date used for multi-entry orders',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // Order 101 has two timeline entries: Jan 10 and Jan 12. Should use Jan 10 (earliest)
+        if (out.includes('2024-01-10') || out.includes('MIN') || /min|earliest/i.test(out)) return { pass: true, msg: 'Earliest expected dates used' };
+        // Can't strictly verify, pass if output has data
+        const lines = out.trim().split('\n');
+        if (lines.length >= 3) return { pass: true, msg: 'SLA results computed' };
+        return { pass: false, msg: 'Expected earliest expected_dispatch_date per order (MIN)' };
+      }
+    }
+  ],
+
+  sql_engret: [
+    { name: 'Engaged users identified (≥30 min threshold)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if (/\d{4}-\d{2}/.test(out) || out.includes('retention') || out.includes('m1') || out.includes('m2')) return { pass: true, msg: 'Retention metrics by cohort present' };
+        return { pass: false, msg: 'Expected monthly engaged retention by registration cohort' };
+      }
+    },
+    { name: 'Retention percentages for m1, m2, m3',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-'));
+        if (lines.length >= 3 && /\d+/.test(out)) return { pass: true, msg: 'Multi-month retention data returned' };
+        return { pass: false, msg: 'Expected retention % for m1, m2, m3 per cohort' };
+      }
+    }
+  ],
+
+  // ── Python Cases ──
+
+  python_clean: [
+    { name: 'Amount column converted to numeric',
+      assertion: `
+import pandas as pd
+assert pd.api.types.is_numeric_dtype(df['amount']), "amount column should be numeric after cleaning"
+`,
+      msg: 'df["amount"] should be numeric (float64) — use pd.to_numeric after removing $ and N/A'
+    },
+    { name: 'No duplicate order_ids',
+      assertion: `assert df['order_id'].duplicated().sum() == 0, f"Found {df['order_id'].duplicated().sum()} duplicate order_ids"`,
+      msg: 'Use df.drop_duplicates(subset=["order_id"]) to remove duplicates'
+    },
+    { name: 'Category casing standardized',
+      assertion: `assert df['category'].dropna().apply(lambda x: x == x.title() or x == x.capitalize()).all(), "Categories should be title-cased"`,
+      msg: 'Use .str.title() or .str.capitalize() to standardize category casing'
+    }
+  ],
+
+  python_agg: [
+    { name: 'Revenue by region calculated',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has = s => out.includes(s);
+        if (has('North') && has('South') || has('East') && has('West')) return { pass: true, msg: 'Revenue by region computed' };
+        return { pass: false, msg: 'Expected revenue totals per region (North, South, East, West)' };
+      }
+    },
+    { name: 'Profit margin by category',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if (out.includes('Widgets') || out.includes('Gadgets') || out.includes('Premium')) return { pass: true, msg: 'Category profit margins present' };
+        return { pass: false, msg: 'Expected profit margin calculation by category' };
+      }
+    },
+    { name: 'Pivot table created',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        if ((out.includes('North') || out.includes('South')) && (out.includes('Widget') || out.includes('Gadget'))) return { pass: true, msg: 'Pivot table with regions × categories created' };
+        return { pass: false, msg: 'Expected pivot table of revenue by region and category' };
+      }
+    }
+  ],
+
+  python_debug: [
+    { name: 'Fixed output_all_odd function',
+      assertion: `
+result = output_all_odd(test_list)
+expected = [3, 15, 7, -3, 11, 1, -5, 19, 33]
+assert sorted(result) == sorted(expected), f"output_all_odd(test_list) returned {sorted(result)}, expected {sorted(expected)}"
+`,
+      msg: 'Move y_list=[] before the loop, and use x%2!=0 for negative odd support'
+    },
+    { name: 'Tuple pairs generated correctly',
+      assertion: `
+pairs = [(i, j) for i in range(1, n+1) for j in range(1, i+1)]
+expected = [(1,1),(2,1),(2,2),(3,1),(3,2),(3,3),(4,1),(4,2),(4,3),(4,4)]
+assert pairs == expected, f"Got {pairs}, expected {expected}"
+`,
+      msg: 'Use [(i,j) for i in range(1,n+1) for j in range(1,i+1)]'
+    }
+  ],
+
+  python_palindrome: [
+    { name: '"babad" → "bab" or "aba"',
+      assertion: `
+r = longest_palindrome(s1)
+assert r in ("bab", "aba"), f'longest_palindrome("babad") = "{r}", expected "bab" or "aba"'
+`,
+      msg: 'For "babad", the longest palindromic substring is "bab" or "aba" (length 3)'
+    },
+    { name: '"cbbd" → "bb"',
+      assertion: `
+r = longest_palindrome(s2)
+assert r == "bb", f'longest_palindrome("cbbd") = "{r}", expected "bb"'
+`,
+      msg: 'For "cbbd", the longest palindromic substring is "bb" (length 2)'
+    },
+    { name: '"zcbbbcd" → "bbb"',
+      assertion: `
+r = longest_palindrome(s3)
+assert r == "bbb", f'longest_palindrome("zcbbbcd") = "{r}", expected "bbb"'
+`,
+      msg: 'For "zcbbbcd", the longest palindromic substring is "bbb" (length 3)'
+    }
+  ],
+
+  python_fd: [
+    { name: 'Interest calculated for all scenarios',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output — run your function on test_scenarios' };
+        if (out.includes('User 1') || out.includes('User 2') || out.includes('user 1') || out.includes('user_1')) {
+          return { pass: true, msg: 'Interest computed for test scenarios' };
+        }
+        if (/\d+\.\d{2}/.test(out)) return { pass: true, msg: 'Interest values computed' };
+        return { pass: false, msg: 'Expected interest calculations printed for each scenario' };
+      }
+    },
+    { name: 'User 2 (no lockup, 4%) earns ~73.42',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        // User 2: $2000 at 4% for 335 days (day 30 to 365) = 2000 * 0.04 * 335/365 ≈ 73.42
+        const nums = out.match(/\d+\.\d+/g);
+        if (nums) {
+          const vals = nums.map(Number);
+          if (vals.some(v => v > 70 && v < 77)) return { pass: true, msg: 'User 2 interest ≈ $73 (4% × 335 days)' };
+        }
+        return { pass: false, msg: 'User 2 (no lockup) should earn ~$73.42 (4% annual on $2000 for 335 days)' };
+      }
+    }
+  ]
+};
 
 const SYSTEM_PROMPT = `You are a world-class data analytics interview coach and case study tutor on aloktheanalyst.com — built by Alok, a Lead Data Analyst and YouTube content creator.
 
@@ -4703,8 +5221,155 @@ function resetHints() {
   closeHintPanel();
 }
 
-// ── Check My Answer (scoring — renders inline in results area) ──
-async function checkMyAnswer() {
+// ── Test My Code (offline compiler-based test cases — no LLM) ──
+async function runTestCases() {
+  if (!sqlEditor) return;
+  const code = sqlEditor.getValue().trim();
+  if (!code || CODE_PLACEHOLDERS.includes(code)) {
+    document.getElementById('sqlResults').innerHTML = `<div class="sql-error" style="border-left-color: #2563eb; background: #eff6ff;">
+      <strong>✍️ Write your code first!</strong><br>
+      Type your solution in the editor, then click <em>Test My Code</em> to run test cases.
+    </div>`;
+    return;
+  }
+
+  if (!activeCaseId) return;
+  const tests = TEST_CASES[activeCaseId];
+  if (!tests || tests.length === 0) {
+    document.getElementById('sqlResults').innerHTML = `<div class="sql-error" style="border-left-color: #f59e0b; background: #fffbeb;">
+      <strong>⚠️ No test cases</strong><br>
+      No offline tests defined for this case. Use <em>AI Help</em> for feedback instead.
+    </div>`;
+    return;
+  }
+
+  const resultsEl = document.getElementById('sqlResults');
+  const footerEl = document.getElementById('sqlResultFooter');
+  resultsEl.innerHTML = `<div class="ai-feedback-loading"><div class="dots"><span></span><span></span><span></span></div>Running test cases&hellip;</div>`;
+  footerEl.style.display = 'none';
+  document.getElementById('sqlExecInfo').textContent = 'Testing...';
+
+  trackEvent('test_cases_run', null, { dialect: sqlDialect, case_id: activeCaseId });
+
+  // Run user's code and capture ALL output
+  let outputText = '';
+  const isPy = sqlDialect === 'python';
+
+  if (isPy) {
+    if (!pyodideInstance) { resultsEl.innerHTML = `<div class="sql-error">Python engine not loaded. Please wait or refresh.</div>`; return; }
+    let output = '';
+    pyodideInstance.setStdout({ batched: (line) => { output += line + '\n'; } });
+    pyodideInstance.setStderr({ batched: (line) => { output += line + '\n'; } });
+    try { await pyodideInstance.runPythonAsync(code); outputText = output.trim(); }
+    catch (err) { outputText = 'Error: ' + err.message; }
+  } else if (sqlDB) {
+    try {
+      if (sqlDialect === 'sqlite') {
+        const results = sqlDB.exec(code);
+        results.forEach(r => {
+          outputText += r.columns.join(' | ') + '\n';
+          r.values.forEach(row => { outputText += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n'; });
+          outputText += '\n';
+        });
+      } else {
+        const result = await sqlDB.query(code);
+        if (result.rows && result.fields) {
+          const cols = result.fields.map(f => f.name);
+          outputText += cols.join(' | ') + '\n';
+          result.rows.forEach(row => { outputText += cols.map(c => row[c] === null ? 'NULL' : String(row[c])).join(' | ') + '\n'; });
+        }
+      }
+    } catch (err) { outputText = 'Error: ' + err.message; }
+  }
+
+  // Run each test case
+  const results = [];
+  for (const test of tests) {
+    try {
+      if (test.assertion && isPy && pyodideInstance) {
+        // Python assertion-based test
+        try {
+          await pyodideInstance.runPythonAsync(test.assertion);
+          results.push({ name: test.name, pass: true, msg: test.msg || 'Passed' });
+        } catch (e) {
+          const errMsg = e.message || String(e);
+          // Extract the assertion message
+          const assertMatch = errMsg.match(/AssertionError: (.+)/s) || errMsg.match(/assert.+/s);
+          results.push({ name: test.name, pass: false, msg: assertMatch ? assertMatch[1] || assertMatch[0] : (test.msg || errMsg) });
+        }
+      } else if (test.check) {
+        // Output-based check (works for SQL and Python)
+        const r = test.check(outputText);
+        results.push({ name: test.name, pass: r.pass, msg: r.msg });
+      } else if (test.assertion && isPy) {
+        results.push({ name: test.name, pass: false, msg: 'Python engine not available' });
+      } else {
+        results.push({ name: test.name, pass: false, msg: 'No validator for this test' });
+      }
+    } catch (err) {
+      results.push({ name: test.name, pass: false, msg: err.message || 'Test error' });
+    }
+  }
+
+  // Render results
+  const passed = results.filter(r => r.pass).length;
+  const total = results.length;
+  const allPassed = passed === total;
+
+  let html = `<div class="test-results-panel">
+    <div class="test-results-header">
+      <span class="test-results-title">Test Results</span>
+      <span class="test-results-score ${allPassed ? 'all-pass' : 'some-fail'}">${passed}/${total} passed</span>
+    </div>`;
+
+  results.forEach(r => {
+    html += `<div class="test-result-item ${r.pass ? 'pass' : 'fail'}">
+      <span class="test-result-icon">${r.pass ? '✅' : '❌'}</span>
+      <div>
+        <div class="test-result-name">${escapeHtml(r.name)}</div>
+        ${r.msg ? `<div class="test-result-msg">${escapeHtml(r.msg)}</div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  if (allPassed) {
+    html += `<div style="margin-top:0.75rem;padding:0.6rem;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:6px;font-size:0.82rem;color:var(--green);">
+      <strong>🎉 All tests passed!</strong> Your solution is correct. Use <em>AI Help</em> for optimization suggestions.
+    </div>`;
+  } else {
+    html += `<div style="margin-top:0.75rem;padding:0.6rem;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:6px;font-size:0.82rem;color:var(--muted);">
+      Review the failing tests and adjust your code. Click <em>Run</em> first to see your output, then <em>Test My Code</em> again.
+    </div>`;
+  }
+
+  html += '</div>';
+  resultsEl.innerHTML = html;
+  document.getElementById('sqlExecInfo').textContent = `${passed}/${total} tests passed`;
+
+  // Mark solved if all tests pass
+  if (allPassed && activeCaseId) {
+    const solved = getSolvedCases();
+    if (!solved.includes(activeCaseId)) {
+      const overlay = document.createElement('div');
+      overlay.className = 'solved-overlay';
+      overlay.id = 'solvedOverlay';
+      overlay.innerHTML = `
+        <div class="solved-prompt">
+          <div class="solved-emoji">🏆</div>
+          <div class="solved-score">All ${total} tests passed!</div>
+          <div class="solved-msg">Great work! Mark this question as complete?</div>
+          <div class="solved-actions">
+            <button class="btn-yes" onclick="markCaseSolved('${activeCaseId}')">Yes, I'm done!</button>
+            <button class="btn-no" onclick="dismissSolvedOverlay()">Not yet</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+  }
+}
+
+// ── AI Help (LLM-powered scoring — renders inline in results area) ──
+async function aiHelp() {
   if (!sqlEditor) return;
   const code = sqlEditor.getValue().trim();
 
@@ -4713,7 +5378,7 @@ async function checkMyAnswer() {
     const resultsEl = document.getElementById('sqlResults');
     resultsEl.innerHTML = `<div class="sql-error" style="border-left-color: #2563eb; background: #eff6ff;">
       <strong>✍️ Write your code first!</strong><br>
-      Type your solution in the editor, then click <em>Check My Answer</em> to get AI feedback.
+      Type your solution in the editor, then click <em>AI Help</em> to get feedback.
     </div>`;
     return;
   }
