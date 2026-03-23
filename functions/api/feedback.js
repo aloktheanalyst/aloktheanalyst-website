@@ -88,8 +88,8 @@ export async function onRequest(context) {
 
   // Build Resend payload
   const emailPayload = {
-    from: 'Feedback <onboarding@resend.dev>',
-    to: ['aloktheanalyst@gmail.com'],
+    from: 'Feedback <feedback@aloktheanalyst.com>',
+    to: ['info@aloktheanalyst.com'],
     subject: `Feedback: ${page || '/'}`,
     html,
   };
