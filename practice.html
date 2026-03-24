@@ -2155,6 +2155,28 @@ const PROMPTS = [
   { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'storytelling',  title: 'Data Storytelling for Stakeholders',   topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
 
+  // ── More Case Studies ──
+  { id: 'cs_northstar',    title: 'Define the North Star Metric',                topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_cannibalize',  title: 'Is the New Feature Cannibalizing Revenue?',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_fraud',        title: 'Detect Fraudulent Transactions',              topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_churn',        title: 'Predict & Reduce Customer Churn',             topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_pricing',      title: 'Pricing Strategy for a Subscription App',     topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_launch',       title: 'Should We Launch in a New Market?',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_notif',        title: 'Push Notification Strategy (Engagement vs Spam)', topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_search',       title: 'Improve Search Relevance on E-commerce',      topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_referral',     title: 'Measure ROI of a Referral Program',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_seasonality',  title: 'Disentangle Seasonality from Real Growth',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_segment',      title: 'Customer Segmentation for Marketing',         topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_abnovelt',     title: 'A/B Test Shows Positive — But Is It Novelty?', topic: 'casestudy', difficulty: 'hard',  tag: 'Case Study' },
+  { id: 'cs_dashboard',    title: 'Design an Executive Dashboard',               topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
+  { id: 'cs_supply',       title: 'Supply-Demand Imbalance (Marketplace)',        topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_retention',    title: 'Day 1 vs Day 7 vs Day 30 Retention Analysis', topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_cannedresp',   title: 'Measure Impact of AI Chatbot on Support',     topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_ltv',          title: 'Estimate Customer Lifetime Value (LTV)',       topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_attribution',  title: 'Marketing Attribution Model',                 topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'cs_paywall',      title: 'When to Show the Paywall?',                   topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_coldstart',    title: 'Cold Start Problem (Recommendation Engine)',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+
   // ── Puzzles ──
   { id: 'pz_45min',       title: 'Measure 45 Minutes (Two Wires)',       topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
   { id: 'pz_daughters',   title: 'Find the Ages of Three Daughters',    topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
@@ -3857,6 +3879,306 @@ Guide the user:
 
 Follow-up: If a parent says "I picked one child at random, and it turned out to be a boy," what is P(both boys) now? (Answer: 1/2, because the selection mechanism matters.)`,
 
+  cs_northstar: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** You've just joined a food delivery startup as the first data analyst. The CEO asks: "What should our North Star metric be?" The company is 18 months old, growing fast, operating in 5 cities with 500K registered users and 80K monthly active orderers. Candidate has access to: orders placed, GMV, DAU/WAU/MAU, average delivery time, reorder rate, customer NPS, and contribution margin per order.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to restate the problem and identify what "success" looks like. What stage is this company in — growth or profitability?
+2. **Identify Key Metrics** — What metrics would they consider? Push them to evaluate GMV, orders, DAU, delivery time, reorder rate. What are the pros/cons of each?
+3. **Propose an Approach** — How would they narrow to one North Star? Push for leading vs lagging distinction, and alignment to business model.
+4. **Analyze & Interpret** — Walk through tradeoffs: GMV can be gamed by discounts; DAU doesn't reflect monetization; reorder rate reflects true habit formation. Ask them to consider edge cases.
+5. **Recommend & Communicate** — Ask them to summarize their recommendation for the CEO in 2 sentences.
+
+Always push for specificity: "How would you define 'active' in DAU?", "What would you tell the CEO if GMV went up but reorder rate went down?", "What supporting metrics would sit below the North Star?"`,
+
+  cs_cannibalize: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** An e-commerce company launched a "Quick Commerce" 10-minute delivery feature 6 months ago. Premium delivery revenue is up 30%, but standard delivery orders dropped 20%. The CFO asks: is the new feature cannibalizing our existing business or growing the pie? You have customer-level order history (pre and post launch), order type (standard vs quick), customer acquisition date, and regional rollout data (Quick Commerce launched in 3 cities, not all cities).
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to define "cannibalization" precisely. What would the counterfactual world look like without Quick Commerce?
+2. **Identify Key Metrics** — What metrics reveal cannibalization vs growth? Push for: net revenue change, new customer acquisition, customer overlap between product lines, order frequency per customer.
+3. **Propose an Approach** — How would they use the regional rollout as a natural experiment? Guide them toward difference-in-differences analysis.
+4. **Analyze & Interpret** — Walk through: if customers in Quick Commerce cities show higher total orders, that's growth. If they shifted spend from standard to quick with no net increase, that's cannibalization. Ask about new vs existing customer mix.
+5. **Recommend & Communicate** — Ask them to frame findings for the CFO: "The net revenue impact is X because..."
+
+Always push for specificity: "What SQL query would identify customers who used both product lines?", "How would you visualize the before/after order pattern?", "What would a DID regression table look like here?"`,
+
+  cs_fraud: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** You're a data analyst at a digital payments company (like PhonePe/Paytm). The risk team flags that fraud losses doubled last quarter — from ₹2Cr to ₹4Cr. You have transaction data: amount, merchant category, transaction time, device ID, IP/location, user account age, historical transaction velocity, and whether a chargeback was filed.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: what type of fraud are we solving? Account takeover, synthetic identity, merchant fraud, or friendly fraud? This shapes the approach.
+2. **Identify Key Metrics** — What signals indicate fraud? Push for: unusual transaction amount (vs user history), unusual time, new device, location mismatch, velocity (5 transactions in 10 minutes), high-risk merchant categories.
+3. **Propose an Approach** — Guide through building rule-based flags first (fast, interpretable) before ML. What rules would they write?
+4. **Analyze & Interpret** — Walk through the false positive vs false negative tradeoff. If you flag 10% of transactions for review, what's the cost to legitimate users? How do you tune the threshold?
+5. **Recommend & Communicate** — Ask them to propose a tiered response: auto-block vs step-up authentication vs flag for review.
+
+Always push for specificity: "Write the SQL to find users with 3+ transactions in under 5 minutes", "How would you measure the precision and recall of your rules?", "What would you tell the Head of Risk about the ₹4Cr loss?"`,
+
+  cs_churn: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A subscription-based ed-tech platform (like Unacademy) sees 40% monthly churn among paid users — far above the 15% industry benchmark. Monthly subscription is ₹999. You have: login frequency (daily/weekly), video watch time per week, quiz completion rate, support ticket history, payment failure history, and days since last activity.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to define churn precisely. Is it non-renewal, cancellation, or inactivity? Does "40% churn" mean 40% of users who had a subscription this month won't have one next month?
+2. **Identify Key Metrics** — What leading indicators predict churn before it happens? Push for: declining login frequency, zero video watches in last 7 days, failed payment, no quiz attempts.
+3. **Propose an Approach** — How would they build a simple early-warning model? Walk through: pick a churn definition, create a labeled dataset, compute features 14 days before churn, train a logistic regression or decision tree.
+4. **Analyze & Interpret** — Ask them to reason through which feature matters most. Quiz completion likely signals deeper engagement. Push them to consider survivorship bias in their analysis.
+5. **Recommend & Communicate** — Ask them to propose 3 interventions ranked by effort vs expected impact (e.g., automated re-engagement email vs live tutor call vs discount offer).
+
+Always push for specificity: "What SQL query would identify users at risk of churning in the next 7 days?", "How would you A/B test the intervention?", "What would you tell the CEO is the #1 reason users are churning?"`,
+
+  cs_pricing: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A fitness app is launching a premium tier in India. They currently have a free tier with 5M MAU. They need to decide: ₹99/month, ₹199/month, or ₹299/month. They have: survey data (willingness to pay questions from 2,000 users), usage data (sessions/week, features used, workout completion rate), and benchmarks from similar apps.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: are we maximizing revenue, conversion rate, or LTV? These may suggest different price points. Also: what features are gated behind the premium tier?
+2. **Identify Key Metrics** — What data informs the pricing decision? Push for: willingness-to-pay distribution from survey, price elasticity concept, feature usage rates (which premium features are most used by free users?), competitor pricing.
+3. **Propose an Approach** — Guide through: analyze survey WTP data to find the Van Westendorp optimal price range, compare to feature value analysis, then design a pricing experiment.
+4. **Analyze & Interpret** — Walk through: ₹99 maximizes volume but may undervalue the product. ₹299 may signal premium but converts fewer. Push them to think about ARPU across price points, not just conversion rate.
+5. **Recommend & Communicate** — Ask them to recommend a price and an experiment design to validate before full rollout.
+
+Always push for specificity: "How would you analyze the survey WTP data in Excel or SQL?", "What sample size do you need for the pricing experiment?", "How do you avoid alienating existing free users during the experiment?"`,
+
+  cs_launch: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A B2B SaaS company (CRM tool) is considering launching in Southeast Asia. Currently India-only with 2,000 customers, ARR of ₹40Cr, NRR of 115%. The CEO asks: "Should we expand to Indonesia or Vietnam first?" You have: market sizing reports, competitor presence data, your own ICP (ideal customer profile) definition, and rough cost estimates for localization.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to define the decision criteria. Is this about speed of revenue, strategic positioning, or risk management? What does "first" mean — pilot with 10 customers or full launch?
+2. **Identify Key Metrics** — What data points matter for the market selection? Push for: TAM/SAM sizing, SMB density (the ICP), English proficiency (SaaS adoption proxy), competitive intensity, ease of doing business.
+3. **Propose an Approach** — Guide through building a weighted scorecard: identify 5-7 criteria, assign weights based on company strategy, score each market, compare.
+4. **Analyze & Interpret** — Walk through tradeoffs: Indonesia has larger market but more fragmented and price-sensitive. Vietnam is smaller but faster-growing tech sector. Push them to challenge the scorecard weights.
+5. **Recommend & Communicate** — Ask them to present a go/no-go recommendation with clear assumptions and the top 2 risks.
+
+Always push for specificity: "How would you estimate TAM for a CRM in Indonesia?", "What leading indicator would tell you within 90 days if the launch is working?", "What would you tell the CEO if both markets score equally?"`,
+
+  cs_notif: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A news app sends 8 push notifications/day and engagement is declining. Monthly notification opt-out rate increased from 5% to 12% in the last quarter. The PM asks: "How do we optimize our notification strategy?" You have: notification send logs (time, category, user), open rates, app session starts post-notification, and notification permission status per user.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to define "optimize." Is it maximizing opens, minimizing opt-outs, or maximizing downstream session depth? These might conflict.
+2. **Identify Key Metrics** — What metrics diagnose the problem? Push for: open rate by notification number (does #8 have near-zero opens?), opt-out rate by user segment, session quality post-notification, day-over-day notification fatigue signals.
+3. **Propose an Approach** — Guide through: segment users by engagement tier (power users vs casual), analyze open rate decay curve across the 8 daily notifications, propose frequency capping experiment.
+4. **Analyze & Interpret** — Walk through: the 8th notification likely has near-zero marginal value but significant opt-out cost. Ask them to think about the "silent churn" — users who don't opt out but ignore all notifications.
+5. **Recommend & Communicate** — Ask them to propose an A/B test: 8 vs 4 vs 2 notifications, with the right success metric (not just open rate, but 30-day retention).
+
+Always push for specificity: "Write the SQL to calculate open rate by notification sequence number", "How would you segment users for personalized notification frequency?", "What would you tell the PM if reducing to 3 notifications drops short-term opens but improves 30-day retention?"`,
+
+  cs_search: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** An e-commerce marketplace (like Flipkart) notices that 30% of searches return 0 results, and search-to-purchase conversion is only 2% (industry benchmark: 5-8%). You have: search query logs (raw text, user ID, timestamp, results count), click-through data, session data, and product catalog metadata (category, stock status, synonyms).
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to identify: is the problem more about 0-result searches or low conversion on searches that do return results? These need different fixes.
+2. **Identify Key Metrics** — What search quality metrics matter? Push for: zero-result rate, click-through rate on results, search abandonment rate, search-to-cart rate, query reformulation rate (user searches again after bad results).
+3. **Propose an Approach** — Guide through: analyze the zero-result queries — categorize them (typos, out-of-stock items, category-level queries, long-tail). Prioritize by query volume × missed GMV.
+4. **Analyze & Interpret** — Walk through improvements: spell correction for typos, synonym mapping ("sneakers" → "sports shoes"), fuzzy matching, showing in-stock alternatives for OOS queries. Ask them to estimate impact of each fix.
+5. **Recommend & Communicate** — Ask them to prioritize 3 improvements ranked by expected GMV impact and implementation complexity.
+
+Always push for specificity: "How would you extract the top 100 zero-result queries from search logs in SQL?", "How would you measure if a search improvement increased conversion without other confounds?", "What would you tell the VP of Product is the #1 quick win?"`,
+
+  cs_referral: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A fintech app launched a referral program: "Refer a friend, both get ₹100 cashback." After 3 months, 50,000 referrals were recorded. Total cost: ₹1Cr. The CMO asks: "Is this program worth the cost?" You have: referral event logs (referrer ID, referred user ID, date), transaction history for all users, and organic signup data from the same period.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: "worth it" means what? Break-even on CAC? LTV-positive cohort? Or strategic user quality target? Push them to define the success criterion.
+2. **Identify Key Metrics** — What metrics answer the ROI question? Push for: CAC from referral vs other channels, LTV of referred users (do they transact more?), fraud rate (self-referrals, fake accounts), incremental signups (how many would have signed up anyway?).
+3. **Propose an Approach** — Guide through: compare referred user cohort (activation rate, 30-day retention, first transaction rate) vs organic cohort from same period. Check for gaming: same device, same IP, circular referrals.
+4. **Analyze & Interpret** — Walk through: if referred users have 40% higher 90-day LTV than organic users, and CAC is ₹200 vs ₹500 for paid channels, the program may be excellent value. But if 30% of referrals are fraudulent, the real CAC is much higher.
+5. **Recommend & Communicate** — Ask them to make a continue/pause/modify recommendation with the key number that drives the decision.
+
+Always push for specificity: "Write the SQL to detect potential self-referral fraud", "How would you estimate the counterfactual — how many referred users would have signed up organically?", "What would you tell the CMO if LTV of referred users is lower than organic?"`,
+
+  cs_seasonality: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A travel booking platform shows revenue grew 35% YoY in December. The CEO celebrates in the all-hands meeting. But you, as the data analyst, suspect most of this is seasonality (holiday travel boom) masking flat underlying growth. You have: monthly revenue data for 3 years, booking category breakdowns (flights, hotels, packages), and some marketing spend data.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to articulate: what's the difference between seasonal growth and real growth? What question is the CEO actually trying to answer?
+2. **Identify Key Metrics** — What analysis techniques reveal real vs seasonal growth? Push for: month-over-month growth adjusted for seasonality, YoY same-period comparison, seasonal index calculation, trend line on seasonally-adjusted data.
+3. **Propose an Approach** — Guide through: calculate a seasonal index (e.g., December historically is 1.4× the annual monthly average). Apply it to "de-seasonalize" the data. What does the trend look like then?
+4. **Analyze & Interpret** — Walk through: if 2-year average December seasonal uplift is 38%, and this December grew only 35%, the company may actually be underperforming the seasonal baseline. Push them to reconcile this with the CEO's statement.
+5. **Recommend & Communicate** — Ask them how they'd present this to the CEO without being the "bad news bearer" — how to frame seasonality analysis constructively.
+
+Always push for specificity: "How would you calculate a seasonal index in Excel or SQL?", "What chart would best communicate trend vs seasonality?", "What would you say if the CEO challenges your analysis and says 35% growth is still great?"`,
+
+  cs_segment: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** An online grocery delivery service wants to run targeted marketing campaigns to improve retention. They have 2M customers with 18 months of data: order history (items, categories), order frequency, average order value (AOV), delivery zone, and time-of-day patterns. Currently they send the same promotional email to all 2M customers with 8% open rate.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: what's the goal of segmentation? More orders? Higher AOV? Reduce churn? This shapes which segmentation approach makes sense.
+2. **Identify Key Metrics** — What variables would they use to segment? Push for RFM: Recency (days since last order), Frequency (orders/month), Monetary (total spend). Also discuss behavioral (basket composition: fresh produce vs packaged goods) and lifecycle stage.
+3. **Propose an Approach** — Guide through implementing RFM: score each dimension 1-5, create segment labels (Champions, At-Risk, Lost, New customers), profile each segment's characteristics.
+4. **Analyze & Interpret** — Walk through: Champions (high R, F, M) need loyalty rewards. At-Risk (high M but dropping F) need reactivation. Lost need win-back offer. New need onboarding nudge. Ask: what campaign would you design for each?
+5. **Recommend & Communicate** — Ask them to estimate the expected lift from segmented vs blanket campaigns and how they'd measure it.
+
+Always push for specificity: "Write the SQL to calculate RFM scores for each customer", "How would you validate that your segments are meaningfully different?", "What would you tell the CMO if the segmented campaign outperforms the blanket email by 40%?"`,
+
+  cs_abnovelt: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A social media app tested a new "Stories" feature in an A/B test. After 2 weeks, the treatment group shows +15% engagement (time-in-app). The PM is excited and wants to ship it immediately. You look at the data more carefully and suspect there's a novelty effect inflating the result. You have: daily engagement metrics by user, cohort data, and the A/B test assignment log.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: what is the novelty effect, and why does it matter here? Push them to articulate: users engage more with any new feature just because it's new, not because it's genuinely better.
+2. **Identify Key Metrics** — What signals indicate novelty effect vs genuine improvement? Push for: engagement trend over time within the test period (is week 2 lower than week 1?), new feature usage rate decaying over days, comparison to cohort that's been using the feature longest.
+3. **Propose an Approach** — Guide through: plot engagement by day for treatment group — if it spikes then declines, that's novelty. Compare Day 1-3 engagement to Day 12-14 engagement within treatment. Run a habituation curve analysis.
+4. **Analyze & Interpret** — Walk through: if engagement at Day 14 is similar to control, the 15% lift is entirely novelty. If it stabilizes at +8% above control, that's a real effect. Push them to recommend a longer test period (4-6 weeks) before shipping.
+5. **Recommend & Communicate** — Ask them how to advise the PM who wants to ship now. How do you balance speed vs statistical confidence?
+
+Always push for specificity: "What visualization would you show the PM to demonstrate novelty effect?", "How long should the test run to observe post-novelty steady state?", "What would you say to the PM if they push back saying 'even novelty-driven engagement is still engagement'?"`,
+
+  cs_dashboard: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** The VP of Sales at a mid-size B2B SaaS company asks you to build an executive dashboard. Currently, they receive a weekly email report with 30+ metrics compiled manually from 4 different systems (Salesforce, HubSpot, billing system, support tool). They want something live and interactive. You need to decide: which metrics, which tool, which design.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: who is the primary audience — the VP alone or the entire sales team? What decisions does this dashboard need to support? What's broken about the current 30-metric email?
+2. **Identify Key Metrics** — Guide them to ruthlessly cut from 30 to 5-7 metrics. Push for: pipeline value, win rate, average deal cycle length, ARR from new vs expansion, churn rate, quota attainment. How do they decide what to cut?
+3. **Propose an Approach** — Walk through: define the top-level KPIs, then design drill-down for each (e.g., win rate overall → by rep → by deal size → by industry). Choose appropriate visualization types (trend lines, bar charts, funnels, scorecards).
+4. **Analyze & Interpret** — Ask them to identify common dashboard anti-patterns: too many metrics, no context (actuals without targets), misleading chart types, no alerting. What makes a dashboard actually get used?
+5. **Recommend & Communicate** — Ask them to sketch a layout: what goes in the top row (most important), what's in drill-downs, and what triggers an alert to the VP.
+
+Always push for specificity: "What chart type would you use for pipeline trend and why?", "How would you set up automated alerting if win rate drops below 20%?", "What would you tell the VP when they ask to add back all 30 metrics?"`,
+
+  cs_supply: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A ride-hailing platform (like Ola) faces severe supply-demand imbalance in Mumbai. Surge pricing hits 3× during 8-10 AM morning rush, causing rider complaints and cancellations. Meanwhile, drivers are idle from 1-4 PM. The operations team asks: "How do we fix the morning supply shortage?" You have: trip request logs (time, zone, status), driver location/availability logs, and driver earnings data.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to be specific: is the morning surge a driver shortage, a geographic mismatch (drivers in wrong zones), or a structural issue (drivers prefer other times)? These need different solutions.
+2. **Identify Key Metrics** — What data reveals the root cause? Push for: supply-demand ratio by hour and zone, driver online rate by time of day, unfulfilled request rate, driver earnings during morning peak vs afternoon, and driver feedback/surveys.
+3. **Propose an Approach** — Guide through analyzing driver behavior: why do drivers avoid the morning peak? (Higher traffic, more trip rejections, lower earnings per hour despite surge?) Propose solutions: guaranteed hourly earnings incentive, zone bonuses, shift pre-commitment with bonus.
+4. **Analyze & Interpret** — Walk through a zone-level heat map analysis: where are the highest unmet demand zones at 9 AM? Design a targeted incentive that routes drivers to those zones.
+5. **Recommend & Communicate** — Ask them to design a 30-day experiment to test morning incentives and define the success metric (% reduction in surge multiplier > 2×, OR unfulfilled request rate).
+
+Always push for specificity: "Write the SQL to compute supply-demand ratio by hour and zone", "How would you run an experiment when you can't randomize by individual driver easily?", "What would you tell the Head of Operations if the incentive cost exceeds the revenue from fulfilled trips?"`,
+
+  cs_retention: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A mobile gaming app has the following retention rates: Day 1 = 45%, Day 7 = 20%, Day 30 = 8%. Industry benchmarks for this game genre are: D1 = 40%, D7 = 15%, D30 = 5%. The PM is confused: Day 1 and Day 30 are above benchmark but Day 7 is lagging. The Head of Product asks: "What's happening between Day 1 and Day 7, and how do we fix it?" You have: event logs (level completed, item purchased, session start/end, social interaction), retention cohort data.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to interpret each stage: D1 = hook/onboarding quality, D7 = habit formation, D30 = core loop engagement. Which stage is the most critical lever given the data?
+2. **Identify Key Metrics** — What user behaviors in Days 2-6 predict whether a user will still be active on Day 7? Push for: levels completed by Day 3, social features used (friends, guild), in-app purchase, notifications enabled, progression past "wall" moments.
+3. **Propose an Approach** — Guide through aha moment analysis: compare Day 7 retained users vs churned users. What did retained users do differently on Day 2-3? Find the "aha moment" threshold (e.g., "users who complete level 5 by Day 3 have 2× Day 7 retention").
+4. **Analyze & Interpret** — Walk through: where is the drop-off point? Day 2? Day 4? Is there a difficulty spike or a progression wall that causes mass drop-off? Ask them to define a "progress funnel" for Days 1-7.
+5. **Recommend & Communicate** — Ask them to propose 3 specific product interventions (e.g., onboarding tutorial improvement, difficulty curve adjustment, Day 3 notification trigger) and how they'd A/B test each.
+
+Always push for specificity: "Write the SQL to identify what actions Day-7-retained users did on Day 2 that churned users didn't", "How would you visualize the retention curve alongside the in-game progression funnel?", "What would you tell the PM is the single most impactful change to make?"`,
+
+  cs_cannedresp: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A D2C brand (fashion e-commerce) launched an AI chatbot for customer support 6 months ago. Support ticket volume dropped 40% (from 10,000 to 6,000/month) and cost savings are ₹30L/month. However, CSAT scores dropped from 4.2 to 3.8 out of 5. The Head of Customer Experience asks: "Is the chatbot helping or hurting overall?" You have: ticket logs (channel: chatbot vs human, category, resolution status, time-to-resolve), CSAT survey responses, and escalation logs (chatbot → human handoff).
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: is the CSAT drop uniform across all ticket types, or concentrated in specific categories? A drop in "chatbot-resolved" CSAT is very different from a drop in "human-resolved" CSAT.
+2. **Identify Key Metrics** — What metrics diagnose chatbot performance? Push for: resolution rate by channel, CSAT by channel, escalation rate (chatbot → human), time-to-resolve comparison, and which ticket categories the chatbot handles vs escalates.
+3. **Propose an Approach** — Guide through: segment tickets by: (1) chatbot-fully-resolved, (2) chatbot-escalated-to-human, (3) direct-to-human. Calculate CSAT and resolution rate for each segment. Identify which ticket types the chatbot handles poorly.
+4. **Analyze & Interpret** — Walk through: if "order tracking" queries have 4.5 CSAT via chatbot but "return initiation" queries have 2.8 CSAT, the chatbot should handle tracking but route returns to humans. The net impact calculation: ₹30L saved minus cost of CSAT-driven churn.
+5. **Recommend & Communicate** — Ask them to propose a hybrid escalation policy: which query types should auto-escalate, and define the optimal human-AI handoff point.
+
+Always push for specificity: "Write the SQL to compute resolution rate and average CSAT by ticket category and channel", "How would you quantify the revenue impact of a 0.4-point CSAT drop?", "What would you tell the Head of CX if the chatbot is profitable on cost but is hurting brand loyalty?"`,
+
+  cs_ltv: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A subscription box service (like Country Delight for fresh dairy/produce) wants to calculate Customer LTV to determine how much to spend on marketing. Monthly subscription ranges from ₹500-₹2,000 depending on box size. They've been operating for 18 months. The CEO asks: "What's our LTV, and how should it inform our marketing budget?" You have: 18 months of transaction data, subscription start/end dates, monthly revenue per customer, and acquisition channel.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: LTV over what time horizon? And is this historical LTV or predictive LTV? Push them to acknowledge: with only 18 months of data, a 3-year LTV involves extrapolation.
+2. **Identify Key Metrics** — What inputs do you need for LTV? Push for: average monthly revenue per customer (ARPU), monthly churn rate, gross margin %, and discount rate. Walk through the formula: LTV = (ARPU × Gross Margin) / Monthly Churn Rate.
+3. **Propose an Approach** — Guide through a cohort-based approach: calculate retention curves for each monthly acquisition cohort, plot them, fit a survival curve, extrapolate. Compare cohort LTVs by acquisition channel.
+4. **Analyze & Interpret** — Walk through: if monthly churn is 8% and ARPU is ₹1,000 with 60% gross margin, LTV = (₹1,000 × 0.6) / 0.08 = ₹7,500. Now ask: what LTV:CAC ratio is healthy for this business? (Typically 3:1 minimum for subscription.)
+5. **Recommend & Communicate** — Ask them to translate LTV into a marketing budget recommendation: "We can spend up to ₹X to acquire a customer profitably."
+
+Always push for specificity: "Write the SQL to compute a monthly retention curve by cohort", "How would you handle LTV calculation for a customer who paused their subscription for 2 months?", "What would you tell the CEO if the LTV:CAC ratio is currently 1.5:1?"`,
+
+  cs_attribution: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** An e-commerce brand spends across 5 marketing channels: Google Search Ads (₹50L/month), Facebook Ads (₹30L/month), Instagram Influencers (₹20L/month), Email Marketing (₹5L/month), and Affiliate Networks (₹15L/month). Last-click attribution shows Google gets 60% of conversion credit. The CMO suspects Instagram drives top-of-funnel awareness that Google then "harvests." She asks: "Are we over-investing in Google and under-investing in Instagram?" You have: full clickstream data (all touchpoints per customer journey), conversion events, and channel spend data.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: what decision does the CMO need to make? Reallocation of budget next month? Or a longer-term brand investment strategy? The time horizon matters.
+2. **Identify Key Metrics** — What attribution models should they consider? Push for: last-click (current), first-click, linear (equal credit), time-decay, position-based (40/20/40). Walk through what each says about Instagram vs Google.
+3. **Propose an Approach** — Guide through: compare attribution models using existing clickstream data. Then push to the gold standard: design an incrementality/geo holdout test — turn off Google in 3 cities for 2 weeks, measure revenue impact.
+4. **Analyze & Interpret** — Walk through: if position-based attribution shifts 15% of credit from Google to Instagram, does that change the ROI ranking? Calculate ROAS under each model. Discuss why no single attribution model is "correct."
+5. **Recommend & Communicate** — Ask them to propose a budget reallocation recommendation with confidence levels: "High confidence: Google is overvalued by X%. Medium confidence: Instagram deserves more. Test needed to confirm."
+
+Always push for specificity: "How would you implement a geo holdout experiment to measure Google's incrementality?", "What would a multi-touch attribution analysis look like in SQL?", "What would you tell the CMO if the incrementality test shows Google drives 80% of its attributed revenue even in isolation?"`,
+
+  cs_paywall: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** A media/content app (like The Ken or Scroll) has a freemium model. The paywall currently appears after 3 free articles/month. They have 1M MAU with 2% paid conversion (20,000 subscribers at ₹999/year). The product team wants to optimize the paywall threshold. They have: article read logs, paywall hit events, subscription conversion events, and ad revenue per user data.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them: what does "optimize" mean? Maximize subscription revenue? Total revenue (subscriptions + ads)? Or engagement? These are in tension — a tighter paywall hurts ad revenue from free users.
+2. **Identify Key Metrics** — What analysis guides the paywall threshold decision? Push for: conversion rate at paywall hit (by article count), paywall hit rate (% of MAU who hit the paywall), ad revenue per free user, subscription revenue per paid user, and the revenue crossover point.
+3. **Propose an Approach** — Guide through: analyze conversion funnel — of users who hit the 3-article paywall, what % convert? Plot conversion rate vs articles read at first paywall hit. Would users who hit the paywall at article 2 convert at a higher or lower rate?
+4. **Analyze & Interpret** — Walk through: tighter paywall (1-2 articles) may increase paywall hits but lower conversion rate (users haven't built enough habit). Looser paywall (5+ articles) may increase habit but lower urgency to subscribe. There's an optimal point.
+5. **Recommend & Communicate** — Ask them to design an A/B test across 3 thresholds (2, 3, 5 articles) with the right primary metric, accounting for both subscription revenue and ad revenue in the result.
+
+Always push for specificity: "Write the SQL to compute paywall conversion rate by 'articles read before hitting paywall' bucket", "How do you account for the ad revenue lost from users who subscribe and no longer see ads?", "What would you tell the product team if the optimal threshold is 5 articles but it reduces subscription revenue by 10%?"`,
+
+  cs_coldstart: `You are a senior analytics interviewer. Present this case study and coach the candidate through it step by step.
+
+**The Case:** An e-commerce platform is building a recommendation engine that works well for returning users (based on purchase history and browsing behavior). But 30% of daily traffic is new users (first visit), and they currently see generic "Top Sellers" which have a 1.2% CTR vs 3.8% CTR for returning users. The Head of Product asks: "How do we improve recommendations for new users?" You have: anonymized session data (device, location, time, referral source, landing page), product catalog (category, price, ratings), and demographic survey data from 5% of new users who completed onboarding.
+
+**Your Coaching Approach:**
+Do NOT give the answer upfront. Guide the candidate through this framework:
+
+1. **Clarify the Problem** — Ask them to define the cold start problem precisely: you have no behavioral history for the user, so collaborative filtering fails. What signals DO you have about new users?
+2. **Identify Key Metrics** — What available signals can proxy for preferences? Push for: referral source (came from a "running shoes" Instagram ad → sports intent), device type (iPhone 15 Pro → premium segment), location (Delhi in December → winter clothing), landing page (clicked on "Women's Ethnic" banner → category intent), time of day.
+3. **Propose an Approach** — Guide through options: (1) Context-based recommendations using the signals above, (2) Onboarding quiz ("What are you shopping for?"), (3) Category-level popularity within inferred segment. Ask them to compare effort vs expected lift for each.
+4. **Analyze & Interpret** — Walk through: a 3-question onboarding quiz can dramatically improve recommendations but adds friction (some % will drop off). Referral source inference requires no friction but has lower precision. Ask them how they'd measure the tradeoff.
+5. **Recommend & Communicate** — Ask them to propose an experiment: test quiz vs context-based vs current Top Sellers, with sample size calculation rationale and primary metric (CTR, add-to-cart rate, or session conversion rate).
+
+Always push for specificity: "How would you implement referral-source-based recommendations without a recommendation model?", "Write the logic to infer user intent from referral URL parameters", "What would you tell the Head of Product if the onboarding quiz reduces new user drop-off but increases recommendation CTR by 2%?"`,
+
   ge_tea: `You are a senior analytics interviewer at a top Indian consulting/tech firm. Present this guesstimate problem and coach the candidate through solving it.
 
 **The Problem:** How many cups of tea (chai) are sold daily in India?
@@ -5327,6 +5649,51 @@ const GUESSTIMATE_SOLUTIONS = {
   ge_ola: `**Approach:** Bottom-up from fare structure and commission model\n\n**Assumptions:**\n• Typical Ola Auto ride: 5 km in a metro city\n• Base fare: ₹30\n• Per km rate: ₹12/km\n• Surge: assume 1.0× (no surge) for base estimate\n• Platform commission: ~20% of fare\n\n**Calculation:**\nFare = ₹30 + (₹12 × 5 km) = ₹30 + ₹60 = ₹90 total\nOla commission (20%): ₹90 × 0.20 = ₹18\nDriver earnings: ₹90 − ₹18 = ₹72 per ride\nWith surge (1.5×): fare = ₹135, Ola gets ₹27, driver gets ₹108\n\n**Answer:** Ola earns ~₹15–20 per auto ride; driver nets ~₹70–90 per ride (5 km, no surge)\n\n**Sanity Check:** Ola's revenue per ride needs to cover ~₹8–10 in customer acquisition cost, technology, and ops; ₹18 commission on a ₹90 ride (20%) is consistent with disclosed take-rate figures in their DRHP filings.`,
 
   ge_jio: `**Approach:** Top-down from subscriber base and data usage\n\n**Assumptions:**\n• Jio subscribers: ~450 million (2025)\n• Average daily data usage per subscriber: 1.0–1.5 GB/day (TRAI reports Jio avg: ~24 GB/month ÷ 30 = 0.8 GB/day)\n• Use 1.0 GB/day as round number\n\n**Calculation:**\n450M subscribers × 1.0 GB/day = 450 million GB/day = 450 petabytes/day\nUpper bound (1.5 GB/day): 450M × 1.5 = 675 petabytes/day\n\n**Answer:** ~450–650 petabytes (0.45–0.65 exabytes) of data per day on Jio's network\n\n**Sanity Check:** Jio handles ~50–60% of India's total mobile data traffic; India's total mobile data: ~18–20 exabytes/month = ~600–650 petabytes/day total; Jio's 50% share = ~300–325 PB/day — our estimate is slightly high; 1.0 GB/user/day is the right order of magnitude.`
+};
+
+// ═══════════════════════════════
+// CASE STUDY SOLUTIONS (pre-written structured answers)
+// ═══════════════════════════════
+const CASESTUDY_SOLUTIONS = {
+  cs_northstar: `**Recommended North Star Metric:** Orders per Active User per Week\n\n**Why not other metrics?**\n• **GMV** — can grow with price increases without real engagement\n• **DAU** — measures eyeballs, not value delivery\n• **Delivery time** — important but operational, not a business driver\n\n**Framework:**\n1. North Star should reflect the core value exchange — food delivered to hungry customers\n2. "Orders per active user/week" captures frequency (habit), activation, and value\n3. It's a leading indicator — if this grows, GMV follows\n4. It's actionable — product, ops, and marketing can all influence it\n\n**Supporting Metrics (Input Metrics):**\n• New user activation rate (% who order within 7 days of signup)\n• Repeat order rate (% of users ordering 2+ times/week)\n• Restaurant selection breadth\n• Delivery time p50 and p90\n\n**Key Insight:** The right North Star depends on business stage. Early-stage (growth): focus on orders or active users. Mature stage (profitability): shift toward contribution margin per order.`,
+
+  cs_cannibalize: `**Framework: Incremental Revenue Analysis**\n\n**Step 1 — Segment Customers:**\n• Group A: Users who ONLY use Quick Commerce (new behavior)\n• Group B: Users who switched FROM standard to Quick Commerce\n• Group C: Users who use both\n• Group D: Users who only use standard (unchanged)\n\n**Step 2 — Calculate Incremental Revenue:**\n• Quick Commerce revenue from Group A = 100% incremental (new demand)\n• Group B revenue = cannibalized (shifted, not new)\n• Group C: Check if total order frequency increased or just shifted\n\n**Step 3 — Counterfactual Analysis:**\nAsk: "What would Group B have spent WITHOUT Quick Commerce?"\n• If they would have ordered standard anyway → cannibalized\n• If they would have ordered from a competitor → retained/incremental\n• Look at pre-launch order patterns for Group B users\n\n**Step 4 — Net Impact:**\nNet Revenue Impact = Quick Commerce Revenue − Lost Standard Revenue + Retained Revenue (would have churned)\n\n**Likely Finding:** Quick Commerce cannibalizes some standard orders BUT also captures new occasions (impulse buys, smaller baskets) that wouldn't have happened. Net positive if Quick Commerce AOV × frequency > standard AOV loss.\n\n**Recommendation:** Track incremental orders per user (did total orders/user increase?) and margin per order (Quick Commerce has higher delivery cost).`,
+
+  cs_fraud: `**Structured Fraud Detection Approach:**\n\n**Step 1 — Define Fraud Patterns:**\n• Velocity: Multiple high-value transactions in short time\n• Geography: Transaction location far from user's usual location\n• Amount: Transactions significantly above user's historical average\n• Timing: Unusual hours (3-5 AM)\n• Device: New device + high-value transaction\n\n**Step 2 — Build Rule-Based Flags:**\n• Rule 1: >3 transactions within 5 minutes → flag\n• Rule 2: Transaction amount > 5× user's 90-day average → flag\n• Rule 3: New device + transaction >₹5,000 in first 24 hours → flag\n• Rule 4: P2P transfer to new payee >₹10,000 → additional verification\n• Rule 5: Location >500km from last transaction within 1 hour → flag\n\n**Step 3 — Scoring System:**\nEach flag adds points. Score >7 → block, 4-7 → additional OTP, <4 → allow\n\n**Step 4 — False Positive vs Fraud Loss Tradeoff:**\n• Too aggressive → block legitimate users → churn\n• Too lenient → fraud losses grow\n• Measure: Precision (% of flagged that are actual fraud) and Recall (% of fraud caught)\n• Target: 80%+ recall with <5% false positive rate\n\n**Step 5 — Monitoring:**\n• Daily fraud rate dashboard (amount and count)\n• Weekly rule performance review (which rules catch most fraud)\n• Monthly model retrain cycle\n\n**Key Insight:** Start simple with rules, then layer ML for edge cases. The best fraud systems combine rules (fast, interpretable) with models (catches novel patterns).`,
+
+  cs_churn: `**Churn Prediction & Reduction Framework:**\n\n**Step 1 — Define Churn:**\n• For subscriptions: didn't renew at end of billing cycle\n• Leading definition: no login for 14+ days AND no video watch for 21+ days (likely to churn)\n\n**Step 2 — Identify Leading Indicators (features for prediction):**\n• Login frequency trend (declining = danger)\n• Video completion rate (dropping = losing interest)\n• Quiz participation (stopped = disengaged)\n• Support ticket recency (recent complaint = at risk)\n• Days since last payment = 25+ (approaching renewal with low engagement)\n\n**Step 3 — Simple Churn Score (no ML needed):**\nScore each user 0-10:\n• Logins last 7 days: 0 = +3 risk, 1-2 = +2, 3-5 = +1, 5+ = 0\n• Videos watched last 14 days: 0 = +3 risk, 1-3 = +1, 3+ = 0\n• Quiz taken last 14 days: No = +2, Yes = 0\n• Support ticket open: Yes = +2, No = 0\nScore ≥6 = High risk, 3-5 = Medium, <3 = Low\n\n**Step 4 — Interventions (ranked by effort vs impact):**\n• High-risk, Low effort: Personalized email with relevant new content → expected 5-10% save rate\n• High-risk, Medium effort: Offer 1 free month or discount → expected 15-20% save rate\n• Medium-risk, Low effort: Push notification with "Your streak is about to break" → expected 3-5% save rate\n• Systemic: Improve onboarding to set study habits in week 1 (reduces future churn)\n\n**Key Insight:** 40% monthly churn means the product has a value delivery problem, not just a retention marketing problem. Focus on Week 1-2 engagement — if a user doesn't form a habit in the first 2 weeks, they're 4× more likely to churn.`,
+
+  cs_pricing: `**Pricing Strategy Framework:**\n\n**Step 1 — Understand Willingness to Pay (WTP):**\n• Survey data: Van Westendorp Price Sensitivity Meter\n  - "At what price is this too expensive?" → ₹299 (60% say too expensive)\n  - "At what price is this a bargain?" → ₹99 (70% say bargain)\n  - "At what price does it seem expensive but worth it?" → ₹149-199\n• Optimal price point: where "too expensive" and "too cheap" curves cross\n\n**Step 2 — Analyze Usage Data:**\n• Segment free users by engagement: casual (<3 sessions/week), regular (3-5), power (5+)\n• Power users (15% of base = 750K) are most likely to convert\n• Regular users (30% = 1.5M) are swing segment\n\n**Step 3 — Revenue Modeling:**\n• ₹99/month: Expected conversion 8% of free users → 400K × ₹99 = ₹3.96 Cr/month\n• ₹199/month: Expected conversion 4% → 200K × ₹199 = ₹3.98 Cr/month\n• ₹299/month: Expected conversion 2% → 100K × ₹299 = ₹2.99 Cr/month\n\n**Step 4 — Recommendation:**\nLaunch at ₹199/month with:\n• Annual plan at ₹149/month (₹1,788/year) — locks in retention\n• Introductory offer: first month ₹99 — reduces friction\n• Feature gate: personalized plans + trainer access only in premium\n\n**Step 5 — Experiment Design:**\n• Don't A/B test prices directly (users talk) — test by cohort or geography\n• Show different prices to new users in Tier 1 vs Tier 2 cities\n• Measure: conversion rate, retention at 3 months, LTV\n\n**Key Insight:** In India, the ₹199 price point is psychologically powerful — it's "under 200" while being 2× the ₹99 that feels too cheap for premium value.`,
+
+  cs_launch: `**Market Entry Decision Framework:**\n\n**Step 1 — Market Sizing:**\n| Factor | Indonesia | Vietnam |\n|--------|-----------|----------|\n| SMB count | ~65M | ~6M |\n| GDP per capita | $4,800 | $4,300 |\n| CRM penetration | ~5% | ~3% |\n| Internet penetration | 77% | 79% |\n| English proficiency | Low | Low |\n\nAddressable market: Indonesia is ~10× larger\n\n**Step 2 — Competitive Landscape:**\n• Indonesia: Salesforce, HubSpot, local players (Mekari, HashMicro) — crowded\n• Vietnam: Less competition, fewer localized CRM tools — first-mover advantage possible\n\n**Step 3 — Unit Economics:**\n• Indonesia: Higher CAC due to competition, but higher LTV (larger companies)\n• Vietnam: Lower CAC, but smaller deal sizes\n• Break-even: Indonesia ~18 months, Vietnam ~12 months\n\n**Step 4 — Operational Complexity:**\n• Indonesia: 17,000 islands, multiple languages, complex regulations\n• Vietnam: More centralized (Hanoi + Ho Chi Minh City cover 60% of market)\n\n**Step 5 — Go/No-Go Scorecard:**\nScore each factor 1-5:\n• Market size: ID 5, VN 2\n• Competition: ID 2, VN 4\n• Ease of entry: ID 2, VN 4\n• Unit economics: ID 3, VN 4\n• Strategic value: ID 4, VN 3\nTotal: Indonesia 16, Vietnam 17\n\n**Recommendation:** Start with Vietnam — smaller market but faster path to profitability and learnings. Use Vietnam as a proving ground before tackling Indonesia with more resources.\n\n**Key Insight:** Market size alone doesn't determine the right entry point. For a 2,000-customer company, speed-to-revenue and operational simplicity matter more than TAM.`,
+
+  cs_notif: `**Notification Optimization Framework:**\n\n**Step 1 — Diagnose the Problem:**\n• Analyze: notification open rate trend over last 6 months (likely declining)\n• Segment users: engaged (open >50%), passive (10-50%), churning (<10%), opted out\n• Find: at what notification count/day does opt-out spike? (likely threshold at 4-5/day)\n\n**Step 2 — User Segmentation Strategy:**\n• Power users: can handle 6-8 notifs, want breaking news\n• Regular users: 2-3 notifs/day max, curated top stories\n• Light users: 1/day digest, only high-relevance content\n• Re-engagement: 2-3/week, personalized hooks\n\n**Step 3 — Optimization Levers:**\n1. **Frequency capping** by segment (not one-size-fits-all)\n2. **Timing optimization** — send when user historically opens (ML on user timezone + behavior)\n3. **Content personalization** — sports fan gets sports, not politics\n4. **Notification type** — breaking news vs recommendations vs engagement nudges (different rules)\n\n**Step 4 — A/B Test Design:**\n• Control: current 8/day for all users\n• Variant A: 4/day, personalized by topic\n• Variant B: Dynamic frequency based on user engagement score\n• Primary metric: 7-day retention (NOT open rate — open rate is vanity)\n• Secondary: notification opt-out rate, DAU\n• Duration: 4 weeks minimum to capture habit changes\n\n**Step 5 — Expected Outcome:**\nReducing from 8 to 4 personalized notifications typically improves:\n• Open rate: +40-60%\n• 30-day retention: +5-10%\n• Opt-out rate: −50%\n\n**Key Insight:** More notifications ≠ more engagement. The goal is maximum information delivery per notification, not maximum notifications per user.`,
+
+  cs_search: `**Search Quality Improvement Framework:**\n\n**Step 1 — Categorize Search Failures:**\nAnalyze the 30% zero-result queries:\n• Typos/misspellings: ~40% of failures (e.g., "samsng" → "samsung")\n• Synonym mismatches: ~25% (e.g., "cooler" vs "air conditioner")\n• Out-of-stock/not-carried: ~20% (legitimate zero results)\n• Long-tail/specific: ~15% (e.g., "blue cotton kurta size M under 500")\n\n**Step 2 — Quick Wins (high impact, low effort):**\n1. Spell correction: Implement fuzzy matching (Levenshtein distance ≤ 2)\n   → Expected: reduce zero results by 12% (40% of 30%)\n2. Synonym dictionary: Map common synonyms ("mobile" = "phone" = "smartphone")\n   → Expected: reduce zero results by 7%\n3. Autocomplete: Show suggestions after 2 characters typed\n   → Prevents typos before they happen\n\n**Step 3 — Medium-Term Improvements:**\n4. Search result ranking: Weight by click-through rate, purchase rate, relevance score\n5. Personalization: Show results based on user's past purchases and browsing\n6. Category fallback: If exact match fails, show category-level results\n\n**Step 4 — Metrics to Track:**\n• Zero Result Rate (ZRR): target <10%\n• Search-to-Click Rate: target >40%\n• Search-to-Purchase Rate: target >5%\n• Time-to-first-click: <10 seconds\n• Search abandonment rate: <20%\n\n**Step 5 — Revenue Impact:**\nIf 30% zero results → 10% zero results (20% improvement)\n20% of searches now show results → even 2% of those convert\n= significant incremental revenue\n\n**Key Insight:** Search is the highest-intent surface on e-commerce. Every 1% improvement in search-to-purchase conversion directly impacts revenue. Start with spell correction — it's the lowest-hanging fruit with the highest ROI.`,
+
+  cs_referral: `**Referral Program ROI Framework:**\n\n**Step 1 — Calculate True Cost:**\n• 50K referrals × ₹200 payout (₹100 × 2 people) = ₹1 Cr total spend\n• Add: tech/ops cost ~₹5L, fraud/abuse cost ~₹10L\n• Total program cost: ~₹1.15 Cr\n\n**Step 2 — Calculate Referral CAC:**\n• Cost per acquired user: ₹1.15 Cr / 50K = ₹230 per referred user\n• Compare to: Organic CAC (~₹0), Paid ads CAC (~₹350-500)\n• Referral CAC is 40-55% cheaper than paid acquisition ✓\n\n**Step 3 — Check for Gaming/Fraud:**\n• Self-referral (same device, same IP): flag and exclude\n• Fake accounts (no activity after signup): ~15-20% of referrals typically\n• Adjusted genuine referrals: 50K × 80% = 40K real users\n• Adjusted CAC: ₹1.15 Cr / 40K = ₹288 per user\n\n**Step 4 — Measure Referred User Quality:**\n• Retention at 30 days: referred users vs organic vs paid\n• Average LTV of referred users (typically 15-25% higher than paid)\n• If referred user LTV = ₹1,500 vs paid user LTV = ₹1,200 → referral wins\n\n**Step 5 — Incrementality Check:**\n• Key question: Would these users have signed up anyway?\n• Check: % of referred users who had already visited the app/website\n• If 30% would have signed up organically → only 70% are truly incremental\n• Adjusted incremental CAC: ₹288 / 0.7 = ₹411\n\n**Step 6 — Final ROI:**\n• 40K genuine referred users × ₹1,500 LTV = ₹6 Cr lifetime revenue\n• Program cost: ₹1.15 Cr\n• ROI = (₹6 Cr − ₹1.15 Cr) / ₹1.15 Cr = 422%\n\n**Recommendation:** Program is profitable. Optimize by: increasing reward for high-value referrers, adding anti-fraud rules, and requiring minimum activity (1 transaction) before payout.\n\n**Key Insight:** Raw referral count is misleading. Always calculate incrementality (would they have come anyway?) and quality (do they stick around and spend?).`,
+
+  cs_seasonality: `**Disentangling Seasonality from Growth:**\n\n**Step 1 — Decompose the 35% YoY Growth:**\nDecember is peak travel season. Compare apples to apples:\n• Dec 2024 revenue: ₹100 Cr → Dec 2025: ₹135 Cr (+35% YoY)\n• But Nov 2024: ₹70 Cr → Nov 2025: ₹85 Cr (+21% YoY)\n• Non-seasonal months average: +18-22% YoY growth\n\n**Step 2 — Seasonal Index Method:**\nCalculate each month's share of annual revenue (using 2+ years):\n• December typically = 12-14% of annual revenue (vs 8.3% if flat)\n• Seasonal index for Dec = 1.55 (55% above average month)\n• Deseasonalized Dec 2025 = ₹135 Cr / 1.55 = ₹87 Cr\n• Deseasonalized Dec 2024 = ₹100 Cr / 1.55 = ₹64.5 Cr\n• Real growth: (87 − 64.5) / 64.5 = 35% → still 35%! (because we're comparing same months)\n\n**Step 3 — The Real Question:**\nThe CEO's 35% is actually a valid YoY comparison (same month). The RIGHT question is:\n• Is December 2025 growth (35%) significantly above the non-seasonal trend (20%)?\n• Excess seasonal growth: 35% − 20% = 15% extra in December\n• This could mean: stronger brand in peak season, better holiday campaigns, or market share gains\n\n**Step 4 — How to Present to Leadership:**\n"Our baseline growth is ~20% YoY — healthy and consistent. December outperformed by 15 percentage points, suggesting our holiday campaign and inventory strategy are working. I'd flag this as a seasonal tailwind worth ₹15 Cr above trend."\n\n**Key Insight:** Don't deflate the number — contextualize it. Show the trend (20% base growth) AND the seasonal outperformance (15% extra). Both are wins worth celebrating.`,
+
+  cs_segment: `**RFM Customer Segmentation:**\n\n**Step 1 — Build RFM Scores (1-5 each):**\n• **Recency:** Days since last order (1 = longest ago, 5 = most recent)\n• **Frequency:** Total orders in last 6 months (1 = fewest, 5 = most)\n• **Monetary:** Total spend in last 6 months (1 = lowest, 5 = highest)\n\n**Step 2 — Define Segments:**\n| Segment | RFM Pattern | % of Base | Strategy |\n|---------|-------------|-----------|----------|\n| Champions | R5 F5 M5 | ~5% | Loyalty rewards, early access |\n| Loyal | R4-5 F4-5 M3-4 | ~15% | Upsell premium, referral program |\n| Potential Loyal | R4-5 F2-3 M2-3 | ~20% | Frequency-building offers |\n| New Customers | R5 F1 M1-2 | ~15% | Onboarding sequence, second order discount |\n| At Risk | R2-3 F3-4 M3-4 | ~15% | Win-back campaign, "We miss you" |\n| Hibernating | R1-2 F1-2 M1-2 | ~20% | Deep discount or sunset |\n| Price Sensitive | R3-4 F3-4 M1-2 | ~10% | Coupon-led campaigns |\n\n**Step 3 — Campaign Design:**\n• Champions (100K users): "Refer & earn ₹200" — they're advocates\n• At Risk (300K users): "₹100 off on orders above ₹500" — re-activate before they churn\n• New Customers (300K users): "Your second order ships free" — build the habit\n• Hibernating (400K users): "We've added 500 new products" — low-cost email/push, don't overspend\n\n**Step 4 — Measure Campaign ROI:**\n• Track: reactivation rate, incremental revenue per segment, CAC per reactivated user\n• Compare: cost of campaign vs incremental revenue generated\n• Best ROI typically: "At Risk" and "Potential Loyal" segments\n\n**Key Insight:** Don't treat all 2M customers the same. The top 20% (Champions + Loyal) drive 60%+ of revenue. Focus retention spend there, and use low-cost channels for the rest.`,
+
+  cs_abnovelt: `**Novelty Effect Detection Framework:**\n\n**What is Novelty Effect?**\nUsers try a new feature because it's new, not because it's valuable. Engagement spikes initially then decays to baseline. Shipping based on a 2-week A/B test can be misleading.\n\n**Step 1 — Time-Decay Analysis:**\nPlot daily engagement for treatment group over the 2 weeks:\n• If engagement is flat or increasing → likely genuine value\n• If engagement peaked in days 1-3 and is declining → novelty effect\n• Calculate: Week 1 avg vs Week 2 avg engagement in treatment group\n  - Week 1: +22% vs control\n  - Week 2: +8% vs control\n  - Decaying → novelty is likely a factor\n\n**Step 2 — Cohort Comparison:**\n• Users who saw Stories on Day 1 of experiment: track their engagement daily\n• Compare Day 1 cohort's engagement on Day 14 vs Day 1\n• If Day 14 engagement is <50% of Day 1 → strong novelty effect\n\n**Step 3 — Power User vs Casual:**\n• Segment: Are power users (already highly engaged) driving the +15%? Or casual users?\n• If mostly casual users trying once → novelty\n• If power users increased their already-high engagement → genuine value\n\n**Step 4 — Recommendation to PM:**\n"The A/B test shows +15% overall, but I see signs of novelty effect — Week 2 lift is declining. I recommend:\n1. Extend the test to 4-6 weeks before shipping\n2. If Week 4 lift stabilizes at >5%, ship it — that's the durable value\n3. If it decays to <3%, the feature needs iteration before launch"\n\n**Key Insight:** A/B tests measure the combined effect of novelty + genuine value. Only ship when you've isolated genuine value — typically requires 4-6 weeks of data, not 2 weeks.`,
+
+  cs_dashboard: `**Executive Dashboard Design Framework:**\n\n**Step 1 — Identify the 5-7 Metrics That Matter:**\nFor a VP of Sales:\n1. **Revenue** (MTD vs target, with trend line)\n2. **Pipeline value** (weighted by probability)\n3. **Win rate** (deals won / deals worked)\n4. **Average deal size** (trending up or down)\n5. **Sales cycle length** (days from lead to close)\n6. **New MQLs** (marketing qualified leads this period)\n7. **Rep performance** (quota attainment by rep)\n\n**Step 2 — Layout Principles:**\n• Top row: 3-4 KPI cards with sparklines (Revenue, Pipeline, Win Rate, Deal Size)\n• Middle: One primary chart — Revenue trend with forecast line\n• Bottom left: Pipeline by stage (funnel chart)\n• Bottom right: Rep leaderboard (table with conditional formatting)\n\n**Step 3 — Visualization Choices:**\n• Revenue trend → Line chart (shows trajectory)\n• Pipeline by stage → Horizontal bar/funnel (shows conversion)\n• Win rate → Single number with color coding (green/red vs target)\n• Rep performance → Table, NOT a pie chart (comparing individuals)\n\n**Step 4 — Anti-Patterns to Avoid:**\n• ❌ 30+ metrics on one page (information overload)\n• ❌ Pie charts for comparing values (use bars)\n• ❌ 3D charts (distort perception)\n• ❌ No time context (always show vs previous period or target)\n• ❌ No drill-down (VP will want to click into underperforming areas)\n\n**Step 5 — Alerting:**\n• Revenue <80% of MTD target → red alert email\n• Win rate drops >5% WoW → flag for review\n• Any rep at <50% quota attainment by mid-month → manager notification\n\n**Key Insight:** An executive dashboard should answer "Are we on track?" in 5 seconds. Every element should either confirm "yes" or scream "look here." If the VP needs to think to understand a chart, redesign it.`,
+
+  cs_supply: `**Supply-Demand Imbalance Framework:**\n\n**Step 1 — Map the Problem:**\n• Morning rush (8-10 AM): demand 3× supply → 3× surge, long wait times, rider cancellations\n• Afternoon lull (1-4 PM): supply 2× demand → idle drivers, low earnings, driver churn\n• Evening peak (6-9 PM): demand 2× supply → moderate surge\n\n**Step 2 — Root Cause by Time Slot:**\n• Morning: Office commuters (predictable, high willingness to pay) + school drops\n• Afternoon: Low demand + drivers staying logged in hoping for rides\n• Evening: Return commute + social outings (diffuse, harder to predict)\n\n**Step 3 — Supply-Side Interventions:**\n1. **Guaranteed minimum earnings:** "Earn ₹400 between 8-10 AM in Koramangala" → shifts supply to high-demand zones/times\n2. **Heat maps:** Show drivers where demand is highest (already done, but can improve with predictions)\n3. **Shift-based incentives:** ₹200 bonus for completing 5 rides between 8-10 AM\n4. **Reduce afternoon idle cost:** Offer package delivery or grocery delivery tasks during lull\n\n**Step 4 — Demand-Side Interventions:**\n1. **Scheduled rides:** Let riders book 8 AM ride at 10 PM the night before → better supply planning\n2. **Off-peak discounts:** "Ride between 2-4 PM, save 20%" → shift elastic demand\n3. **Surge cap:** Cap at 2× to avoid rider backlash (accept lower margins)\n\n**Step 5 — Measure Impact:**\n• Surge frequency and magnitude (target: <1.5× avg surge)\n• Rider wait time p50 (target: <5 min)\n• Driver utilization rate (target: >65% of logged-in time)\n• Driver daily earnings (must increase, or they'll leave)\n\n**Key Insight:** Marketplace balance is a two-sided problem. You can't solve it by only incentivizing supply — you also need to shape demand. The best platforms manage both simultaneously.`,
+
+  cs_retention: `**Retention Curve Analysis:**\n\n**Step 1 — Interpret Each Stage:**\n• **Day 1 (45% vs 40% benchmark):** First session experience is strong — users find value quickly ✓\n• **Day 7 (20% vs 15% benchmark):** Slightly above benchmark but the Day 1→Day 7 drop is steep (45→20 = 56% drop)\n• **Day 30 (8% vs 5% benchmark):** Users who survive to Day 7 have decent long-term stickiness (20→8 = 60% retained)\n\n**Step 2 — The Day 3-7 Problem:**\nThe biggest leak is between Day 1 and Day 7. Drill deeper:\n• Day 1→Day 3 retention: likely ~30% (users explore, then leave)\n• Day 3→Day 7: likely ~20% (habit didn't form)\nThe "aha moment" isn't happening fast enough.\n\n**Step 3 — Aha Moment Analysis:**\nCompare Day 7 retained users vs churned users — what did retained users do?\n• Hypothesis: Users who complete Level 5 within Day 3 retain 2× better\n• Hypothesis: Users who join a guild/community retain 3× better\n• Hypothesis: Users who make their first in-app purchase retain 4× better\n• Find the action that most separates retained from churned users\n\n**Step 4 — Product Changes:**\nIf "complete Level 5 by Day 3" is the aha moment:\n1. Reduce friction to Level 5 — easier early levels, skip tutorial option\n2. Push notification on Day 2: "You're 2 levels away from unlocking [reward]"\n3. Day 3 check-in reward: bonus coins for returning\n4. Social hook: "Your friend just beat Level 7" on Day 4\n\n**Step 5 — Expected Impact:**\nImproving Day 7 from 20% to 25% (just 5pp):\n• With same Day 30/Day 7 ratio (40%): Day 30 goes from 8% to 10%\n• On 100K installs/month: 2,000 more monthly active users retained\n• At ₹50 ARPU: ₹1L incremental monthly revenue\n\n**Key Insight:** Retention is won or lost in the first 3-7 days. Focus all product energy on accelerating the "aha moment" — make users feel value before the habit window closes.`,
+
+  cs_cannedresp: `**AI Chatbot Impact Assessment:**\n\n**Step 1 — Segment by Ticket Type:**\n| Ticket Type | % of Volume | Chatbot Resolution | Human Resolution | CSAT Impact |\n|-------------|-------------|-------------------|-----------------|-------------|\n| Order status | 35% | 95% | 98% | Minimal |\n| Returns/refund | 25% | 60% | 90% | High negative |\n| Product questions | 20% | 80% | 85% | Low negative |\n| Complaints | 15% | 30% | 75% | Very negative |\n| Account issues | 5% | 70% | 95% | Moderate negative |\n\n**Step 2 — CSAT Deep Dive:**\n• Overall CSAT dropped 4.2 → 3.8 (−0.4 points)\n• But order status CSAT: 4.5 → 4.4 (fine — fast automated response)\n• Returns CSAT: 4.0 → 3.2 (big drop — chatbot can't handle nuance)\n• Complaints CSAT: 3.5 → 2.5 (terrible — users are angry AND getting a bot)\n\n**Step 3 — Cost Savings Calculation:**\n• Pre-chatbot: 10,000 tickets/day × ₹50 per human handling = ₹5L/day\n• Post-chatbot: 6,000 human + 4,000 bot × ₹5 per bot handling = ₹3.2L/day\n• Savings: ₹1.8L/day = ~₹54L/month\n\n**Step 4 — Find Optimal Handoff:**\nKeep chatbot for:\n• ✅ Order status (high volume, high resolution, low CSAT risk)\n• ✅ Product questions (decent resolution, low stakes)\n\nRoute to human immediately:\n• ❌ Complaints (anger + bot = disaster)\n• ❌ Returns >₹1,000 (high-value, nuanced)\n• ⚠️ Returns <₹1,000 (chatbot with easy escalation button)\n\n**Step 5 — Revised Impact:**\n• Chatbot handles ~55% of tickets (status + product + small returns)\n• Human handles 45% (complaints + large returns + account)\n• Expected CSAT: ~4.0-4.1 (recovered from 3.8)\n• Cost savings retained: ~₹40L/month (vs ₹54L but better CSAT)\n\n**Key Insight:** The chatbot IS helping — it's just being used for the wrong ticket types. The fix isn't removing the chatbot; it's smart routing. Route by ticket type and customer emotion signal, not randomly.`,
+
+  cs_ltv: `**Customer LTV Calculation Framework:**\n\n**Step 1 — Choose the Model:**\nWith 18 months of subscription data, use the **Cohort-Based LTV** method:\n• Group customers by signup month\n• Track monthly retention and revenue for each cohort\n• Project future months using retention curve\n\n**Step 2 — Build the Retention Curve:**\nExample cohort (Jan 2024 signups, 1000 customers):\n• Month 1: 100% (1000) × ₹800 ARPU = ₹8L\n• Month 3: 65% (650) × ₹850 ARPU = ₹5.5L\n• Month 6: 45% (450) × ₹900 ARPU = ₹4L\n• Month 12: 30% (300) × ₹950 ARPU = ₹2.85L\n• Month 18: 22% (220) × ₹1,000 ARPU = ₹2.2L\n\n**Step 3 — Project LTV:**\nRetention stabilizes after Month 12 at ~3% monthly churn (power law curve)\nSum of monthly revenue per customer over projected lifetime:\n• Months 1-18 (actual): ₹800 + ₹780 + ... = ~₹10,500 per customer\n• Months 19-36 (projected): ~₹4,500 per customer\n• Total 3-year LTV: ~₹15,000\n\n**Step 4 — LTV:CAC Decision Framework:**\n• If CAC = ₹3,000 → LTV:CAC = 5:1 ✓ (very healthy)\n• If CAC = ₹8,000 → LTV:CAC = 1.9:1 ⚠️ (needs improvement)\n• Rule of thumb: LTV:CAC > 3:1 for healthy unit economics\n• Payback period: How many months to recover CAC? Target <12 months\n\n**Step 5 — Segment LTV:**\n• ₹500 plan users: LTV ~₹8,000 (higher churn, lower ARPU)\n• ₹1,000 plan users: LTV ~₹16,000 (moderate retention)\n• ₹2,000 plan users: LTV ~₹28,000 (lowest churn, highest engagement)\n\n**Marketing Budget Implication:**\n• For ₹2,000 plan users: can spend up to ₹9,000 CAC (LTV/3)\n• For ₹500 plan users: can spend up to ₹2,600 CAC\n• Focus acquisition spend on high-plan users for best ROI\n\n**Key Insight:** LTV is not one number — it varies dramatically by segment. A blended LTV masks that your best customers are 3-4× more valuable. Target marketing spend at the segments with highest LTV:CAC ratio.`,
+
+  cs_attribution: `**Marketing Attribution Framework:**\n\n**Step 1 — Current State (Last-Click):**\n| Channel | Last-Click Credit | Spend | ROAS |\n|---------|------------------|-------|------|\n| Google Ads | 60% | ₹40L/month | 3.2× |\n| Facebook | 15% | ₹20L/month | 1.6× |\n| Instagram Influencers | 5% | ₹15L/month | 0.7× |\n| Email | 15% | ₹2L/month | 16× |\n| Affiliates | 5% | ₹8L/month | 1.3× |\n\nLast-click makes Google look great and Instagram look terrible.\n\n**Step 2 — Why Last-Click is Wrong:**\n• Typical journey: Instagram ad (awareness) → Google search (intent) → Email reminder → Purchase\n• Last-click gives 100% credit to email, 0% to Instagram that created awareness\n• Instagram is a "top-of-funnel" channel — it starts journeys, rarely finishes them\n\n**Step 3 — Compare Attribution Models:**\n| Channel | Last-Click | First-Click | Linear | Position-Based |\n|---------|-----------|-------------|--------|---------------|\n| Google | 60% | 25% | 35% | 35% |\n| Facebook | 15% | 20% | 20% | 18% |\n| Instagram | 5% | 30% | 20% | 22% |\n| Email | 15% | 5% | 15% | 15% |\n| Affiliates | 5% | 20% | 10% | 10% |\n\nInstagram jumps from 5% to 22-30% credit when we account for awareness.\n\n**Step 4 — Incrementality Test (Gold Standard):**\nDesign: Geo-based holdout test for Instagram\n• Treatment cities: Continue Instagram spend\n• Control cities: Pause Instagram for 4 weeks\n• Measure: Did overall conversions drop in control cities?\n• If conversions drop 15% in control → Instagram drives 15% incremental\n\n**Step 5 — Recommendation:**\n1. Switch from last-click to position-based attribution (40% first touch, 40% last touch, 20% middle)\n2. Run incrementality test on Instagram before cutting spend\n3. Don't over-invest in email — it's a conversion channel, not an acquisition channel\n4. Budget reallocation: Shift ₹5L from Google to Instagram (likely under-invested)\n\n**Key Insight:** Attribution models are all wrong — some are just less wrong. The real question isn't "which model?" but "what would happen if I stopped spending on this channel?" That's incrementality, and it's the only true measure of channel value.`,
+
+  cs_paywall: `**Paywall Optimization Framework:**\n\n**Step 1 — Current State Analysis:**\n• Free users: 500K MAU, see ads, 3 free articles/month\n• Paid subscribers: 20K (4% conversion rate)\n• Subscription: ₹299/month\n• Ad revenue per free user: ~₹15/month\n• Subscription revenue: 20K × ₹299 = ₹59.8L/month\n• Ad revenue: 480K × ₹15 = ₹72L/month\n\n**Step 2 — Analyze User Behavior:**\n• 60% of free users read 0-1 articles/month (won't hit any paywall)\n• 25% read 2-3 articles (hit the paywall, most bounce)\n• 10% read 3+ and subscribe\n• 5% read 3, hit paywall, and leave forever (lost ad revenue)\n\n**Step 3 — Test Different Thresholds:**\n| Threshold | Expected Subscriptions | Expected Ad Revenue | Total Revenue |\n|-----------|----------------------|--------------------|--------------|\n| 1 article | 30K (+50%) | ₹50L (−30%) | ₹139.7L |\n| 3 articles (current) | 20K | ₹72L | ₹131.8L |\n| 5 articles | 15K (−25%) | ₹85L (+18%) | ₹129.8L |\n| Dynamic (personalized) | 25K (+25%) | ₹70L (−3%) | ₹144.8L |\n\n**Step 4 — Dynamic Paywall Strategy:**\nShow paywall based on user signals:\n• High-intent signals (read >2 articles in 1 session, shared an article, returning visitor): Show paywall earlier (after 2 articles)\n• Low-intent signals (first visit, came from social media, bounced before): Show paywall later or not at all (maximize ad impressions)\n• Use logistic regression: P(subscribe | user features) → if P > 30%, show paywall\n\n**Step 5 — Experiment Design:**\n• Control: 3 articles for everyone\n• Treatment: Dynamic paywall based on intent score\n• Metric: Total revenue (subscriptions + ads) over 8 weeks\n• Also track: subscriber retention at 3 months (don't want low-quality subscribers)\n\n**Key Insight:** The optimal paywall isn't a fixed number — it's different for each user. High-intent users should see it early (they'll convert). Low-intent users should see more free content (maximize ad revenue until they're ready).`,
+
+  cs_coldstart: `**Cold Start Recommendation Framework:**\n\n**Step 1 — Understand the Problem:**\n• Returning users (70% of traffic): Collaborative filtering works well (CTR ~8%)\n• New users (30% of traffic): Generic "popular items" shown (CTR ~2%)\n• Lost revenue: 30% of traffic at 4× lower CTR = significant missed opportunity\n\n**Step 2 — Available Signals for New Users:**\nEven without purchase history, we know:\n• Device type + price range (iPhone 15 Pro vs Redmi = different segments)\n• Location (city, pin code → income proxy)\n• Referral source (Google search query, Facebook ad creative)\n• Time of day and day of week\n• First few clicks/searches on the platform (real-time signals)\n\n**Step 3 — Approaches (Progressive):**\n\n**Level 1 — Contextual Defaults (no interaction needed):**\n• Device + location → segment → show segment-popular items\n• Example: iPhone user in South Delhi at 9 PM → premium fashion, electronics\n• Expected CTR improvement: 2% → 3.5%\n\n**Level 2 — Onboarding Quiz (1-3 questions):**\n• "What are you shopping for today?" [Categories]\n• "Your budget range?" [₹-₹₹₹₹]\n• Use answers to seed recommendations\n• Expected CTR: 3.5% → 5%\n\n**Level 3 — Real-Time Adaptation (after first 3-5 clicks):**\n• User clicks on 2 running shoes → immediately shift recommendations to sports\n• Multi-armed bandit: explore different categories, exploit what gets clicks\n• By click 10, should be close to personalized recommendations\n• Expected CTR: 5% → 6.5%\n\n**Step 4 — Experiment Design:**\n• Control: Popular items for new users\n• Variant A: Contextual defaults (device + location)\n• Variant B: Onboarding quiz + contextual\n• Variant C: Real-time adaptation + contextual\n• Metric: New user 7-day conversion rate, not just session CTR\n\n**Step 5 — Measure Recommendation Quality:**\n• Coverage: % of catalog recommended to someone\n• Diversity: How varied are recommendations per user\n• Serendipity: Does the user discover something unexpected?\n• Conversion: Recommendation click → purchase rate\n\n**Key Insight:** The cold start problem is temporary — every new user becomes a returning user after their first session. The goal isn't perfect recommendations from click 1; it's getting to "good enough" by click 5 so the user sticks around long enough to become a returning user.`
 };
 
 // ═══════════════════════════════
@@ -7433,26 +7800,39 @@ function loadCase(id) {
   const solPanel = document.getElementById('puzzleSolutionPanel');
   if (solPanel) { solPanel.classList.remove('show'); }
   if (solBtn) {
-    const hasSolution = (PUZZLE_SOLUTIONS && PUZZLE_SOLUTIONS[id]) || (typeof GUESSTIMATE_SOLUTIONS !== 'undefined' && GUESSTIMATE_SOLUTIONS[id]);
+    const hasSolution = (PUZZLE_SOLUTIONS && PUZZLE_SOLUTIONS[id]) || (typeof GUESSTIMATE_SOLUTIONS !== 'undefined' && GUESSTIMATE_SOLUTIONS[id]) || (typeof CASESTUDY_SOLUTIONS !== 'undefined' && CASESTUDY_SOLUTIONS[id]);
     solBtn.style.display = hasSolution ? 'flex' : 'none';
   }
 
   // For puzzle/guesstimate cases: display statically (no LLM call)
   // For other cases: send prompt to AI as before
   const casePrompt = CASE_PROMPTS[id];
-  const isStaticCase = (p.topic === 'puzzles' || p.topic === 'guesstimates') && casePrompt;
+  const isStaticCase = (p.topic === 'puzzles' || p.topic === 'guesstimates' || p.topic === 'casestudy') && casePrompt;
   if (isStaticCase) {
     // Extract the problem statement (before coaching instructions)
-    const cutMarkers = ['Guide the user:', '**Your Coaching Approach:**'];
+    const cutMarkers = ['Guide the user:', '**Your Coaching Approach:**', 'Walk me through', 'Guide me through', 'Push me to'];
     let cutIdx = -1;
     for (const m of cutMarkers) { cutIdx = casePrompt.indexOf(m); if (cutIdx > 0) break; }
-    const probMarkers = ['**The Puzzle:**', '**The Problem:**'];
+    const probMarkers = ['**The Puzzle:**', '**The Problem:**', '**The Case:**'];
     let startIdx = 0;
     for (const m of probMarkers) { const i = casePrompt.indexOf(m); if (i >= 0) { startIdx = i; break; } }
-    const displayText = cutIdx > 0 ? casePrompt.substring(startIdx, cutIdx).trim() : casePrompt;
-    const suffix = p.topic === 'guesstimates'
-      ? '\n\nThink through this step by step. Start by asking clarifying questions, choose an approach (top-down or bottom-up), then build your assumptions. Share your approach and I\'ll guide you. You can also click **Show Solution** to see a worked example.'
-      : '\n\nTake your time to think through this. When you\'re ready, share your approach and I\'ll guide you step by step. You can also click **Show Solution** below if you want to see the answer directly.';
+    let displayText;
+    if (p.topic === 'casestudy' && startIdx > 0 && cutIdx > 0) {
+      displayText = casePrompt.substring(startIdx, cutIdx).trim();
+    } else if (p.topic === 'casestudy') {
+      // Old-format case studies (single paragraph) — show first 2 sentences as the scenario
+      const sentences = casePrompt.split(/\.(?=\s)/);
+      displayText = sentences.slice(0, Math.min(3, sentences.length)).join('.').trim();
+      if (!displayText.endsWith('.')) displayText += '.';
+    } else {
+      displayText = cutIdx > 0 ? casePrompt.substring(startIdx, cutIdx).trim() : casePrompt;
+    }
+    const suffixes = {
+      guesstimates: '\n\nThink through this step by step. Start by asking clarifying questions, choose an approach (top-down or bottom-up), then build your assumptions. Share your approach and I\'ll guide you. You can also click **Show Solution** to see a worked example.',
+      puzzles: '\n\nTake your time to think through this. When you\'re ready, share your approach and I\'ll guide you step by step. You can also click **Show Solution** below if you want to see the answer directly.',
+      casestudy: '\n\nThink about how you\'d approach this. What clarifying questions would you ask? What metrics would you look at? Share your thinking and I\'ll coach you through it. You can also click **Show Solution** to see a structured answer.'
+    };
+    const suffix = suffixes[p.topic] || suffixes.casestudy;
     appendMessage('bot', displayText + suffix);
     // Store full coaching prompt as system context so AI can guide if user asks
     conversationHistory.push({ role: 'system', content: casePrompt });
@@ -7464,7 +7844,8 @@ function loadCase(id) {
 
 function showPuzzleSolution() {
   const sol = (PUZZLE_SOLUTIONS && PUZZLE_SOLUTIONS[activeCaseId]) ||
-              (typeof GUESSTIMATE_SOLUTIONS !== 'undefined' && GUESSTIMATE_SOLUTIONS[activeCaseId]);
+              (typeof GUESSTIMATE_SOLUTIONS !== 'undefined' && GUESSTIMATE_SOLUTIONS[activeCaseId]) ||
+              (typeof CASESTUDY_SOLUTIONS !== 'undefined' && CASESTUDY_SOLUTIONS[activeCaseId]);
   if (!activeCaseId || !sol) return;
   const panel = document.getElementById('puzzleSolutionPanel');
   const text = document.getElementById('puzzleSolutionText');
