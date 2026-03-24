@@ -9626,7 +9626,9 @@ function renderPromptList(filter = 'all') {
   // Update progress counter
   const solvedInFilter = filtered.filter(p => solved.includes(p.id)).length;
   const counter = document.getElementById('progressCounter');
-  if (counter) counter.textContent = solvedInFilter > 0 ? `${solvedInFilter}/${filtered.length} solved` : '';
+  if (counter) counter.textContent = `${solvedInFilter}/${filtered.length} solved`;
+  // Update filter chip counts
+  updateFilterCounts();
 }
 
 const SECTION_TITLES = {
@@ -9637,6 +9639,22 @@ const SECTION_TITLES = {
   puzzles: 'Puzzles',
   guesstimates: 'Guesstimates'
 };
+
+function updateFilterCounts() {
+  const solved = getSolvedCases();
+  document.querySelectorAll('.topic-chip').forEach(chip => {
+    const topic = chip.getAttribute('data-topic');
+    const topicProblems = topic === 'all' ? PROMPTS : PROMPTS.filter(p => p.topic === topic);
+    const total = topicProblems.length;
+    const topicSolved = topicProblems.filter(p => solved.includes(p.id)).length;
+    const label = topic === 'all' ? 'All' : (SECTION_TITLES[topic] || topic);
+    if (chip.classList.contains('active') && topicSolved > 0) {
+      chip.textContent = `${label} (${topicSolved}/${total})`;
+    } else {
+      chip.textContent = `${label} (${total})`;
+    }
+  });
+}
 
 function filterTopic(topic, el) {
   activeFilter = topic;
