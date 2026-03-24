@@ -2177,6 +2177,32 @@ const PROMPTS = [
   { id: 'cs_paywall',      title: 'When to Show the Paywall?',                   topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'cs_coldstart',    title: 'Cold Start Problem (Recommendation Engine)',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
 
+  // ── Framework & Strategy Cases ──
+  { id: 'fw_market_entry',   title: 'Should Zepto Enter Tier 2 Cities?',              topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fw_profit_decline', title: 'OYO Rooms — Why Are Profits Declining?',         topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'fw_acquisition',    title: 'Should PhonePe Acquire a Neobank?',              topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'fw_pricing',        title: 'Pricing Strategy for an EdTech Course',          topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fw_operations',     title: 'BigBasket — Reduce Delivery Delays',             topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fw_competitive',    title: 'Swiggy vs Zomato — New Competitor Enters',       topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'fw_nonprofit',      title: 'Increase Blood Donations in Rural India',        topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fw_pe_invest',      title: 'Should a PE Firm Invest in a D2C Brand?',        topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+
+  // ── Brainstorming Cases ──
+  { id: 'bs_barriers',       title: 'Barriers to Entry: EV Charging Network',         topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
+  { id: 'bs_revenue',        title: 'How Can IRCTC Increase Revenue?',                topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'bs_risks',          title: 'Risks of Jio Dropping Data Prices Again',        topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'bs_crosssell',      title: 'Cross-sell Strategies for a Super App',          topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'bs_monetize',       title: 'How Should ChatGPT Monetize in India?',          topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'bs_reduce_cost',    title: 'Reduce Cloud Costs for a Growing Startup',       topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'bs_ipl_sponsor',    title: 'IPL Team Sponsorship — Worth It?',               topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
+
+  // ── Business Judgment Cases ──
+  { id: 'bj_discount',       title: 'Should Nykaa Offer Deep Discounts?',             topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
+  { id: 'bj_build_buy',      title: 'Build vs Buy: In-house Analytics Platform',      topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'bj_pivot',          title: 'Should a Food Delivery App Pivot to Groceries?', topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'bj_layoff',         title: 'Impact Analysis of Workforce Restructuring',     topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
+  { id: 'bj_freemium',       title: 'Freemium vs Paid: SaaS Pricing Decision',        topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+
   // ── Puzzles ──
   { id: 'pz_45min',       title: 'Measure 45 Minutes (Two Wires)',       topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
   { id: 'pz_daughters',   title: 'Find the Ages of Three Daughters',    topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
@@ -4179,6 +4205,620 @@ Do NOT give the answer upfront. Guide the candidate through this framework:
 
 Always push for specificity: "How would you implement referral-source-based recommendations without a recommendation model?", "Write the logic to infer user intent from referral URL parameters", "What would you tell the Head of Product if the onboarding quiz reduces new user drop-off but increases recommendation CTR by 2%?"`,
 
+  fw_market_entry: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** Zepto (10-minute grocery delivery) currently operates in 8 major metros. They're considering expanding to Tier 2 cities like Jaipur, Lucknow, and Indore. Should they enter?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Which specific Tier 2 cities and in what sequence? What is the target timeline and capital budget? Are we evaluating all three cities together or independently?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Market attractiveness: city population, internet/smartphone penetration, disposable income, grocery spend per household
+- Operational feasibility: dark store real estate availability, supply chain setup, last-mile delivery infrastructure, hiring pool
+- Competitive landscape: existing local players (offline kiranas, JioMart, Blinkit presence), switching barriers
+- Financial viability: unit economics (AOV, contribution margin, CAC vs LTV), payback period, investment required
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Jaipur: ~35 lakh urban households, growing middle class, average grocery spend ~₹8,000/month, limited quick commerce presence
+- Key risk: lower population density than metros increases delivery cost per order
+- Regulatory: local zoning laws for dark stores can be complex in Tier 2 cities
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  fw_profit_decline: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** OYO Rooms has seen a 30% decline in operating profit over the past year despite revenue remaining flat. Diagnose the cause and recommend solutions.
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Is revenue flat across all geographies/segments or just in aggregate? What time period are we comparing? Has anything changed — new markets entered, product mix shift, pricing strategy?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Revenue drivers: occupancy rate × average daily rate (ADR) × number of rooms — which lever has changed?
+- Cost structure: fixed costs (lease commitments, corporate overhead) vs variable costs (cleaning, utilities, commissions)
+- Competitive changes: have rivals like Treebo or FabHotels changed pricing? Has OTA commission structure shifted?
+- Customer behavior: has customer mix shifted (budget vs premium), longer/shorter stays, direct vs OTA bookings?
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Occupancy is stable at 72%, ADR has actually increased 5% — so revenue per room is up slightly
+- Total room count grew 8% (new properties added) — explaining flat total revenue despite per-room improvement
+- Key insight: new properties have higher fixed cost per room and lower occupancy in ramp-up phase
+- Variable cost per room has increased 18% due to higher cleaning/hygiene standards post-COVID and rising labor costs
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  fw_acquisition: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** PhonePe (digital payments) is considering acquiring a small neobank to offer full banking services. Should they proceed?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What is the neobank's size, customer base, and current product set? What is the asking price? Is this about acquiring a banking license, technology, or customers? What is PhonePe's strategic goal — lending, savings, or full banking?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Strategic fit: does banking align with PhonePe's core mission and user base? Which gaps does it fill?
+- Target attractiveness: neobank's revenue, growth rate, NPA levels, customer demographics, technology stack
+- Synergies: revenue synergies (cross-sell lending/savings to 500M+ PhonePe users), cost synergies (shared infrastructure)
+- Regulatory risks: RBI approval requirements, banking license complexity, data privacy compliance
+- Financial considerations: acquisition price vs standalone value, integration costs, dilution impact
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- PhonePe has 500M+ registered users but monetization is limited — banking is the natural next step
+- Key regulatory hurdle: RBI has been cautious about fintech-bank mergers; approval could take 18-24 months
+- Neobank's NPA ratio and deposit base quality are critical risk factors to assess
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  fw_pricing: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** An EdTech startup has built an AI-powered data analytics course. How should they price it? Currently considering ₹5,000–₹50,000 range.
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Who is the target customer (fresher, working professional, career switcher)? What is the course duration and format (live vs recorded)? What outcomes/certifications does it offer? Who are the key competitors?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Cost-based pricing: course development cost + instructor cost + platform cost + margin — sets the floor price
+- Competitor benchmarking: UpGrad, Coursera, Great Learning pricing for comparable courses (₹15,000–₹1,00,000 range)
+- Value-based pricing: expected salary uplift for the learner (data analyst roles pay ₹6–15 LPA) — price as a fraction of first-year salary gain
+- Willingness to pay by segment: students (₹5,000–₹15,000), working professionals (₹20,000–₹40,000), corporate L&D (₹50,000+ per seat)
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Value-based anchor: if a fresher gains ₹3 LPA salary uplift, 10% of first-year gain = ₹30,000 — within the range considered
+- Competitor data: UpGrad's data science programs range ₹60,000–₹2,50,000; Coursera certificates ~₹3,000–₹15,000
+- Recommendation: tiered pricing (₹9,999 self-paced, ₹29,999 live with mentorship, ₹49,999 with placement guarantee)
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  fw_operations: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** BigBasket is experiencing 25% delivery delays in Bangalore during monsoon season. Diagnose the operational bottlenecks and propose solutions.
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Which delivery time slots are most affected? Is the issue across all zones or specific areas? Has demand increased or is the supply side constrained? What is the current SLA and how bad are the delays?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Supply chain steps: procurement → warehouse receiving → picking & packing → dispatch → last-mile delivery — identify which step is the bottleneck
+- Identify bottleneck: is the warehouse processing slower, or are delivery agents taking longer per route?
+- Capacity vs demand: has monsoon spiked demand (people ordering more) or reduced capacity (fewer delivery agents willing to work)?
+- Process improvements: route optimization, weather-adjusted time slots, inventory pre-positioning
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Order volume up 15% on rainy days (people avoid going out), delivery agent availability down 20% (reluctance to ride in rain)
+- Average delivery time per drop increased from 12 min to 22 min due to traffic and navigation difficulty
+- Key bottleneck: last-mile delivery, not warehouse operations — warehouse throughput is fine
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  fw_competitive: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A well-funded new competitor with ₹2,000 Cr backing has entered the food delivery market in India. How should Swiggy/Zomato respond?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Who is this competitor — a new startup or an established player (e.g., Amazon Food relaunch)? What cities are they entering first? What is their differentiation — price, speed, restaurant selection? What is our current market position?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Threat assessment: how differentiated is their offering? Do they have sustainable advantages or just cash?
+- Customer loyalty: how sticky are our current users? What % order exclusively from us vs switching based on offers?
+- Competitive advantages: our restaurant network, delivery infrastructure, brand trust, Gold/Pro membership loyalty
+- Strategic options: defend (increase discounts/loyalty rewards), attack (enter their strongest markets aggressively), ignore (focus on profitable segments), or collaborate
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Heavy funded competitors in food delivery historically burn cash but fail to sustain (e.g., Foodpanda, Uber Eats India)
+- The new entrant's ₹2,000 Cr gives them ~18-24 months of cash at typical burn rates
+- Key risk: if they sign exclusive deals with top restaurant chains, that's a real threat to GMV
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  fw_nonprofit: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** An NGO wants to increase voluntary blood donations in rural India. Currently, rural areas face 40% blood shortage. How can they solve this?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What states/regions are we focused on? What is the current donation rate vs requirement? Are there specific blood groups in shortage? What budget and resources does the NGO have? Are we solving for awareness, logistics, or both?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Stakeholders: donors (eligibility, willingness), hospitals (demand patterns), NGO (capabilities), government (PHCs, blood banks), corporates (CSR partnerships)
+- Barriers to donation: awareness/myths about blood donation, fear of needles, lack of nearby donation camps, no follow-up system
+- Awareness & trust: community leaders, panchayat involvement, local language campaigns, dispelling myths
+- Logistics: mobile blood collection vans, partnering with district hospitals, cold chain for storage, blood bank mapping
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Rural areas have 60% of India's population but only 30% of blood donation camps
+- Community influencers (sarpanch, religious leaders) have outsized impact on rural behavior change
+- Mobile camps at haats (weekly markets) can reach 500-1,000 people at low cost vs fixed camps
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  fw_pe_invest: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A PE firm is evaluating a D2C skincare brand (₹200 Cr revenue, 3 years old, 40% YoY growth). Should they invest at ₹800 Cr valuation?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What is the PE firm's investment thesis and target return (IRR)? What is the holding period? Is this primary or secondary investment? What are the brand's current unit economics and profitability?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Market attractiveness: India skincare market size (~₹20,000 Cr), growth rate (15%+ CAGR), D2C penetration trend
+- Company performance: revenue trajectory, gross margin (D2C skincare typically 60-70%), EBITDA margin, repeat rate, CAC vs LTV
+- Growth sustainability: whether 40% growth is organic or paid-ad dependent, brand moat, customer retention
+- Valuation reasonableness: 4x revenue multiple — compare to public comps (Mamaearth trades at 3-5x) and PE deal comps
+- Exit strategy: IPO potential, strategic acquirer (HUL, Nykaa), or secondary PE sale in 4-5 years
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- If gross margin is 65% and EBITDA is -5% (investing in growth), that's acceptable for a 3-year-old brand
+- Key risk: high ad spend dependency — if 70% of revenue comes from performance marketing, the moat is weak
+- 4x revenue is reasonable if growth continues, but at 20% growth the multiple looks stretched
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bs_barriers: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** What are the potential barriers to entry for building an EV charging network in India?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Are we talking about public charging stations or home/commercial? For 2-wheelers, 3-wheelers, or 4-wheelers? What geography — metros, highways, or pan-India? Fast charging or slow charging?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Capital & infrastructure: upfront capex for chargers + installation, land/real estate acquisition in prime locations
+- Power & grid: stable electricity supply requirements, grid capacity upgrades, DISCOM coordination complexity
+- Regulatory & approvals: government permits, safety certifications, land-use approvals, Bureau of Energy Efficiency norms
+- Demand & chicken-and-egg: EV adoption drives charging demand, but lack of chargers slows EV adoption — classic network effect problem
+- Standards fragmentation: multiple connector types (CCS2, CHAdeMO, Type 2, proprietary) create interoperability challenges
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- A single DC fast charger costs ₹5-15 lakh installed; a station with 4 chargers = ₹20-60 lakh just in equipment
+- Grid reliability: 8-10% of India's grid has voltage fluctuations that can damage chargers without additional conditioning
+- Location paradox: prime urban real estate (malls, offices) has highest EV parking demand but highest lease cost
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bs_revenue: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** IRCTC (Indian Railway Catering & Tourism Corp) currently makes money from ticket booking and catering. What are 5-7 creative ways they can increase revenue?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Are there regulatory constraints on what IRCTC can monetize? Should ideas be near-term (low investment) or long-term strategic bets? Is the focus on consumer revenue, B2B, or data/platform plays?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Existing asset monetization: IRCTC's unique assets — 8 Cr+ daily visitors, railway station footprint, train captive audience, massive data
+- Adjacency expansion: products/services close to core (tourism packages, premium lounges, last-mile travel)
+- Platform/marketplace: IRCTC as a platform for third-party services
+- Data & digital: monetizing the behavioral data IRCTC holds on millions of travelers
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- IRCTC gets 8 Cr website/app visits daily — one of India's highest-traffic digital properties, yet ad revenue is minimal
+- Tourism packages: IRCTC already runs Bharat Gaurav trains — premium themed tourism has 40%+ margins
+- Co-branded credit card with a bank: SBI Card, HDFC, Axis — model similar to IndiGo-HDFC card (₹500 Cr+ annual revenue potential)
+- Railway WiFi: RailTel provides free WiFi at 6,000+ stations — monetizable through sponsored landing pages and premium tiers
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bs_risks: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** Jio is considering another aggressive price cut in mobile data plans to gain market share. What are the risks?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: How large is the proposed price cut — 10%, 20%, 50%? Is this targeted (specific geographies or plans) or across the board? What is Jio's current market share? What triggered this — a competitor move or proactive?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Financial risks: ARPU decline impact on revenue and EBITDA, payback period to recover via volume, capex funding implications
+- Competitive response: Airtel and Vi/Vodafone Idea's likely reactions — matching cuts would erase gains; Vi may be destabilized further
+- Industry structure risks: further ARPU erosion across the industry damages the investment case for 5G rollout
+- Regulatory risks: TRAI scrutiny for predatory pricing, potential floor price regulation
+- Brand and perception: being seen permanently as a "cheap" network vs premium operator ambition
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Jio already has ~50% market share — incremental share gains from price cuts are diminishing returns
+- India's average mobile data ARPU is already among the world's lowest (~₹180/month vs ₹3,000+ in the US)
+- Airtel has shown willingness to absorb short-term share loss rather than follow Jio into destructive pricing
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bs_crosssell: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** Paytm is building a super app (payments, lending, insurance, shopping, travel). What cross-sell strategies should they use?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Who is Paytm's core user — merchant or consumer? What products do they already use (payments only vs multiple)? Are we targeting new-to-product cross-sell or upsell within existing products? What is the current cross-product penetration rate?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Data-driven product recommendations: use payment transaction data to infer life stage and financial needs
+- Contextual cross-sell moments: trigger offers at the right payment moment (e.g., offer travel insurance when user books a flight)
+- Bundled subscriptions: Paytm First or similar loyalty tier that bundles multiple products with discounts
+- Cashback funnels: reward usage of one product with cashback redeemable only in another product
+- Financial health scores: show users their "financial health" and recommend the right next product
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- A user paying utility bills monthly → high candidate for a savings account or recurring deposit
+- A user making frequent small UPI payments → likely underserved by formal credit → target for BNPL or small personal loan
+- Contextual timing: showing a travel insurance offer immediately after a flight ticket payment has 3-5x higher CTR than generic banner ads
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bs_monetize: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** ChatGPT wants to grow paid subscriptions in India where users are price-sensitive. How should they monetize?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What is the current India user base size and free-to-paid conversion rate? What are the top use cases for Indian users (coding, content writing, study help)? Who are the target segments — students, professionals, enterprises? What is the competitive landscape (Google Gemini, local AI tools)?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- India-specific pricing: global pricing (₹1,650/month for Plus) is high for India; PPP-adjusted pricing of ₹500-800/month improves conversion
+- Segment-specific plans: student plans (verified via .edu email), SMB plans, enterprise/API plans
+- Freemium design: strong free tier with usage limits that create natural upgrade moments
+- Distribution partnerships: bundle with existing platforms Indians already pay for (Jio, Airtel, BYJU's, Flipkart)
+- B2B and API monetization: enterprise sales to IT services, BPO, and edtech companies — less price sensitive
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- India has the 2nd largest ChatGPT user base globally but very low paid conversion due to price sensitivity
+- Localized pricing works: Spotify charges ₹119/month in India vs ₹169 globally — and India is now one of Spotify's fastest-growing markets
+- B2B route: TCS, Infosys, Wipro are already deploying AI tools — enterprise deals can be ₹50-500 Cr annually
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bs_reduce_cost: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A 50-person startup spending ₹15 lakh/month on AWS. Their CTO wants to reduce cloud costs by 40%. What strategies would you recommend?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What is the breakdown of AWS spend (compute, storage, data transfer, managed services)? Is the 40% target over what timeline? Are there performance/reliability constraints we must maintain? Do we have engineering bandwidth to implement changes?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Commitment-based savings: Reserved Instances and Savings Plans for predictable workloads (can save 40-70% vs on-demand)
+- Elasticity improvements: auto-scaling groups, spot instances for non-critical batch jobs, schedule-based scaling
+- Architecture optimization: data tiering (S3 Intelligent Tiering), database right-sizing, CDN for static assets
+- Waste elimination: identify and terminate zombie resources (unused EC2s, unattached EBS volumes, old snapshots)
+- Vendor negotiation: AWS Enterprise Discount Program, annual commitment discounts, requesting credits
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Typical startup finding: 20-30% of cloud spend is on zombie/idle resources — low-hanging fruit with no performance impact
+- Reserved Instances for 1-year term save ~38% vs on-demand; 3-year saves ~57% — alone can hit the 40% target if compute-heavy
+- Data egress costs are often hidden — if they're transferring data between regions or to the internet heavily, that's worth examining
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bs_ipl_sponsor: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A mid-sized fintech startup is offered title sponsorship of an IPL team for ₹50 Cr/season. Is it worth it?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What is the startup's current revenue, marketing budget, and growth stage? Who is their target customer (retail investors, SMBs, young professionals)? What is their current CAC and LTV? Which IPL team is this — a top team like MI/CSK or a smaller franchise?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Brand awareness ROI: estimated impressions × target audience overlap × brand recall rate — translate to equivalent media buying cost
+- Customer acquisition impact: can we track new sign-ups attributable to IPL campaign? Compare against current digital CAC
+- Alternative channel comparison: ₹50 Cr could fund digital ads, influencer campaigns, referral programs — compare expected returns
+- Audience alignment: IPL audience skews male, 18-45, urban — does this match the fintech's ICP?
+- Measurability challenges: brand campaigns are hard to attribute; the company needs robust brand tracking pre/post
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- IPL 2024 averaged 12 Cr viewers per match; title sponsor gets jersey logo + ground branding + digital mentions — massive reach
+- Angel One (stockbroking app) saw significant brand recall uplift and user growth after IPL sponsorships
+- At ₹50 Cr and a CAC of ₹1,000, you'd need 5 lakh new customers attributable to IPL to break even — ambitious but not impossible for a large sponsor
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bj_discount: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** Nykaa (beauty e-commerce) is considering offering 50% discounts during its annual Pink Friday sale. Based on your business judgment, is this a good strategy?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Is the 50% discount across all categories or selective? Are brands participating or is Nykaa absorbing the discount? What is the goal — GMV, new customer acquisition, or clearing inventory? How does this compare to last year's sale performance?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Brand positioning impact: Nykaa has positioned itself as a premium beauty destination — deep discounting risks undermining this
+- Unit economics: at 50% discount, what is the gross margin? Does Nykaa still make money per order, or is it a loss leader?
+- Customer behavior: are these new customers or existing customers pulling forward purchases? What's the retention rate post-sale?
+- Competitive context: Myntra's EORS, Amazon's Great Indian Sale — is Nykaa forced to compete or can it differentiate?
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Beauty/personal care has high repeat purchase rates — acquiring a new customer during a sale can be very valuable if they become loyal
+- Risk: "sale shoppers" have lower LTV than regular-price buyers; Nykaa must track cohort behavior post-Pink Friday
+- Brand solution: selective deep discounts on mass-market brands while keeping luxury brands at minimal discount protects positioning
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bj_build_buy: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A Series B fintech with 200 employees needs an analytics platform. Should they build in-house or buy a SaaS tool like Mixpanel/Amplitude?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What analytics use cases are needed — product analytics, marketing attribution, financial reporting, or all? What is the current data maturity? Do we have data engineers in-house? What is the budget? What are the data privacy/residency requirements?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Cost comparison (TCO over 3 years): build = engineering salaries + infrastructure + maintenance; buy = SaaS subscription + integration cost
+- Time to value: buy gets you up and running in weeks; build takes 6-18 months minimum
+- Customization needs: if the fintech has highly proprietary metrics or complex regulatory reporting, build may be necessary
+- Team capability and opportunity cost: engineering time spent on internal tools is not spent on core product
+- Vendor lock-in and data privacy: financial data going to third-party SaaS has RBI/data localization implications
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Amplitude/Mixpanel cost: ~$2,000-5,000/month for a 200-person company scale; over 3 years = ₹50-1.25 Cr
+- Build cost: 2 senior data engineers at ₹30 LPA each = ₹60 LPA/year; over 3 years = ₹1.8 Cr just in salaries, plus infrastructure
+- At Series B, most fintechs benefit from buying standard analytics (Amplitude/Mixpanel) and building only the proprietary regulatory/risk dashboards
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bj_pivot: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A food delivery startup in Tier 2 cities is struggling with unit economics. Should they pivot to grocery delivery where margins might be better?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What specifically are the unit economics problems — high CAC, low AOV, high delivery cost? How much capital runway remains? Is the grocery opportunity validated or assumed? What is the operational overlap between food and grocery delivery?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Current vs potential unit economics: compare food delivery (AOV ₹250-400, delivery cost ₹40-60) vs grocery (AOV ₹600-1,500, but thinner gross margins on product)
+- Competitive landscape: BigBasket, Blinkit, JioMart already in grocery — what is our differentiation in Tier 2?
+- Operational overlap: delivery network, app, and customer base can partially transfer — but warehouse/dark store model is different
+- Customer demand validation: do our current food customers want grocery from us? Survey data or behavioral signals?
+- Capital requirements and risk: pivoting burns runway during transition; risk of losing existing food customer base
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Grocery has higher AOV but lower gross margin (10-15% vs 20-25% for food delivery) — contribution margin may be similar
+- In Tier 2 cities, organized grocery delivery penetration is very low — first-mover advantage is real
+- Partial pivot (add grocery as a category) is lower risk than full pivot — test with existing customer base first
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bj_layoff: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A tech company is considering laying off 15% of its workforce (mostly in customer support) and replacing them with AI chatbots. Analyze the impact.
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: What types of customer queries does support handle — simple FAQs or complex issue resolution? What is the current CSAT and resolution rate? What is the implementation timeline and cost of AI chatbots? Is there a phased approach or immediate transition?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Cost savings vs customer satisfaction risk: calculate annual savings vs expected CSAT decline and its revenue impact (churn)
+- AI capability assessment: chatbots handle 60-80% of tier-1 queries well; complex escalations still need humans
+- Implementation timeline: AI chatbot deployment, training, and integration typically takes 3-6 months before it's reliable
+- People impact: retraining/reskilling options for affected employees, severance costs, employee morale across company
+- Regulatory and PR risk: India labor laws (Industrial Disputes Act) for mass layoffs; media/social media scrutiny
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- If 15% workforce = 150 people at average ₹5 LPA = ₹7.5 Cr/year savings; chatbot cost = ₹50-80 lakh/year — net saving is real
+- Risk: if CSAT drops from 85% to 70% and churn increases by 2%, calculate revenue loss — may exceed cost savings
+- Hybrid model recommendation: AI handles tier-1, humans handle tier-2/escalations — reduces workforce by 8-10%, not 15%
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
+  bj_freemium: `You are a senior analytics interviewer conducting a case study interview. Present this problem and coach the candidate through it.
+
+**The Problem:** A SaaS analytics startup is debating between freemium (free tier + paid) vs purely paid model with a 14-day trial. What's your recommendation?
+
+**Your Coaching Approach:**
+Do NOT solve the problem upfront. Guide the candidate step by step:
+
+**Step 1 — Clarify the Problem**
+Ask: "Before diving in, what clarifying questions would you ask?"
+Key questions they should surface: Who is the target customer — individual analysts, SMBs, or enterprise? What is the product's core value proposition and how quickly does a user experience it? What are the unit economics (CAC, LTV, gross margin)? What are competitors doing?
+
+**Step 2 — Build a Framework**
+Ask the candidate to structure their approach. A strong framework should cover:
+- Market maturity and customer education: if the market doesn't know they need analytics, freemium helps with discovery; if demand is established, trial is sufficient
+- CAC implications: freemium drives organic growth and virality, reducing paid CAC; 14-day trial requires more sales effort
+- Conversion rates and free tier cost: typical freemium converts 2-5%; free users consume infrastructure — calculate cost of serving free users
+- Product virality: does the product have natural sharing/collaboration features that let free users bring in colleagues?
+- Customer segment: SMB and individual users respond well to freemium; enterprise buyers prefer structured trials with dedicated sales support
+
+**Step 3 — Analyze Key Areas**
+Dive into the most critical element first. Provide data/context if they ask the right questions:
+- Amplitude, Mixpanel, Notion all use freemium successfully for SMB/individual segment — viral loops drive growth
+- Enterprise SaaS (Salesforce, SAP) uses trial + sales-led approach — free tier would undermine pricing power
+- Hybrid approach: freemium for self-serve SMB segment + 30-day trial for enterprise segment — Slack and Linear do this effectively
+
+**Step 4 — Synthesize & Recommend**
+Ask: "Based on everything we've discussed, what is your recommendation?"
+Push for: structured answer (recommendation + 3 reasons + risks + next steps)
+
+Be encouraging but push for structured thinking. Use Indian business context (₹, lakhs/crores, Indian companies/brands).`,
+
   ge_tea: `You are a senior analytics interviewer at a top Indian consulting/tech firm. Present this guesstimate problem and coach the candidate through solving it.
 
 **The Problem:** How many cups of tea (chai) are sold daily in India?
@@ -5719,7 +6359,47 @@ const CASESTUDY_SOLUTIONS = {
 
   cs_paywall: `**Paywall Optimization Framework:**\n\n**Step 1 — Current State Analysis:**\n• Free users: 500K MAU, see ads, 3 free articles/month\n• Paid subscribers: 20K (4% conversion rate)\n• Subscription: ₹299/month\n• Ad revenue per free user: ~₹15/month\n• Subscription revenue: 20K × ₹299 = ₹59.8L/month\n• Ad revenue: 480K × ₹15 = ₹72L/month\n\n**Step 2 — Analyze User Behavior:**\n• 60% of free users read 0-1 articles/month (won't hit any paywall)\n• 25% read 2-3 articles (hit the paywall, most bounce)\n• 10% read 3+ and subscribe\n• 5% read 3, hit paywall, and leave forever (lost ad revenue)\n\n**Step 3 — Test Different Thresholds:**\n| Threshold | Expected Subscriptions | Expected Ad Revenue | Total Revenue |\n|-----------|----------------------|--------------------|--------------|\n| 1 article | 30K (+50%) | ₹50L (−30%) | ₹139.7L |\n| 3 articles (current) | 20K | ₹72L | ₹131.8L |\n| 5 articles | 15K (−25%) | ₹85L (+18%) | ₹129.8L |\n| Dynamic (personalized) | 25K (+25%) | ₹70L (−3%) | ₹144.8L |\n\n**Step 4 — Dynamic Paywall Strategy:**\nShow paywall based on user signals:\n• High-intent signals (read >2 articles in 1 session, shared an article, returning visitor): Show paywall earlier (after 2 articles)\n• Low-intent signals (first visit, came from social media, bounced before): Show paywall later or not at all (maximize ad impressions)\n• Use logistic regression: P(subscribe | user features) → if P > 30%, show paywall\n\n**Step 5 — Experiment Design:**\n• Control: 3 articles for everyone\n• Treatment: Dynamic paywall based on intent score\n• Metric: Total revenue (subscriptions + ads) over 8 weeks\n• Also track: subscriber retention at 3 months (don't want low-quality subscribers)\n\n**Key Insight:** The optimal paywall isn't a fixed number — it's different for each user. High-intent users should see it early (they'll convert). Low-intent users should see more free content (maximize ad revenue until they're ready).`,
 
-  cs_coldstart: `**Cold Start Recommendation Framework:**\n\n**Step 1 — Understand the Problem:**\n• Returning users (70% of traffic): Collaborative filtering works well (CTR ~8%)\n• New users (30% of traffic): Generic "popular items" shown (CTR ~2%)\n• Lost revenue: 30% of traffic at 4× lower CTR = significant missed opportunity\n\n**Step 2 — Available Signals for New Users:**\nEven without purchase history, we know:\n• Device type + price range (iPhone 15 Pro vs Redmi = different segments)\n• Location (city, pin code → income proxy)\n• Referral source (Google search query, Facebook ad creative)\n• Time of day and day of week\n• First few clicks/searches on the platform (real-time signals)\n\n**Step 3 — Approaches (Progressive):**\n\n**Level 1 — Contextual Defaults (no interaction needed):**\n• Device + location → segment → show segment-popular items\n• Example: iPhone user in South Delhi at 9 PM → premium fashion, electronics\n• Expected CTR improvement: 2% → 3.5%\n\n**Level 2 — Onboarding Quiz (1-3 questions):**\n• "What are you shopping for today?" [Categories]\n• "Your budget range?" [₹-₹₹₹₹]\n• Use answers to seed recommendations\n• Expected CTR: 3.5% → 5%\n\n**Level 3 — Real-Time Adaptation (after first 3-5 clicks):**\n• User clicks on 2 running shoes → immediately shift recommendations to sports\n• Multi-armed bandit: explore different categories, exploit what gets clicks\n• By click 10, should be close to personalized recommendations\n• Expected CTR: 5% → 6.5%\n\n**Step 4 — Experiment Design:**\n• Control: Popular items for new users\n• Variant A: Contextual defaults (device + location)\n• Variant B: Onboarding quiz + contextual\n• Variant C: Real-time adaptation + contextual\n• Metric: New user 7-day conversion rate, not just session CTR\n\n**Step 5 — Measure Recommendation Quality:**\n• Coverage: % of catalog recommended to someone\n• Diversity: How varied are recommendations per user\n• Serendipity: Does the user discover something unexpected?\n• Conversion: Recommendation click → purchase rate\n\n**Key Insight:** The cold start problem is temporary — every new user becomes a returning user after their first session. The goal isn't perfect recommendations from click 1; it's getting to "good enough" by click 5 so the user sticks around long enough to become a returning user.`
+  cs_coldstart: `**Cold Start Recommendation Framework:**\n\n**Step 1 — Understand the Problem:**\n• Returning users (70% of traffic): Collaborative filtering works well (CTR ~8%)\n• New users (30% of traffic): Generic "popular items" shown (CTR ~2%)\n• Lost revenue: 30% of traffic at 4× lower CTR = significant missed opportunity\n\n**Step 2 — Available Signals for New Users:**\nEven without purchase history, we know:\n• Device type + price range (iPhone 15 Pro vs Redmi = different segments)\n• Location (city, pin code → income proxy)\n• Referral source (Google search query, Facebook ad creative)\n• Time of day and day of week\n• First few clicks/searches on the platform (real-time signals)\n\n**Step 3 — Approaches (Progressive):**\n\n**Level 1 — Contextual Defaults (no interaction needed):**\n• Device + location → segment → show segment-popular items\n• Example: iPhone user in South Delhi at 9 PM → premium fashion, electronics\n• Expected CTR improvement: 2% → 3.5%\n\n**Level 2 — Onboarding Quiz (1-3 questions):**\n• "What are you shopping for today?" [Categories]\n• "Your budget range?" [₹-₹₹₹₹]\n• Use answers to seed recommendations\n• Expected CTR: 3.5% → 5%\n\n**Level 3 — Real-Time Adaptation (after first 3-5 clicks):**\n• User clicks on 2 running shoes → immediately shift recommendations to sports\n• Multi-armed bandit: explore different categories, exploit what gets clicks\n• By click 10, should be close to personalized recommendations\n• Expected CTR: 5% → 6.5%\n\n**Step 4 — Experiment Design:**\n• Control: Popular items for new users\n• Variant A: Contextual defaults (device + location)\n• Variant B: Onboarding quiz + contextual\n• Variant C: Real-time adaptation + contextual\n• Metric: New user 7-day conversion rate, not just session CTR\n\n**Step 5 — Measure Recommendation Quality:**\n• Coverage: % of catalog recommended to someone\n• Diversity: How varied are recommendations per user\n• Serendipity: Does the user discover something unexpected?\n• Conversion: Recommendation click → purchase rate\n\n**Key Insight:** The cold start problem is temporary — every new user becomes a returning user after their first session. The goal isn't perfect recommendations from click 1; it's getting to "good enough" by click 5 so the user sticks around long enough to become a returning user.`,
+
+  fw_market_entry: `**Market Entry Framework: Zepto Tier 2 Expansion**\n\n**Step 1 — Market Attractiveness:**\n• Tier 2 population: 30+ cities with 5-15L population, rapidly urbanizing\n• Smartphone penetration: 55-65% (lower than metros but growing fast)\n• Grocery spending: ₹4,000-6,000/month per household (vs ₹8,000+ in metros)\n• Online grocery adoption: still early — <10% of grocery spend online\n\n**Step 2 — Operational Feasibility:**\n• Dark store setup cost: ₹40-60L each (vs ₹80-1Cr in metros — cheaper real estate)\n• Supply chain: Fewer FMCG distributors, inconsistent restocking frequency\n• Cold chain: Limited cold storage infrastructure outside metros\n• Rider availability: Lower density, harder to achieve 10-min delivery economics\n\n**Step 3 — Competitive Landscape:**\n• BigBasket: Present but 2-4 hour delivery, not 10-min\n• JioMart: Strong kirana network partnerships\n• Local apps: Dunzo-like players in some cities\n• Kirana stores: Very strong loyalty, credit relationships, home delivery\n\n**Step 4 — Financial Viability:**\n• AOV: ₹200-250 (vs ₹450+ in metros) — 45% lower\n• Delivery cost per order: ₹35-45 (vs ₹25-30 in metros — lower density)\n• Contribution margin: Significantly worse unit economics initially\n\n**Recommendation:**\n1. Test 2-3 high-density Tier 2 cities first: Jaipur, Lucknow, Indore\n2. Modify model: 30-min delivery promise (not 10-min) allows larger dark store radius\n3. Higher MOV (minimum order value): ₹199 minimum to improve per-order economics\n\n**Key Insight:** The 10-minute model that works in dense metros breaks in Tier 2. Zepto must adapt its core promise — competing on convenience (same-day) rather than speed (10 min) — to make unit economics work outside metros.`,
+
+  fw_profit_decline: `**Profit Decline Framework: OYO Rooms**\n\n**Step 1 — Revenue Decomposition:**\nRevenue = Number of Rooms × Occupancy Rate × Average Daily Rate (ADR)\n• Which lever is down? All three? One primary driver?\n• Check: Room count (are properties churning?), occupancy (demand dropping?), ADR (price compression?)\n\n**Step 2 — Cost Analysis:**\n• Fixed costs: Tech platform maintenance, corporate overhead, brand marketing\n• Variable costs: Property commissions (OYO pays hotels ~70-75% of booking value), customer support, payment processing\n• Has commission structure changed? New property types with higher commission rates?\n\n**Step 3 — Likely Diagnosis:**\n• ADR compression: Airbnb entering India + MakeMyTrip/Goibibo discounting → price war\n• Customer acquisition cost increase: More competition for same traveler\n• Property quality issues → negative reviews → lower occupancy → ADR drops further\n• Expansion into unprofitable cities (smaller Tier 3 markets with poor occupancy)\n\n**Step 4 — Solutions:**\n1. Business travel segment: Corporate travelers pay 40-50% higher ADR, book further ahead\n2. Dynamic pricing technology: Maximize ADR during peak periods (weekends, holidays)\n3. Portfolio cleanup: Exit unprofitable properties, focus on high-occupancy locations\n4. Reduce commission in exchange for exclusive branding rights from top properties\n\n**Recommendation:**\n• Short-term: Raise ADR in high-demand markets, cut underperforming properties\n• Medium-term: Shift mix toward corporate travel (OYO for Business)\n• Long-term: Build loyalty program to reduce CAC and improve repeat bookings\n\n**Key Insight:** OYO's profitability problem is structural — the asset-light model works only if ADR and occupancy stay above threshold. Chasing room count growth sacrifices quality, which destroys both metrics simultaneously.`,
+
+  fw_acquisition: `**M&A Framework: PhonePe Acquiring a Neobank**\n\n**Step 1 — Strategic Fit:**\n• PhonePe has 500M+ registered users and processes ₹1L+ Cr in UPI monthly\n• Natural progression: payments → savings → credit → insurance → investments\n• A neobank adds: savings accounts, FDs, credit products, direct debit\n• Data advantage: UPI transaction history is the best credit scoring dataset in India\n\n**Step 2 — Regulatory Landscape:**\n• RBI banking license requirements: ₹200 Cr minimum capital for small finance bank\n• Fit-and-proper criteria for promoters, compliance burden is massive\n• Alternative: Acquire NBFC license (easier) + payment bank (already have)\n• Timeline: Full banking license approval takes 2-3 years minimum\n\n**Step 3 — Synergy Analysis:**\n• Revenue synergies: Cross-sell credit to 500M users (even 1% conversion = 5M loans)\n• Cost synergies: Shared tech infrastructure, customer support, KYC data reuse\n• Data moat: Spending patterns → credit underwriting → lower NPA rates\n\n**Step 4 — Risks:**\n• Capital requirements for banking are substantial (₹500Cr-1,000Cr+)\n• NPA risk if credit underwriting models fail at scale\n• Regulatory scrutiny: RBI watching Big Tech in banking very carefully\n• Integration complexity: Banking systems are legacy, fintech is modern — culture clash\n\n**Step 5 — Valuation Check:**\n• Indian neobanks valued at 3-8× revenue or 15-25× forward earnings\n• Justify premium only if synergies exceed standalone value by >30%\n\n**Recommendation:**\n• Phase 1: Strategic investment (20-30% stake) in target neobank — learn, integrate APIs\n• Phase 2: Acquire if integration proves out after 18 months\n• Regulatory path is clearer with an existing licensed entity than starting fresh\n\n**Key Insight:** In Indian fintech, the regulatory moat is as important as the product. Acquiring a licensed entity is faster than building from scratch — but only if the culture and technology can actually integrate.`,
+
+  fw_pricing: `**Pricing Strategy Framework: EdTech Course Pricing**\n\n**Step 1 — Cost-Based Floor:**\n• Content creation: ₹5-15L per course (one-time)\n• Delivery cost per student: ₹1,500-2,500 (LMS, mentors, support)\n• Minimum viable price to cover delivery: ₹2,000-3,000 per student\n\n**Step 2 — Competitor Benchmarks:**\n| Player | Product | Price |\n|--------|---------|-------|\n| Scaler/upGrad | Full-stack bootcamp with placement | ₹3-4L |\n| Coursera (certificate) | Specialization | ₹3,000-8,000 |\n| NPTEL | Free government courses | ₹0 |\n| YouTube creators | Crash courses | ₹999-2,999 |\n| Offline coaching | Weekend batches | ₹20,000-50,000 |\n\n**Step 3 — Value-Based Pricing:**\n• Career switcher: Expected salary increase ₹3-5L/year → worth paying ₹30-50K (10× annual uplift)\n• Upskiller: Skill premium adds ₹50,000-1L to next appraisal → worth ₹10-15K\n• Student: Placement potential → worth ₹50K-1L as investment in career\n\n**Step 4 — Willingness to Pay by Segment:**\n• College students: ₹5,000-10,000 (limited income, EMI-sensitive)\n• Early-career professionals (0-3 yrs): ₹15,000-30,000\n• Mid-career switchers (3-8 yrs): ₹40,000-80,000\n• Corporate L&D: ₹40,000-50,000 per seat (budget approved, less price sensitive)\n\n**Recommendation — Tiered Pricing:**\n1. Self-paced (videos + quizzes only): ₹8,999 — captures students and budget-conscious\n2. Mentor-led (live classes + 1:1 sessions): ₹24,999 — core offering for professionals\n3. Placement-guaranteed (full support + money-back): ₹49,999 — premium segment willing to pay for certainty\n\n**Key Insight:** Price is a signal of quality in EdTech. Price too low and serious learners won't trust the program. The placement-guarantee tier isn't just a product — it's a confidence signal that converts fence-sitters.`,
+
+  fw_operations: `**Operations Framework: BigBasket Delivery Delays in Monsoon**\n\n**Step 1 — Map the Full Supply Chain:**\nSupplier → Regional Warehouse → City Dark Store → Picker → Packer → Delivery Rider → Customer\n• Identify which step fails first during monsoon — is it upstream or downstream?\n\n**Step 2 — Monsoon-Specific Failure Modes:**\n• Last-mile delivery: Road flooding adds 30-60 min per route, rider safety concerns, bike breakdowns\n• Warehouse receiving: Supplier trucks delayed, inconsistent replenishment\n• Produce quality: Humidity accelerates spoilage, cold chain stress\n• Rider workforce: Higher absenteeism during heavy rain, lower supply of delivery partners\n\n**Step 3 — Data Analysis Questions:**\n• Which pin codes have highest delay rates? (Map to flood-prone areas)\n• What % of delays are last-mile vs picking/packing vs inventory unavailability?\n• Which SKUs have highest stock-outs during monsoon? (Perishables vs staples)\n• Rider utilization by hour — when does supply drop below demand?\n\n**Step 4 — Solutions by Category:**\n\n**Demand-side:**\n• Longer delivery windows during heavy rain alerts ("60-min delivery today due to weather")\n• Proactive order-ahead nudges: "Monsoon coming — stock up on staples"\n\n**Supply-side:**\n• Pre-monsoon inventory build for high-turnover items (2-week buffer vs normal 3-day)\n• Micro-fulfillment centers in flood-prone areas to reduce last-mile distance\n• Monsoon rider incentives: ₹30-50 bonus per delivery in heavy rain\n\n**Infrastructure:**\n• Waterlogging data API integration into route optimization\n• Real-time order re-routing to nearest available dark store\n\n**Key Insight:** Monsoon is predictable — it happens every year. The best operations teams use the 6 months before monsoon to build inventory buffers, route fallbacks, and rider incentive programs so disruption is minimized before the first cloud arrives.`,
+
+  fw_competitive: `**Competitive Response Framework: New Food Delivery Entrant**\n\n**Step 1 — Threat Assessment:**\n• ₹2,000 Cr war chest at ₹80-100 Cr/month burn = ~20-25 months of cash\n• Customer loyalty in food delivery: Low — 60%+ of users use 2+ apps simultaneously\n• Switching cost: Near zero — another app install + first-order discount\n• Their likely strategy: Deep discounting for 12-18 months to grab market share\n\n**Step 2 — Your Moats:**\n• Restaurant relationships: Exclusive agreements, integrated POS systems, co-marketing\n• Rider fleet: Established network, trained riders, route familiarity\n• Data: Order history, preferences, personalized recommendations\n• Brand: Top-of-mind awareness, Swiggy One / Zomato Gold subscribers\n\n**Step 3 — Strategic Options:**\n| Option | Pros | Cons |\n|--------|------|------|\n| Price war (match discounts) | Retains price-sensitive users | Burns your cash too, may not have better economics |\n| Ignore them | Preserve margins | Risk losing casual users permanently |\n| Exclusive restaurant deals | Competitor can't offer same selection | Expensive, may face anti-trust scrutiny |\n| Double down on loyalty | High-LTV users won't leave for ₹50 off | Doesn't protect bottom of funnel |\n\n**Step 4 — Recommended Response:**\n1. Do NOT engage in a full price war — you'll both lose\n2. Accelerate Swiggy One / Zomato Gold memberships: Lock in users with annual subscription before the new player arrives\n3. Exclusive restaurant partnerships: Sign top-100 restaurants in each city on 12-month exclusives\n4. Improve delivery speed: Faster delivery = more orders per rider = better unit economics\n\n**Key Insight:** The best defense against a new entrant with deep pockets isn't to match their discounts — it's to increase switching costs before they arrive. A customer paying ₹300/month for Gold membership won't leave for a ₹50 first-order discount.`,
+
+  fw_nonprofit: `**Non-Profit Framework: Increasing Blood Donations in Rural India**\n\n**Step 1 — Stakeholder Map:**\n• Donors: Farmers, daily wage workers, rural youth (18-60, eligible)\n• Intermediaries: ASHA workers, Anganwadi centers, PHCs (Primary Health Centers)\n• Recipients: District hospitals, state blood banks, accident/surgery patients\n• Partners: NGOs, religious institutions, gram panchayats, local employers\n\n**Step 2 — Barrier Analysis:**\n| Barrier | Root Cause | Intervention |\n|---------|-----------|-------------|\n| Awareness | Myths: "blood doesn't replenish," "weakness for a month" | ASHA-led myth-busting sessions |\n| Accessibility | Nearest blood bank 30-80 km away, no transport | Mobile blood collection vans |\n| Trust | Fear of needles, hygiene concerns, past bad experiences | Visible cleanliness protocols, peer testimonials |\n| Motivation | "What do I get?" — no tangible benefit | Free health checkup as thank-you gift |\n| Social norms | Donation seen as unusual, no peer pressure to donate | Community leader endorsements, group donation drives |\n\n**Step 3 — Program Design:**\n• Mobile blood collection vans: Visit each village once per quarter, pre-scheduled\n• ASHA worker incentive: ₹50-100 per donor brought in (ASHA already trusted in community)\n• Donor benefit: Free hemoglobin test + basic health screening post-donation\n• Community drive: Work with sarpanch/temple/mosque to organize camp — social proof\n• Digital: WhatsApp-based scheduling and appointment reminders\n\n**Step 4 — Key Metrics:**\n• Donations per drive (target: 30-50 per village per quarter)\n• First-time vs repeat donor ratio (repeat donors are the backbone)\n• Donor adverse event rate (safety track record builds trust)\n• Blood utilization rate (donated blood must be used — no wastage)\n\n**Key Insight:** In rural India, trust and accessibility are bigger barriers than willingness. People will donate if (1) someone they trust asks them, (2) the collection point comes to them, and (3) they receive tangible acknowledgment. Remove friction, add respect.`,
+
+  fw_pe_invest: `**Private Equity Framework: Investing in a D2C Brand**\n\n**Step 1 — Market Assessment:**\n• India D2C beauty/personal care market: ₹30,000 Cr, growing 20-25% CAGR\n• Digital native consumers: 150M+ online shoppers, premiumization trend\n• Tailwinds: Social commerce, influencer marketing efficiency, Direct-to-consumer economics\n\n**Step 2 — Company Due Diligence:**\n• Revenue: ₹200 Cr, growing 40% YoY — healthy top-line\n• Gross margin: Is it >55%? Below 50% means thin product economics\n• CAC trend: Is CAC increasing as they scale? Rising CAC = unsustainable growth\n• Repeat purchase rate: >35% is healthy for beauty; lower means one-time buyers\n• Channel mix: How dependent on Instagram/influencers? (concentration risk)\n\n**Step 3 — Valuation Analysis:**\n• Ask price: ₹800 Cr = 4× revenue multiple\n• Comparable transactions: Mamaearth IPO at 7-8× revenue, Sugar Cosmetics at 5-6×\n• 4× revenue is reasonable IF growth sustains and margins improve\n• DCF check: At 40% growth slowing to 20%, with 15% EBITDA margin in Year 5 → fair value ₹600-900 Cr\n\n**Step 4 — Risk Factors:**\n• Brand fatigue: D2C brands peak and fade (Wow Skin Science lost buzz quickly)\n• CAC inflation: As Instagram matures, influencer CPMs are rising\n• Competitive response: HUL, Marico launching D2C arms with massive distribution\n• Founder dependency: Is the brand tied to the founder's personal brand?\n\n**Step 5 — Exit Path:**\n• IPO in 4-5 years (if revenue reaches ₹600-800 Cr) — beauty IPOs are well-received\n• Strategic sale to HUL, Marico, Godrej — they all want digital-native brands\n• Secondary sale to late-stage growth PE\n\n**Recommendation:** Invest IF gross margins >60% AND repeat purchase rate >35% AND CAC has been stable for last 3 quarters. These three metrics signal real brand love, not just paid growth.\n\n**Key Insight:** D2C brands are easy to start and hard to sustain. The PE question isn't "is it growing?" — it's "does it have real brand equity or just paid distribution?" Repeat purchase rate is the honest answer.`,
+
+  bs_barriers: `**Brainstorm: Barriers to EV Charging Network Expansion in India**\n\n**Capital & Financial Barriers:**\n• High upfront cost: DC fast chargers (50-150 kW) cost ₹15-25L each; Level 2 AC chargers ₹1-3L\n• Long payback period: Low EV penetration → low utilization → poor ROI for early investors\n• Land acquisition cost: Premium real estate in cities is prohibitively expensive for charging stations\n• Working capital: Revenue is per-charge (small transactions), but capex is large and upfront\n\n**Infrastructure Barriers:**\n• Power grid capacity: Many locations lack sufficient load capacity — transformer upgrades cost ₹5-20L\n• Unreliable grid: Power cuts in Tier 2/3 cities disrupt charging sessions, customer dissatisfaction\n• Highway infrastructure: Remote highway locations need dedicated power connections (costly)\n\n**Regulatory & Policy Barriers:**\n• State-by-state variation: Different policies, tariffs, and approvals across 28 states\n• Approval timeline: Land use, electricity board NOC, fire NOC — can take 6-12 months\n• Electricity tariff: Commercial tariff for EV charging is higher than residential — eats into margins\n\n**Demand-Side (Chicken-and-Egg):**\n• Low EV base: <5% of vehicles are EVs — charger utilization is low → ROI is poor\n• Range anxiety: Few chargers → consumers hesitant to buy EVs → few EVs → few chargers\n• Home/office charging preference: 80% of charging happens at home or office, reducing public charger demand\n\n**Technical Barriers:**\n• Charging standard fragmentation: CCS2, GB/T, CHAdeMO, Type 2 — different vehicles need different connectors\n• Maintenance: Chargers are electronic equipment requiring regular maintenance; skilled technicians are scarce\n\n**Key Insight:** EV charging is a classic chicken-and-egg problem compounded by high capital requirements. Government subsidy (FAME scheme) + mandates for charging in new buildings + EV fleet contracts (Uber, Ola) are needed to break the deadlock.`,
+
+  bs_revenue: `**Brainstorm: New Revenue Streams for IRCTC**\n\n**Digital & Data Revenue:**\n• Premium in-train Wi-Fi: ₹99/journey or ₹299/month pass — 10M users/day × even 5% uptake = ₹500Cr/year potential\n• In-app advertising: 100M+ monthly active users on IRCTC app — prime real estate for travel, FMCG, financial products\n• Data analytics services: Sell anonymized travel pattern data to urban planners, FMCG companies (where are people traveling?)\n• Push notification advertising: Targeted offers on ticket confirmation screen (hotel, cab, insurance)\n\n**Service Bundling:**\n• Premium lounge access: ₹300-500/visit at major stations — currently fragmented, IRCTC can own this\n• Rail + Hotel packages: Curated "Spiritual Circuit," "Hill Stations," "Heritage Route" packages with hotel + train\n• Last-mile integration: Cab/auto/e-rickshaw booking within IRCTC app — earn referral/commission\n• Airport-style duty-free: Premium retail at major stations under IRCTC brand\n\n**Financial Services:**\n• Co-branded credit card: IRCTC SBI card already exists — expand to debit card, wallet, insurance\n• Travel insurance upsell: ₹49-99 per ticket at checkout (100M tickets/year × ₹99 × 10% uptake = ₹100Cr)\n• EMI for expensive tickets: Tatkal and AC class tickets → EMI option via fintech partners\n• Foreign currency exchange: International tourist segment at major stations\n\n**E-Commerce & Hyperlocal:**\n• Regional specialties delivery to berths: "Order Agra petha before Agra station" — delivered by vendors\n• Premium meal upgrades: ₹200-500 restaurant-quality meals pre-ordered in-app vs pantry car food\n• Merchandising: IRCTC-branded travel accessories (pillows, earplugs, travel kits)\n\n**Key Insight:** IRCTC has one of India's largest captive audiences — 100M+ users who are physically in transit and have time to engage. The monetization opportunity is in the journey experience, not just the ticket.`,
+
+  bs_risks: `**Brainstorm: Risks of Jio Announcing a 10% Price Cut**\n\n**Immediate Financial Risks:**\n• ARPU destruction: 10% price cut on 450M subscribers × ₹150 ARPU = ₹6,750 Cr annual revenue loss\n• Margin squeeze: Jio's EBITDA margins are ~50% — any revenue drop flows through disproportionately to profit\n• Debt service risk: Reliance Jio carries significant debt from spectrum auctions — lower cash flows tighten coverage\n\n**Competitive Retaliation Risks:**\n• Airtel forced to match: Airtel has higher margins to absorb cuts but will still be hurt\n• Vi (Vodafone Idea) pushed to collapse: Already loss-making — a price war could trigger insolvency\n• Two-player market outcome: If Vi collapses, duopoly (Jio + Airtel) faces heavy regulatory scrutiny\n\n**Regulatory Risks:**\n• TRAI predatory pricing investigation: Jio did this in 2016-17; regulators are watchful now\n• Competition Commission (CCI) probe: Dominant player using below-cost pricing to eliminate competition\n• Forced floor pricing: Government may impose minimum tariffs (as TRAI has discussed) if industry profitability deteriorates\n\n**Industry-Wide Risks:**\n• 5G investment gap: Indian telecoms need ₹5L Cr+ to fully roll out 5G — price war delays this by years\n• Quality of service decline: Lower revenue → less capex → network quality suffers → consumer harm\n• FDI deterrence: Foreign investors lose confidence in Indian telecom sector viability\n\n**Jio-Specific Strategic Risks:**\n• Shifts focus from value-added services: Jio should be competing on JioCinema, JioCloud, JioFiber — not base price\n• Subscriber quality degradation: Price cuts attract low-ARPU users who churn when the next offer comes\n\n**Key Insight:** The biggest risk of a price cut isn't the immediate revenue loss — it's normalizing a downward pricing spiral that prevents the entire industry from funding infrastructure that India needs for its digital future.`,
+
+  bs_crosssell: `**Brainstorm: Cross-Sell Strategies for a Super App**\n\n**Payment-Moment Triggers:**\n• Post-purchase insurance: User pays ₹5,000 at Apollo Pharmacy → "Protect your health: insurance from ₹499/month"\n• Large transaction → investment nudge: ₹50,000 payment → "This could have grown 12% in a liquid fund"\n• Bill payment → savings account: Regular electricity/rent payments → "Auto-save ₹500/month when you pay your rent"\n\n**Spending Analytics-Based:**\n• Category spend insights: "You spend ₹8,000/month on food — Zomato Gold saves you ₹2,000/month"\n• Travel pattern: Regular booking to Mumbai → suggest travel insurance, hotel deals\n• Monthly expenditure report → personalized product: High grocery spend → BigBasket Pro subscription offer\n\n**Credit & Lending (Highest Margin):**\n• Pre-approved personal loans at checkout: UPI transaction history → credit score → loan offer in-app at payment moment\n• BNPL for large purchases: ₹15,000+ transaction → "Pay in 3 EMIs, no cost"\n• Credit card offer based on consistent bill payment history (demonstrates reliability)\n\n**Lifecycle Targeting:**\n• New graduate: First salary → first credit card → first SIP investment — sequential onboarding\n• New parent: Baby product purchases → life insurance, children's education plan\n• First home: Large furniture purchase → home loan, home insurance cross-sell\n\n**Gamification & Bundles:**\n• Super App bundle: "Subscribe to all 5 services for ₹999/month, save 40%"\n• Loyalty points ecosystem: Points earned on payments redeemable across all services\n• Seasonal bundles: Diwali — shopping cashback + travel deals + gold investment in one offer\n\n**Key Insight:** The best cross-sell happens at the moment of highest intent and relevance — not in a push notification at 3 PM on a Tuesday. Trigger-based cross-sell (right product, right moment) converts 5-10× better than generic recommendations.`,
+
+  bs_monetize: `**Brainstorm: Monetization Strategies for ChatGPT in India**\n\n**Consumer Pricing:**\n• India-specific pricing: ₹500-700/month (vs $20/month globally) — purchasing power parity\n• Student tier: ₹199/month with .edu email verification — build habit before they earn\n• Annual plan: 12-month at ₹4,999 (30% discount) — improves cash flow and reduces churn\n• Family plan: ₹1,200/month for up to 5 family members — increases household penetration\n\n**B2B Enterprise:**\n• API access for Indian IT companies: TCS, Infosys, Wipro build AI tools on GPT API — volume discounts\n• Integration with Indian SaaS: Zoho, Freshworks, Razorpay — embed ChatGPT as AI assistant feature\n• Government contracts: DPDP Act compliance tools, citizen services chatbots\n• Custom fine-tuned models for Indian businesses (GST filing assistant, legal document drafting in Indian law)\n\n**Distribution Partnerships:**\n• Telecom bundle: "Jio AI Pack" — ₹99/month add-on to existing Jio plan (reach 450M users)\n• Device pre-installation: Pre-install on Android devices sold in India (like Google apps model)\n• Bank partnerships: HDFC/ICICI bundle ChatGPT with premium banking accounts\n\n**Education Vertical:**\n• Coaching institute partnerships: BYJU's, Unacademy, Allen Coaching — AI tutor supplement\n• University licensing: Per-student fee for campus-wide access\n• UPSC/JEE/NEET preparation: Specialized fine-tuned assistants for India's biggest exam markets\n\n**Freemium Strategy:**\n• Generous free tier: 20 messages/day free (builds habit, drives word-of-mouth)\n• Power user paywall: After 20 messages, upgrade prompt — converts high-usage users\n• Feature gating: Free = GPT-4o mini; Paid = GPT-4o + image generation + voice\n\n**Key Insight:** India's price sensitivity is real, but so is its scale. A ₹500/month tier with 10M Indian subscribers generates $75M ARR — comparable to 3.75M subscribers at $20. Volume × right price > fewer subscribers at global price.`,
+
+  bs_reduce_cost: `**Brainstorm: AWS Cost Reduction for a Startup**\n\n**Week 1 — Quick Wins (No Engineering Required):**\n• Zombie resource cleanup: Delete unused EBS volumes, old AMI snapshots, idle Elastic IPs, stopped EC2 instances → save 10-15%\n• Right-size obvious over-provisioning: Check CloudWatch — instances running at <20% CPU are prime candidates for downsizing\n• Delete old S3 data: Log files, old backups, staging environment data nobody looks at\n• Turn off non-production environments at night/weekends: Dev/staging runs 168 hrs/week — run only 50 hrs → 70% cost saving on those environments\n\n**Week 2-3 — Right-Sizing:**\n• EC2 right-sizing: Most startups use 2-4× what they need (over-provisioned "just in case")\n• RDS right-sizing: Database instances are often the biggest cost — check actual memory/CPU utilization\n• Compute Savings Plans: Commit to consistent usage (even 1-year, no upfront) → 20-40% discount\n\n**Month 1-2 — Architectural Changes:**\n• Spot instances: Non-critical batch jobs, ML training, CI/CD pipelines can run on spot (up to 90% cheaper)\n• Auto-scaling: Stop paying for peak capacity 24/7 — scale up only when needed\n• S3 lifecycle policies: Move data >30 days old to S3-IA (Infrequent Access), >90 days to Glacier\n• Lambda for intermittent workloads: Replace always-on EC2 for low-frequency API calls\n\n**Month 2-3 — Strategic Optimization:**\n• Reserved instances: For steady-state workloads — 1-year commitment = 40% savings vs on-demand\n• Multi-cloud credits: Google Cloud and Azure offer $100K+ startup credits — migrate some workloads\n• CDN optimization: Serve static assets from CloudFront, reduce origin server load\n• Database query optimization: Slow queries burn CPU — fixing top 10 queries can halve RDS costs\n\n**Process Changes:**\n• Tag all resources by team/product — create accountability (team sees their cloud spend)\n• Weekly cost review in engineering standup\n• Budget alerts: Get notified when spend exceeds threshold before the bill arrives\n\n**Key Insight:** Cloud cost optimization isn't a one-time project — it's a habit. The best-run startups treat their AWS bill like a product metric: review weekly, set targets, assign ownership. The first cleanup always finds 20-30% waste.`,
+
+  bs_ipl_sponsor: `**Brainstorm: Is IPL Sponsorship Worth ₹50 Cr?**\n\n**The Math (Back-of-Envelope):**\n• Investment: ₹50 Cr/season for title sponsorship\n• Viewership: ~300M viewers per match (TV + digital) × 7 home games (with overlap discount) = ~1.5-2B impressions\n• CPM: ₹50 Cr / 1.75B impressions = ₹2.9 CPM — competitive vs digital advertising (₹50-200 CPM on Google/Facebook)\n• But: Not all impressions are targetable or measurable like digital ads\n\n**What You Get Beyond Reach:**\n• Brand name on jersey: Worn by players in every highlight clip, news article, social post — long-tail free exposure\n• Association effect: "CRED IPL" → premium brand positioning, credibility\n• Stadium visibility: On-ground branding seen by 30,000 fans per match × 7 home games\n• Digital content rights: Can use player clips, team branding in own marketing\n\n**Who Should Do This:**\n• Early-stage brand (no awareness): IPL can put you on the map fast (Dream11, CRED, Upstox all did this)\n• Consumer brand targeting young males: Cricket audience skews 18-35 male — perfect for fintech, gaming, insurance\n• Brand with broad target audience: Works if your TAM is "everyone" not a niche\n\n**Who Should NOT Do This:**\n• CAC-focused growth stage: ₹50 Cr could acquire 50,000 customers at ₹10,000 CAC — more measurable ROI\n• B2B company: Procurement decision-makers aren't watching IPL differently because of jersey branding\n• Brand already at awareness saturation: If everyone knows you, more awareness spend has diminishing returns\n\n**Alternative Use of ₹50 Cr:**\n• Performance marketing: ~500K customer acquisitions at ₹1,000 CAC (highly measurable)\n• Product investment: Hire 50 engineers × ₹30L = same spend, builds lasting capability\n• Smaller sports: Title sponsor 5 different sport leagues at ₹10 Cr each — more diversified brand presence\n\n**Key Insight:** IPL sponsorship is a brand-awareness investment, not a customer acquisition investment. It makes sense only if (1) brand awareness is genuinely the bottleneck to growth, and (2) your target audience overlaps with cricket viewership. Measure it with brand tracking surveys, not direct attribution.`,
+
+  bj_discount: `**Business Judgment: Should Nykaa Offer 50% Discounts?**\n\n**Argument AGAINST (Stronger):**\n\n1. **Brand positioning damage:** Nykaa has spent years building a premium beauty destination. 50% off sends a signal that products are worth half the price — this is hard to walk back.\n\n2. **Customer expectation trap:** Shoppers who buy during 50% off sales learn to wait for the next sale. Full-price purchases decline permanently. This is the "Myntra discount trap" — they ran so many sales that customers refuse to buy at full price.\n\n3. **Unit economics destruction:** Beauty gross margins are typically 40-55%. A 50% discount on a ₹1,000 product means selling at ₹500, with COGS of ₹450-600. Nykaa may be selling at a loss or breakeven before accounting for delivery and customer acquisition costs.\n\n4. **Competitive signal:** Signals to competitors (Tira by Reliance, Purplle) that Nykaa is under margin pressure — inviting further price competition.\n\n**Argument FOR (Weaker but Valid):**\n1. New customer acquisition: First-time premium product trial — if CAC is otherwise ₹800-1,500, a sale that acquires a customer at ₹200 unit margin loss may break even on LTV.\n2. Inventory clearance: For slow-moving, expiring, or seasonal SKUs — better to sell at 50% than write off.\n3. Competitive necessity: If Tira or Purplle is running deep discounts, not responding loses market share.\n\n**Better Alternative:**\n• "Buy 2 get 1 free" — effective 33% off, but preserves full sticker price perception\n• Loyalty points multiplier (2× points this weekend) — rewards existing customers without public price signal\n• Basket-size discounts (₹500 off orders >₹3,000) — increases AOV while limiting discount exposure\n\n**Key Insight:** Discount strategy in beauty is a brand decision first, a financial decision second. A 50% off sale might improve this quarter's GMV while permanently damaging the pricing power that Nykaa took a decade to build.`,
+
+  bj_build_buy: `**Build vs Buy: Analytics Platform Decision**\n\n**Option 1 — Build In-House:**\n• Year 1 cost: 3 engineers × ₹30L fully-loaded = ₹90L + ₹20L infrastructure = ₹1.1 Cr\n• Time to MVP: 6-9 months (basic dashboards); 12-18 months (feature parity with Mixpanel)\n• Advantages: Full customization, data stays in-house, no vendor lock-in, competitive moat if analytics is core\n• Disadvantages: Engineering opportunity cost (3 engineers not building product), maintenance burden forever, 6-9 months before any value\n\n**Option 2 — Buy (Mixpanel/Amplitude):**\n• Cost: ₹50-80L/year (depending on event volume)\n• Time to value: 2-4 weeks (instrument events, import historical data)\n• Advantages: Proven reliability, rich feature set, no maintenance, analytics best practices built-in\n• Disadvantages: Data leaves your servers (privacy/compliance consideration), price scales with usage, limited customization, vendor dependency\n\n**Option 3 — Hybrid (Buy + Open Source):**\n• Buy Mixpanel/Amplitude for product analytics (user funnels, retention, A/B tests)\n• Deploy Metabase or Apache Superset on your own infrastructure for custom business dashboards\n• Cost: ₹50L/year + ₹5L setup + 0.5 engineer maintaining = ₹70L total\n• Best of both worlds: proven product analytics + full control of business data\n\n**Decision Framework:**\n• Is analytics your core product differentiator? → Build\n• Do you just need standard product metrics (funnels, retention, cohorts)? → Buy\n• Are you pre-Series B with <50 engineers? → Definitely buy (opportunity cost is too high)\n• Are you at Series D+ with 200+ engineers and 100B+ events/month? → Consider building\n\n**Recommendation for Most Startups:**\nBuy Mixpanel/Amplitude now. At 200 employees, every engineer hour spent on internal tooling is an hour not spent on the core product. Revisit the build decision at Series D when you have a dedicated data platform team.\n\n**Key Insight:** The "build vs buy" question is really an "opportunity cost" question. The cost of buying is the subscription fee. The cost of building is the subscription fee PLUS 3 engineers' time PLUS 9 months of delay PLUS ongoing maintenance. Build only when the buy option genuinely can't meet your needs.`,
+
+  bj_pivot: `**Business Judgment: Should Food Delivery Startup Pivot to Groceries?**\n\n**Current State — Food Delivery Unit Economics:**\n• AOV: ₹280 (Tier 2 city)\n• Platform commission: ₹56 (20%)\n• Delivery cost: ₹65 (lower density than metros)\n• Other variable costs: ₹30 (payment, support, refunds)\n• Contribution margin: ₹56 - ₹65 - ₹30 = **-₹39 per order**\n• Path to profitability requires AOV increase OR delivery cost reduction\n\n**Grocery Potential:**\n• Higher AOV: ₹400-600 per basket\n• Lower commission rate: 10-15% (grocery margins are thin)\n• Gross commission: ₹50-75\n• BUT: Higher delivery cost (heavier bags, e-bikes needed), cold chain investment, returns handling\n• Contribution margin estimate: ₹10-25 per order — better than food but not great\n\n**Asset Overlap Analysis:**\n• Delivery fleet: ~60% can be shared (need cargo-capable e-bikes for grocery)\n• App infrastructure: 80% reusable (add inventory browsing, slot-based delivery)\n• Customer base: ~40% overlap (food delivery customers also order groceries online)\n• Dark store: New investment required (food delivery operates without warehousing)\n\n**Competitive Reality:**\n• BigBasket, Zepto, Blinkit, JioMart — all well-funded, have distribution in Tier 2\n• Entering grocery means competing against companies with 5-year head starts\n• Your advantage: Local delivery fleet, local brand recognition — potentially partner rather than compete\n\n**Recommendation:**\n• Do NOT fully pivot — food delivery has brand equity worth preserving\n• Add grocery as a second vertical in top 3 cities to improve fleet utilization\n• Consider a white-label model: Power a local grocery store's delivery without owning inventory\n• Measure: If grocery reaches 30% of orders in pilot city within 6 months, expand. If not, cut.\n\n**Key Insight:** A pivot should solve your unit economics problem, not just add a new revenue line. If grocery improves fleet utilization from 40% to 65%, your per-delivery cost drops significantly — and both verticals become profitable together.`,
+
+  bj_layoff: `**Business Judgment: Laying Off 15% of Staff for AI Automation**\n\n**Financial Analysis:**\n• 15% workforce = ~30 customer support staff at avg ₹6L/year CTC = ₹1.8 Cr annual cost\n• AI chatbot cost: ₹20-30L/year (SaaS subscription + implementation)\n• One-time severance: ~₹30-45L (1 month per year of service, avg 2-year tenure)\n• Net year-1 savings after severance: ₹1.8 Cr - ₹25L (chatbot) - ₹37.5L (severance) = **₹1.17 Cr**\n• Year-2+ ongoing savings: ~₹1.55 Cr/year — payback in 9 months\n\n**The Case Against Immediate Full Layoff:**\n\n1. **CSAT risk:** AI chatbots handle simple queries well but struggle with complex, emotional, or ambiguous issues. Immediate 30-person reduction could drop CSAT from 4.2 to 3.5 — measurable revenue impact (1 point CSAT drop = ~5-8% churn increase in subscription businesses)\n\n2. **Premature automation:** Has the AI chatbot been tested at scale? What is its current resolution rate? Deploying unproven automation while simultaneously removing human backup is high-risk.\n\n3. **India labor law complexity:** Notice period requirements, gratuity obligations, potential labor court complications if not handled properly. Budget ₹10-15L for legal/HR compliance.\n\n4. **Morale impact on remaining staff:** Layoffs create fear. Productivity of the 85% who remain may drop 10-20% temporarily — partially offsetting the savings.\n\n**Recommended Approach — Phased Hybrid Model:**\n• Month 1-3: Deploy AI for Tier 1 queries (order status, FAQs, password reset) — ~60% of volume. Keep all staff. Measure resolution rate and CSAT.\n• Month 3-6: If CSAT holds, reduce human team by 30% through natural attrition + voluntary exits. Retrain some staff as "AI trainers" (review chatbot failures, improve responses).\n• Month 6-12: Evaluate further reduction based on data. Target: 15-20% team reduction while maintaining CSAT >4.0.\n\n**Key Insight:** The financial case for AI automation is often real — but the timeline is almost always longer than the spreadsheet suggests. Phased implementation that uses data to guide each reduction step is far less risky than a single large-scale layoff based on projected AI capability.`,
+
+  bj_freemium: `**Business Judgment: Freemium vs Paid-Only for Indian SaaS**\n\n**Freemium Model:**\n• Mechanism: Free tier with limited features/usage → converts power users to paid\n• Works when: Product has viral/network effects (each user invites colleagues), switching cost builds over time, product value is hard to explain without experiencing it\n• Indian SaaS examples: Zoho (free for 3 users), Freshdesk (free for 10 agents), Notion-style tools\n• Risks: High support cost for free users (they need help too), free users may never convert, "free" attracts wrong-fit customers\n\n**Paid-Only (Trial) Model:**\n• Mechanism: 14-30 day free trial → credit card required → paid subscription\n• Works when: Market is educated and knows what it needs, sales-led motion (enterprise), product is complex enough that free tier doesn't demonstrate full value\n• Examples: Salesforce, SAP, most enterprise B2B SaaS\n• Risks: Higher barrier to adoption, slower growth, requires strong sales team\n\n**Decision Framework:**\n| Factor | Freemium | Paid Trial |\n|--------|----------|------------|\n| Network effects? | ✓ Freemium | ✗ Paid |\n| Self-serve adoption? | ✓ Freemium | Either |\n| Enterprise buyers? | ✗ Freemium | ✓ Paid |\n| High support cost? | ✗ Freemium | ✓ Paid |\n| India SMB market? | ✓ Freemium | ✗ Paid |\n\n**India-Specific Considerations:**\n• Indian SMBs are highly price-sensitive — "free" dramatically lowers the adoption barrier\n• "Try before you buy" culture is strong — freemium builds trust with skeptical buyers\n• BUT: Indian SMBs also have lower willingness to pay — conversion rates may be lower (1-3% vs 5-8% in US)\n• WhatsApp-based distribution: Freemium tools spread virally through WhatsApp networks in India\n\n**Recommendation for Indian B2B SaaS Startup:**\n• Generous freemium: Free for up to 5 users OR 1,000 events/month — covers most SMBs' initial needs\n• Limit collaboration features in free tier (team sharing, admin controls) — these are what make teams pay\n• Annual plan discount: ₹X/month billed annually vs ₹1.4X monthly — improve cash flow and reduce churn\n• Measure: Track free-to-paid conversion rate monthly. If <2% after 6 months, tighten free limits.\n\n**Key Insight:** In India, freemium is less about monetization strategy and more about distribution strategy. The free tier is your most efficient sales channel — it gets the product into organizations where it can prove value and trigger organic expansion. Price the free tier generously enough to get adopted, restrictively enough to create a reason to upgrade.`
 };
 
 // ═══════════════════════════════
