@@ -2115,7 +2115,7 @@ const PROMPTS = [
   { id: 'rca_signup',       title: 'Signup Conversion Rate Crashed',         topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'rca_revenue',      title: 'SaaS Revenue Dropped After Launch',      topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'rca_cart',         title: 'Cart Abandonment Spiked Overnight',      topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
-  { id: 'rca_engagement',   title: 'Feature Engagement Fell 40%',            topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'rca_engagement',   title: 'Feature Engagement Fell 40%',            topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
 
   // ── SQL ──
   { id: 'sql_window',    title: 'Window Functions Deep Dive',         topic: 'sql',     difficulty: 'medium', tag: 'SQL' },
@@ -2140,10 +2140,10 @@ const PROMPTS = [
   { id: 'sql_visitconvert',  title: 'Visits Before Nth Order',           topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
 
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'ab_sample',     title: 'Sample Size & Power Calculation',      topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'ab_sample',     title: 'Sample Size & Power Calculation',      topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'funnel',        title: 'E-commerce Funnel Drop-off',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'metric_drop',   title: 'Revenue Metric Drop Investigation',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'kpi_design',    title: 'KPI Design for a New Feature',         topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'kpi_design',    title: 'KPI Design for a New Feature',         topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
 
   // ── Python ──
   { id: 'python_clean',  title: 'Messy Dataset Cleaning (Pandas)',      topic: 'python',  difficulty: 'easy',   tag: 'Python' },
@@ -2161,20 +2161,20 @@ const PROMPTS = [
   { id: 'cs_fraud',        title: 'Detect Fraudulent Transactions',              topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'cs_churn',        title: 'Predict & Reduce Customer Churn',             topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'cs_pricing',      title: 'Pricing Strategy for a Subscription App',     topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'cs_launch',       title: 'Should We Launch in a New Market?',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_launch',       title: 'Should We Launch in a New Market?',           topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'cs_notif',        title: 'Push Notification Strategy (Engagement vs Spam)', topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'cs_search',       title: 'Improve Search Relevance on E-commerce',      topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'cs_referral',     title: 'Measure ROI of a Referral Program',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_referral',     title: 'Measure ROI of a Referral Program',           topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'cs_seasonality',  title: 'Disentangle Seasonality from Real Growth',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'cs_segment',      title: 'Customer Segmentation for Marketing',         topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'cs_abnovelt',     title: 'A/B Test Shows Positive — But Is It Novelty?', topic: 'casestudy', difficulty: 'hard',  tag: 'Case Study' },
   { id: 'cs_dashboard',    title: 'Design an Executive Dashboard',               topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'cs_supply',       title: 'Supply-Demand Imbalance (Marketplace)',        topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'cs_retention',    title: 'Day 1 vs Day 7 vs Day 30 Retention Analysis', topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
-  { id: 'cs_cannedresp',   title: 'Measure Impact of AI Chatbot on Support',     topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_cannedresp',   title: 'Measure Impact of AI Chatbot on Support',     topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'cs_ltv',          title: 'Estimate Customer Lifetime Value (LTV)',       topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'cs_attribution',  title: 'Marketing Attribution Model',                 topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'cs_paywall',      title: 'When to Show the Paywall?',                   topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'cs_paywall',      title: 'When to Show the Paywall?',                   topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'cs_coldstart',    title: 'Cold Start Problem (Recommendation Engine)',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
 
   // ── Framework & Strategy Cases ──
@@ -2184,11 +2184,11 @@ const PROMPTS = [
   { id: 'fw_pricing',        title: 'Pricing Strategy for an EdTech Course',          topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'fw_operations',     title: 'BigBasket — Reduce Delivery Delays',             topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'fw_competitive',    title: 'Swiggy vs Zomato — New Competitor Enters',       topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'fw_nonprofit',      title: 'Increase Blood Donations in Rural India',        topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fw_nonprofit',      title: 'Increase Blood Donations in Rural India',        topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'fw_pe_invest',      title: 'Should a PE Firm Invest in a D2C Brand?',        topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
 
   // ── Brainstorming Cases ──
-  { id: 'bs_barriers',       title: 'Barriers to Entry: EV Charging Network',         topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
+  { id: 'bs_barriers',       title: 'Barriers to Entry: EV Charging Network',         topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'bs_revenue',        title: 'How Can IRCTC Increase Revenue?',                topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'bs_risks',          title: 'Risks of Jio Dropping Data Prices Again',        topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'bs_crosssell',      title: 'Cross-sell Strategies for a Super App',          topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
@@ -2205,11 +2205,11 @@ const PROMPTS = [
 
   // ── Additional Framework Cases ──
   { id: 'fw_drug_pricing',    title: 'Pricing a New Diabetes Drug in India',           topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'fw_fleet_ops',       title: 'Fleet Optimization for a Logistics Company',     topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fw_fleet_ops',       title: 'Fleet Optimization for a Logistics Company',     topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'fw_ma_edtech',       title: 'Should BYJU\'S Acquire a Test Prep Startup?',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'fw_store_close',     title: 'Which Retail Stores Should We Close?',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'fw_launch_upi',      title: 'Launch Strategy for a New UPI App',              topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'fw_hospital_ops',    title: 'Reduce Patient Wait Times at a Hospital Chain',  topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fw_hospital_ops',    title: 'Reduce Patient Wait Times at a Hospital Chain',  topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'fw_export',          title: 'Should an Indian D2C Brand Expand to US/UK?',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'fw_airline_profit',  title: 'IndiGo Profit Decline — Diagnose & Fix',         topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'fw_subscription',    title: 'Design a Subscription Model for a News App',     topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
@@ -2237,7 +2237,7 @@ const PROMPTS = [
 
   // ── Additional Business Judgment Cases ──
   { id: 'bj_crypto',          title: 'Should an Indian Bank Offer Crypto Trading?',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'bj_vernacular',      title: 'Should a Tech Product Go Vernacular-First?',     topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'bj_vernacular',      title: 'Should a Tech Product Go Vernacular-First?',     topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study' },
   { id: 'bj_outsource',       title: 'Outsource Data Labeling or Build In-house?',     topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
 
   // ── Full-Length Strategy Cases (Multi-Step) ──
@@ -2251,9 +2251,9 @@ const PROMPTS = [
   { id: 'fl_ola_electric',    title: 'Ola Electric: Scale Manufacturing or Fix Quality?', topic: 'casestudy', difficulty: 'hard', tag: 'Case Study' },
   { id: 'fl_meesho',          title: 'Meesho: Compete with Amazon in Tier 3 India',    topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'fl_zomato_blinkit',  title: 'Zomato + Blinkit: Synergy or Distraction?',      topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'fl_dream11',         title: 'Dream11: Expand Beyond Cricket?',                topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fl_dream11',         title: 'Dream11: Expand Beyond Cricket?',                topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'fl_urban_company',   title: 'Urban Company: Unit Economics at Scale',          topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
-  { id: 'fl_lenskart',        title: 'Lenskart: Offline-First in the Age of D2C',      topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
+  { id: 'fl_lenskart',        title: 'Lenskart: Offline-First in the Age of D2C',      topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'fl_policybazaar',    title: 'PolicyBazaar: Insurance Penetration in India',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'fl_zepto_vs_blinkit', title: 'Quick Commerce Wars: Zepto vs Blinkit vs Swiggy', topic: 'casestudy', difficulty: 'hard', tag: 'Case Study' },
 
@@ -9603,7 +9603,29 @@ function dismissSolvedOverlay() {
 
 function renderPromptList(filter = 'all') {
   const list = document.getElementById('promptList');
-  const filtered = filter === 'all' ? PROMPTS : PROMPTS.filter(p => p.topic === filter);
+  const filtered = filter === 'all' ? PROMPTS.slice() : PROMPTS.filter(p => p.topic === filter);
+  // Sort: easy → medium → hard, then by sub-type within same difficulty
+  const diffOrder = { easy: 0, medium: 1, hard: 2 };
+  const subTypeOrder = (id) => {
+    if (id.startsWith('rca_')) return 0;
+    if (id.startsWith('cs_'))  return 1;
+    if (id.startsWith('fw_'))  return 2;
+    if (id.startsWith('ms_'))  return 3;
+    if (id.startsWith('pf_'))  return 4;
+    if (id.startsWith('bs_'))  return 5;
+    if (id.startsWith('bj_'))  return 6;
+    if (id.startsWith('fl_'))  return 7;
+    if (id.startsWith('ab_'))  return 8;
+    if (id.startsWith('sql_')) return 0;
+    if (id.startsWith('python_')) return 0;
+    if (id.startsWith('ge_'))  return 0;
+    return 9;
+  };
+  filtered.sort((a, b) => {
+    const dA = diffOrder[a.difficulty] ?? 1, dB = diffOrder[b.difficulty] ?? 1;
+    if (dA !== dB) return dA - dB;
+    return subTypeOrder(a.id) - subTypeOrder(b.id);
+  });
   const solved = getSolvedCases();
   list.innerHTML = filtered.map(p => {
     const isSolved = solved.includes(p.id);
