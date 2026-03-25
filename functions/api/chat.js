@@ -90,29 +90,38 @@ export async function onRequest(context) {
     userId = getUserId(sessionData);
   }
 
-  // ── Rate limiting ─────────────────────────────────────────────────────────
+  // ── Rate limiting (consolidated keys to minimize KV operations) ───────────
   const ip = request.headers.get('cf-connecting-ip') || 'unknown';
   if (env.RATE_LIMIT_KV) {
     try {
-      // Per-user rate limits (preferred — tied to Google identity)
       if (userId) {
-        // Hourly per-user
-        const userHourKey = `rl:chat:user:${userId}:hr`;
-        const userHourRaw = await env.RATE_LIMIT_KV.get(userHourKey);
-        const userHourCount = userHourRaw ? parseInt(userHourRaw, 10) : 0;
-        if (userHourCount >= USER_HOURLY_LIMIT) {
+        // Single consolidated key for per-user hourly + daily limits
+        const userKey = `rl:chat:${userId}`;
+        const userRaw = await env.RATE_LIMIT_KV.get(userKey);
+        const now = Date.now();
+        let data = userRaw ? JSON.parse(userRaw) : {};
+
+        // Reset hourly counter if window expired
+        if (!data.hrReset || now > data.hrReset) {
+          data.hr = 0;
+          data.hrReset = now + RATE_WINDOW * 1000;
+        }
+        // Reset daily counter if window expired
+        if (!data.dayReset || now > data.dayReset) {
+          data.day = 0;
+          data.dayReset = now + DAILY_WINDOW * 1000;
+        }
+
+        if (data.hr >= USER_HOURLY_LIMIT) {
           return json({ error: `You've used ${USER_HOURLY_LIMIT} requests this hour. Try again later or switch to Groq / Local AI.` }, 429);
         }
-        await env.RATE_LIMIT_KV.put(userHourKey, String(userHourCount + 1), { expirationTtl: RATE_WINDOW });
-
-        // Daily per-user
-        const userDayKey = `rl:chat:user:${userId}:day`;
-        const userDayRaw = await env.RATE_LIMIT_KV.get(userDayKey);
-        const userDayCount = userDayRaw ? parseInt(userDayRaw, 10) : 0;
-        if (userDayCount >= USER_DAILY_LIMIT) {
+        if (data.day >= USER_DAILY_LIMIT) {
           return json({ error: `You've reached your daily limit of ${USER_DAILY_LIMIT} Instant AI requests. Try Groq or Local AI for unlimited usage.` }, 429);
         }
-        await env.RATE_LIMIT_KV.put(userDayKey, String(userDayCount + 1), { expirationTtl: DAILY_WINDOW });
+
+        data.hr++;
+        data.day++;
+        await env.RATE_LIMIT_KV.put(userKey, JSON.stringify(data), { expirationTtl: DAILY_WINDOW });
       } else {
         // Fallback: per-IP limit for unauthenticated edge cases
         const ipKey = `rl:chat:ip:${ip}`;

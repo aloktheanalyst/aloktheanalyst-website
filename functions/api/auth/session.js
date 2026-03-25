@@ -40,7 +40,15 @@ export async function onRequest(context) {
     const session = JSON.parse(raw);
     // Only expose necessary fields (not internal google_id)
     const user = { email: session.email, name: session.name, picture: session.picture };
-    return json({ authenticated: true, user });
+    return new Response(JSON.stringify({ authenticated: true, user }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        // Cache in browser for 2 min — avoids repeated KV reads on page navigations
+        'Cache-Control': 'private, max-age=120',
+        ...CORS,
+      },
+    });
   } catch {
     return json({ authenticated: false });
   }
