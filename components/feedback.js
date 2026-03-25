@@ -204,16 +204,20 @@
         return;
       }
       html2canvas(document.body, {
-        scale: 1.5,
+        scale: window.devicePixelRatio || 1,
         useCORS: true,
         allowTaint: true,
         logging: false,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        x: window.scrollX,
+        y: window.scrollY,
       }).then(function (canvas) {
         panel.style.display = '';
         trigger.style.display = '';
         panel.classList.add('open');
         try {
-          var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          var dataUrl = canvas.toDataURL('image/png');
           screenshotBase64 = dataUrl.split(',')[1]; // strip data:image/jpeg;base64,
           screenshotImg.src = dataUrl;
           screenshotArea.style.display = 'flex';
