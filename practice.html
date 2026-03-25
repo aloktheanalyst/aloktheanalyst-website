@@ -1960,6 +1960,7 @@
           <div class="sql-toolbar">
             <select class="sql-dialect-select" id="sqlDialectSelect" onchange="switchDialect(this.value)">
               <option value="postgres">PostgreSQL</option>
+              <option value="mysql">MySQL</option>
               <option value="sqlite">SQLite</option>
               <option value="python">Python (Pandas)</option>
             </select>
@@ -9818,7 +9819,7 @@ let activeCaseId = null;
 // Code Editor state
 let sqlDB = null;             // Active DB instance (sql.js Database or PGlite)
 let sqlEditor = null;         // CodeMirror instance
-let sqlDialect = 'postgres';  // 'postgres' | 'sqlite' | 'python'
+let sqlDialect = 'postgres';  // 'postgres' | 'mysql' | 'sqlite' | 'python'
 let sqlJsReady = false;
 let sqlJsSQL = null;          // sql.js constructor
 let pgliteReady = false;
@@ -10587,7 +10588,7 @@ async function sendToAI(userText, isSystemTrigger) {
   if (!isSystemTrigger && lastIdx >= 0 && conversationHistory[lastIdx].role === 'user') {
     const codeSnapshot = getEditorSnapshot();
     if (codeSnapshot) {
-      const dialect = sqlDialect === 'python' ? 'python' : (sqlDialect === 'postgres' ? 'sql' : 'sql');
+      const dialect = sqlDialect === 'python' ? 'python' : 'sql';
       originalMsg = conversationHistory[lastIdx];
       conversationHistory[lastIdx] = {
         ...originalMsg,
@@ -11119,10 +11120,9 @@ function initCodeMirrorEditor() {
     console.warn('CodeMirror not loaded yet');
     return;
   }
-  const mode = sqlDialect === 'python' ? 'python' : (sqlDialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
   const textarea = document.getElementById('sqlEditorTextarea');
   sqlEditor = CodeMirror.fromTextArea(textarea, {
-    mode: mode,
+    mode: dialectToMode(sqlDialect),
     lineNumbers: true,
     lineWrapping: true,
     indentWithTabs: false,
@@ -11166,10 +11166,10 @@ async function setupSQLDatabase(caseId) {
   await destroySQLDB();
   const setupSQL = dataset.setup.shared;
 
-  if (sqlDialect === 'sqlite') {
+  if (sqlDialect === 'sqlite' || sqlDialect === 'mysql') {
     await initSqlJsEngine();
     sqlDB = new sqlJsSQL.Database();
-    try { sqlDB.run(setupSQL); } catch (err) { console.error('SQLite setup error:', err); }
+    try { sqlDB.run(setupSQL); } catch (err) { console.error('SQLite/MySQL setup error:', err); }
   } else {
     await initPGliteEngine();
     sqlDB = new window.PGlite();
@@ -11264,7 +11264,7 @@ async function runSQL() {
   const startTime = performance.now();
   try {
     let columns, rows;
-    if (sqlDialect === 'sqlite') {
+    if (sqlDialect === 'sqlite' || sqlDialect === 'mysql') {
       const results = sqlDB.exec(query);
       if (results.length === 0) { showCodeSuccess(startTime); return; }
       const r = results[results.length - 1];
@@ -11502,9 +11502,9 @@ async function runTestCases() {
     catch (err) { outputText = 'Error: ' + err.message; }
   } else if (sqlDB) {
     try {
-      if (sqlDialect === 'sqlite') {
+      if (sqlDialect === 'sqlite' || sqlDialect === 'mysql') {
         const results = sqlDB.exec(code);
-        // SQLite exec returns one result per SELECT statement
+        // SQLite/MySQL exec returns one result per SELECT statement
         results.forEach(r => {
           let stmtOut = r.columns.join(' | ') + '\n';
           r.values.forEach(row => { stmtOut += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n'; });
@@ -11536,7 +11536,7 @@ async function runTestCases() {
     let rowCount = 0;
     let colCount = 0;
     try {
-      if (sqlDialect === 'sqlite') {
+      if (sqlDialect === 'sqlite' || sqlDialect === 'mysql') {
         const expResults = sqlDB.exec(query);
         expResults.forEach(r => {
           colCount = Math.max(colCount, r.columns.length);
@@ -11786,7 +11786,7 @@ async function aiHelp() {
   } else if (sqlDB) {
     try {
       let columns, rows;
-      if (sqlDialect === 'sqlite') {
+      if (sqlDialect === 'sqlite' || sqlDialect === 'mysql') {
         const results = sqlDB.exec(code);
         if (results.length > 0) { const r = results[results.length - 1]; columns = r.columns; rows = r.values; }
       } else {
@@ -11803,7 +11803,7 @@ async function aiHelp() {
 
   const isPy = sqlDialect === 'python';
   const dataset = isPy ? PYTHON_DATASETS[activeCaseId] : SQL_DATASETS[activeCaseId];
-  const langLabel = isPy ? 'Python' : (sqlDialect === 'postgres' ? 'PostgreSQL' : 'SQLite');
+  const langLabel = isPy ? 'Python' : (sqlDialect === 'postgres' ? 'PostgreSQL' : (sqlDialect === 'mysql' ? 'MySQL' : 'SQLite'));
   const codeBlock = isPy ? 'python' : 'sql';
 
   const rowCount = resultsText ? (resultsText.match(/\n/g) || []).length - 1 : 0;
@@ -11971,8 +11971,7 @@ async function switchDialect(dialect) {
 
   sqlDialect = dialect;
   if (sqlEditor) {
-    const mode = dialect === 'python' ? 'python' : (dialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
-    sqlEditor.setOption('mode', mode);
+    sqlEditor.setOption('mode', dialectToMode(dialect));
     sqlEditor.setOption('tabSize', dialect === 'python' ? 4 : 2);
   }
 
@@ -11988,6 +11987,14 @@ async function switchDialect(dialect) {
   }
 }
 
+// ── Map dialect to CodeMirror mode ──
+function dialectToMode(d) {
+  if (d === 'python') return 'python';
+  if (d === 'postgres') return 'text/x-pgsql';
+  if (d === 'mysql') return 'text/x-mysql';
+  return 'text/x-sql'; // sqlite
+}
+
 // ── Auto-set dialect based on case type ──
 function setDialectForCase(caseId) {
   const select = document.getElementById('sqlDialectSelect');
@@ -12001,8 +12008,7 @@ function setDialectForCase(caseId) {
     }
   }
   if (sqlEditor) {
-    const mode = sqlDialect === 'python' ? 'python' : (sqlDialect === 'postgres' ? 'text/x-pgsql' : 'text/x-sql');
-    sqlEditor.setOption('mode', mode);
+    sqlEditor.setOption('mode', dialectToMode(sqlDialect));
     sqlEditor.setOption('tabSize', sqlDialect === 'python' ? 4 : 2);
   }
 }
