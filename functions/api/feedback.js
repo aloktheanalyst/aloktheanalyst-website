@@ -104,9 +104,9 @@ export async function onRequest(context) {
     html,
   };
 
-  if (screenshot && typeof screenshot === 'string' && screenshot.length < 1_400_000) {
+  if (screenshot && typeof screenshot === 'string' && screenshot.length < 4_000_000) {
     emailPayload.attachments = [{
-      filename: 'screenshot.jpg',
+      filename: 'screenshot.png',
       content: screenshot,
     }];
   }
