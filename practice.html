@@ -10213,7 +10213,7 @@ function updateFilterCounts() {
     const total = topicProblems.length;
     const topicSolved = topicProblems.filter(p => solved.includes(p.id)).length;
     const label = topic === 'all' ? 'All' : (SECTION_TITLES[topic] || topic);
-    if (chip.classList.contains('active') && topicSolved > 0) {
+    if (topicSolved > 0) {
       chip.textContent = `${label} (${topicSolved}/${total})`;
     } else {
       chip.textContent = `${label} (${total})`;
