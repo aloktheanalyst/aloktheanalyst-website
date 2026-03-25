@@ -263,35 +263,39 @@
     sending = true;
     sendBtn.disabled = true;
 
-    // Gather debugging context from the page
-    var context = {};
+    // Gather debugging context and embed into message/page
+    var pagePath = location.pathname;
+    var contextLines = [];
     try {
-      if (typeof activeCaseId !== 'undefined' && activeCaseId) context.activeCase = activeCaseId;
-      if (typeof sqlDialect !== 'undefined' && sqlDialect) context.dialect = sqlDialect;
-      // Get the case title from sidebar
+      var caseTitle = '';
       var activeItem = document.querySelector('.prompt-item.active .prompt-item-title span');
-      if (activeItem) context.caseTitle = activeItem.textContent;
-      // Get username from profile if available
+      if (activeItem) caseTitle = activeItem.textContent.trim();
+      if (typeof activeCaseId !== 'undefined' && activeCaseId) {
+        contextLines.push('Question: ' + (caseTitle || activeCaseId) + ' (' + activeCaseId + ')');
+        pagePath = location.pathname + ' > ' + (caseTitle || activeCaseId);
+      }
+      if (typeof sqlDialect !== 'undefined' && sqlDialect) contextLines.push('Dialect: ' + sqlDialect);
+      if (typeof currentProvider !== 'undefined') contextLines.push('AI Provider: ' + currentProvider);
       var profile = null;
       try { profile = JSON.parse(localStorage.getItem('userProfile') || 'null'); } catch(e) {}
-      if (profile && profile.name) context.userName = profile.name;
-      if (profile && profile.email) context.userEmail = profile.email;
-      // Capture any error in results area
+      if (profile && profile.name) contextLines.push('User: ' + profile.name + (profile.email ? ' (' + profile.email + ')' : ''));
       var errEl = document.querySelector('.sql-error');
-      if (errEl) context.errorText = errEl.textContent.substring(0, 500);
-      // Current AI provider
-      if (typeof currentProvider !== 'undefined') context.aiProvider = currentProvider;
+      if (errEl) contextLines.push('Error: ' + errEl.textContent.substring(0, 300));
     } catch(e) {}
+
+    var fullMessage = text;
+    if (contextLines.length > 0) {
+      fullMessage = text + '\n\n--- Debug Context ---\n' + contextLines.join('\n');
+    }
 
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: text,
+        message: fullMessage,
         screenshot: screenshotBase64,
-        page: location.pathname,
+        page: pagePath,
         userAgent: navigator.userAgent,
-        context: context,
       }),
     })
       .then(function (res) { return res.json(); })
