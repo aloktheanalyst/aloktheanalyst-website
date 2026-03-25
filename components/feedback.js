@@ -204,7 +204,7 @@
         return;
       }
       html2canvas(document.body, {
-        scale: 0.5,
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -213,7 +213,7 @@
         trigger.style.display = '';
         panel.classList.add('open');
         try {
-          var dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
           screenshotBase64 = dataUrl.split(',')[1]; // strip data:image/jpeg;base64,
           screenshotImg.src = dataUrl;
           screenshotArea.style.display = 'flex';
@@ -259,6 +259,26 @@
     sending = true;
     sendBtn.disabled = true;
 
+    // Gather debugging context from the page
+    var context = {};
+    try {
+      if (typeof activeCaseId !== 'undefined' && activeCaseId) context.activeCase = activeCaseId;
+      if (typeof sqlDialect !== 'undefined' && sqlDialect) context.dialect = sqlDialect;
+      // Get the case title from sidebar
+      var activeItem = document.querySelector('.prompt-item.active .prompt-item-title span');
+      if (activeItem) context.caseTitle = activeItem.textContent;
+      // Get username from profile if available
+      var profile = null;
+      try { profile = JSON.parse(localStorage.getItem('userProfile') || 'null'); } catch(e) {}
+      if (profile && profile.name) context.userName = profile.name;
+      if (profile && profile.email) context.userEmail = profile.email;
+      // Capture any error in results area
+      var errEl = document.querySelector('.sql-error');
+      if (errEl) context.errorText = errEl.textContent.substring(0, 500);
+      // Current AI provider
+      if (typeof currentProvider !== 'undefined') context.aiProvider = currentProvider;
+    } catch(e) {}
+
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -267,6 +287,7 @@
         screenshot: screenshotBase64,
         page: location.pathname,
         userAgent: navigator.userAgent,
+        context: context,
       }),
     })
       .then(function (res) { return res.json(); })
