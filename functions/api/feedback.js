@@ -58,25 +58,33 @@ export async function onRequest(context) {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { message, screenshot, page, userAgent, context } = body;
+  const { message, screenshot, page, userAgent } = body;
 
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     return json({ error: 'Message is required' }, 400);
   }
-  if (message.length > 2000) {
-    return json({ error: 'Message too long (max 2000 characters)' }, 400);
+  if (message.length > 5000) {
+    return json({ error: 'Message too long (max 5000 characters)' }, 400);
   }
 
   // Build email HTML
   const timestamp = new Date().toISOString();
-  const ctx = context || {};
-  const contextRows = [
-    ctx.userName && `<tr><td style="color:#94a3b8;padding:2px 8px 2px 0;">User</td><td>${escapeHtml(ctx.userName)}${ctx.userEmail ? ' (' + escapeHtml(ctx.userEmail) + ')' : ''}</td></tr>`,
-    ctx.activeCase && `<tr><td style="color:#94a3b8;padding:2px 8px 2px 0;">Question</td><td>${escapeHtml(ctx.caseTitle || ctx.activeCase)} <span style="color:#94a3b8;">(${escapeHtml(ctx.activeCase)})</span></td></tr>`,
-    ctx.dialect && `<tr><td style="color:#94a3b8;padding:2px 8px 2px 0;">Dialect</td><td>${escapeHtml(ctx.dialect)}</td></tr>`,
-    ctx.aiProvider && `<tr><td style="color:#94a3b8;padding:2px 8px 2px 0;">AI Provider</td><td>${escapeHtml(ctx.aiProvider)}</td></tr>`,
-    ctx.errorText && `<tr><td style="color:#94a3b8;padding:2px 8px 2px 0;">Error</td><td style="color:#dc2626;">${escapeHtml(ctx.errorText)}</td></tr>`,
-  ].filter(Boolean).join('');
+
+  // Split user message from debug context (appended by client)
+  const parts = message.trim().split('\n\n--- Debug Context ---\n');
+  const userMessage = parts[0];
+  const debugContext = parts[1] || '';
+
+  // Build context table from debug lines
+  const contextHtml = debugContext
+    ? '<table style="font-size:0.82rem;color:#334155;margin:0.75rem 0;border-collapse:collapse;">' +
+      debugContext.split('\n').map(line => {
+        const [label, ...rest] = line.split(': ');
+        const value = rest.join(': ');
+        return `<tr><td style="color:#94a3b8;padding:2px 8px 2px 0;white-space:nowrap;">${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`;
+      }).join('') +
+      '</table>'
+    : '';
 
   const html = `
     <div style="font-family:sans-serif;max-width:600px;">
@@ -84,9 +92,9 @@ export async function onRequest(context) {
       <p style="color:#64748b;font-size:0.85rem;margin-top:0;">
         ${timestamp} · <strong>${page || 'Unknown page'}</strong>
       </p>
-      ${contextRows ? `<table style="font-size:0.82rem;color:#334155;margin:0.75rem 0;border-collapse:collapse;">${contextRows}</table>` : ''}
+      ${contextHtml}
       <div style="background:#f8faff;border:1px solid #e2e8f2;border-radius:8px;padding:1rem;margin:1rem 0;">
-        <p style="margin:0;color:#334155;white-space:pre-wrap;">${escapeHtml(message.trim())}</p>
+        <p style="margin:0;color:#334155;white-space:pre-wrap;">${escapeHtml(userMessage)}</p>
       </div>
       <p style="color:#94a3b8;font-size:0.75rem;">
         IP: ${ip}<br>
@@ -100,7 +108,7 @@ export async function onRequest(context) {
   const emailPayload = {
     from: 'Feedback <feedback@aloktheanalyst.com>',
     to: ['info@aloktheanalyst.com'],
-    subject: `Feedback: ${page || '/'}`,
+    subject: `Feedback: ${page || '/'} [${timestamp.substring(11, 19)}]`,
     html,
   };
 
