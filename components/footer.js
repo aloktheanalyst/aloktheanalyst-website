@@ -76,6 +76,8 @@
           <li><a href="/#courses">Courses</a></li>
           <li><a href="https://aloktheanalyst.com/practice">Practice</a></li>
           <li><a href="/#contact">Contact</a></li>
+          <li><a href="/privacy.html">Privacy Policy</a></li>
+          <li><a href="/terms.html">Terms of Service</a></li>
         </ul>
       </div>
     </footer>
