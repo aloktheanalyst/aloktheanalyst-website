@@ -1780,6 +1780,199 @@
   .test-result-msg { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
   .test-result-item.fail .test-result-msg { color: #ef4444; }
 
+  /* ── BROWSE VIEW ── */
+  .browse-view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  body.view-browse .browse-view { display: flex; }
+  body.view-browse .app-layout { display: none; }
+  body.view-solve .browse-view { display: none; }
+
+  .browse-header {
+    padding: 1.5rem 2rem 0;
+    background: var(--bg);
+  }
+  .browse-header-top {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .browse-search {
+    flex: 1;
+    max-width: 400px;
+    padding: 0.55rem 1rem 0.55rem 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 0.75rem center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .browse-search:focus { border-color: var(--accent); }
+  .browse-search::placeholder { color: var(--muted); }
+
+  .browse-stats {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .browse-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 2rem;
+    background: var(--bg);
+    flex-wrap: wrap;
+  }
+  .browse-chip {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .browse-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .browse-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .browse-difficulty-select {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .browse-grid-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 2rem 2rem;
+  }
+  .browse-grid-wrapper::-webkit-scrollbar { width: 4px; }
+  .browse-grid-wrapper::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .browse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 0.85rem;
+  }
+
+  .browse-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+  }
+  .browse-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(37,99,235,0.08); transform: translateY(-1px); }
+  .browse-card--solved { border-left: 3px solid var(--green); }
+
+  .browse-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .browse-card__header .difficulty {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .browse-card__header .solved-badge {
+    margin-left: auto;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(22,163,74,0.1);
+    color: var(--green);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .browse-card__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.35;
+  }
+
+  .browse-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .browse-card__company {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ── SOLVE VIEW: back button ── */
+  .back-to-browse {
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .back-to-browse:hover { border-color: var(--accent); color: var(--accent); }
+  .back-to-browse svg { width: 14px; height: 14px; }
+  body.view-solve .back-to-browse { display: flex; }
+
+  /* ── RESULT TABS (replaces toolbar buttons for Expected Output / Test / AI Help) ── */
+  .results-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 0 0.5rem;
+  }
+  .results-tab {
+    padding: 0.45rem 0.85rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.73rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .results-tab:hover { color: var(--accent); }
+  .results-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
   /* Mobile question bar (hidden on desktop, shown on mobile when sidebar is gone) */
   .mobile-question {
     display: none;
@@ -1802,6 +1995,14 @@
     .chat-tab-switcher { padding: 0 1rem; }
     .hint-panel-text { padding-left: 0; }
     .hint-panel-nav { padding-left: 0; }
+    /* Browse view mobile */
+    .browse-header { padding: 1rem 1rem 0; }
+    .browse-filters { padding: 0.5rem 1rem; }
+    .browse-grid-wrapper { padding: 0.75rem 1rem 1.5rem; }
+    .browse-grid { grid-template-columns: 1fr; }
+    .browse-header-top { flex-direction: column; align-items: stretch; }
+    .browse-search { max-width: none; }
+    .results-tabs { overflow-x: auto; }
   }
 </style>
 </head>
@@ -1855,8 +2056,40 @@
   </div>
 </div>
 
-<!-- LAYOUT -->
-<div class="app-layout">
+<!-- BROWSE VIEW -->
+<div class="browse-view" id="browseView">
+  <div class="browse-header">
+    <div class="browse-header-top">
+      <input type="text" class="browse-search" id="browseSearch" placeholder="Search questions..." oninput="renderBrowseGrid()">
+      <span class="browse-stats" id="browseStats"></span>
+    </div>
+  </div>
+  <div class="browse-filters" id="browseFilters">
+    <span class="browse-chip active" data-topic="all" onclick="setBrowseFilter('topic', 'all', this)">All</span>
+    <span class="browse-chip" data-topic="sql" onclick="setBrowseFilter('topic', 'sql', this)">SQL</span>
+    <span class="browse-chip" data-topic="python" onclick="setBrowseFilter('topic', 'python', this)">Python</span>
+    <span class="browse-chip" data-topic="casestudy" onclick="setBrowseFilter('topic', 'casestudy', this)">Case Studies</span>
+    <span class="browse-chip" data-topic="puzzles" onclick="setBrowseFilter('topic', 'puzzles', this)">Puzzles</span>
+    <span class="browse-chip" data-topic="guesstimates" onclick="setBrowseFilter('topic', 'guesstimates', this)">Guesstimates</span>
+    <select class="browse-difficulty-select" id="browseDifficultySelect" onchange="setBrowseFilter('difficulty', this.value)">
+      <option value="all">All Difficulties</option>
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+    <select class="browse-difficulty-select" id="browseSolvedSelect" onchange="setBrowseFilter('solved', this.value)">
+      <option value="all">All Status</option>
+      <option value="solved">Solved</option>
+      <option value="unsolved">Unsolved</option>
+    </select>
+  </div>
+  <div class="browse-grid-wrapper">
+    <div class="browse-grid" id="browseGrid"></div>
+  </div>
+</div>
+
+<!-- SOLVE VIEW -->
+<div class="app-layout" id="solveView">
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -1896,6 +2129,10 @@
         <div id="activeCaseFramework" style="display:none;margin-top:4px;"></div>
       </div>
       <div class="chat-actions">
+        <button class="back-to-browse" onclick="navigateToBrowse()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          All Problems
+        </button>
         <div class="provider-selector" id="providerSelector">
           <button class="provider-pill" id="providerPill" onclick="toggleProviderDropdown()">
             <div class="pill-icon" id="pillIcon" style="background:var(--free-color)"></div>
@@ -1996,15 +2233,6 @@
             <div class="sql-toolbar-right">
               <span class="sql-exec-info" id="sqlExecInfo"></span>
               <button class="sql-clear-btn" onclick="resetPanelSizes()" title="Reset panel sizes to default">Reset Layout</button>
-              <button class="sql-expected-btn" onclick="showExpectedOutput()" title="Show expected output for this question">
-                &#x1F4CB; Expected Output
-              </button>
-              <button class="sql-check-btn" onclick="runTestCases()" title="Run offline test cases against your code (no AI needed)">
-                &#x2705; Test My Code
-              </button>
-              <button class="sql-ai-btn" onclick="aiHelp()" title="Get AI-powered scoring and feedback">
-                &#x1F916; AI Help
-              </button>
             </div>
           </div>
           <!-- Hint Panel (hidden until user clicks Hint) -->
@@ -2021,6 +2249,12 @@
             <textarea id="sqlEditorTextarea"></textarea>
           </div>
           <div class="resize-handle-v" id="resizeHandleV"></div>
+          <div class="results-tabs" id="resultsTabs">
+            <button class="results-tab active" data-rtab="output" onclick="switchResultTab('output')">Output</button>
+            <button class="results-tab" data-rtab="expected" onclick="switchResultTab('expected')">Expected Output</button>
+            <button class="results-tab" data-rtab="tests" onclick="switchResultTab('tests')">Test My Code</button>
+            <button class="results-tab" data-rtab="aihelp" onclick="switchResultTab('aihelp')">AI Help</button>
+          </div>
           <div class="sql-results" id="sqlResults">
             <div class="sql-results-empty">
               <div class="empty-icon">&#x1F50D;</div>
@@ -9861,6 +10095,11 @@ let webllmError = null;        // Error message string, or null
 let webllmSupported = null;    // null = not checked, true/false after check
 let dialectCodeCache = {};    // { caseId: { postgres: '...', sqlite: '...', python: '...' } }
 
+// Browse view state
+let browseTopicFilter = 'all';
+let browseDifficultyFilter = 'all';
+let browseSolvedFilter = 'all';
+
 // ── Loading overlay with rotating facts ──
 let loadingFactInterval = null;
 const LOADING_FACTS = [
@@ -10129,7 +10368,153 @@ function renderWebLLMModalStatus() {
 // ═══════════════════════════════
 // INIT
 // ═══════════════════════════════
+// ═══════════════════════════════
+// BROWSE / SOLVE VIEW ROUTER
+// ═══════════════════════════════
+function route() {
+  const params = new URLSearchParams(window.location.search);
+  const qId = params.get('q');
+  if (qId && PROMPTS.find(p => p.id === qId)) {
+    showSolveView(qId);
+  } else {
+    showBrowseView();
+  }
+}
+
+function showBrowseView() {
+  document.body.classList.remove('view-solve');
+  document.body.classList.add('view-browse');
+  document.documentElement.classList.remove('case-active');
+  renderBrowseGrid();
+}
+
+function showSolveView(caseId) {
+  document.body.classList.remove('view-browse');
+  document.body.classList.add('view-solve');
+  if (caseId && caseId !== activeCaseId) {
+    loadCase(caseId);
+  }
+}
+
+function navigateToBrowse() {
+  history.pushState({}, '', window.location.pathname);
+  showBrowseView();
+}
+
+function navigateToSolve(caseId) {
+  history.pushState({ q: caseId }, '', '?q=' + caseId);
+  showSolveView(caseId);
+}
+
+window.addEventListener('popstate', route);
+
+// ═══════════════════════════════
+// BROWSE GRID
+// ═══════════════════════════════
+function extractCompany(id) {
+  var ds = SQL_DATASETS[id] || PYTHON_DATASETS[id];
+  if (!ds || !ds.question) return '';
+  var m = ds.question.match(/Asked at\s+([^<.]+)/i);
+  return m ? m[1].trim() : '';
+}
+
+function setBrowseFilter(type, value, el) {
+  if (type === 'topic') {
+    browseTopicFilter = value;
+    document.querySelectorAll('.browse-chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+  } else if (type === 'difficulty') {
+    browseDifficultyFilter = value;
+  } else if (type === 'solved') {
+    browseSolvedFilter = value;
+  }
+  renderBrowseGrid();
+}
+
+function renderBrowseGrid() {
+  var grid = document.getElementById('browseGrid');
+  if (!grid) return;
+  var solved = getSolvedCases();
+  var searchText = (document.getElementById('browseSearch')?.value || '').toLowerCase();
+
+  var filtered = PROMPTS.slice();
+  if (browseTopicFilter !== 'all') {
+    filtered = filtered.filter(function(p) { return p.topic === browseTopicFilter; });
+  }
+  if (browseDifficultyFilter !== 'all') {
+    filtered = filtered.filter(function(p) { return p.difficulty === browseDifficultyFilter; });
+  }
+  if (browseSolvedFilter === 'solved') {
+    filtered = filtered.filter(function(p) { return solved.includes(p.id); });
+  } else if (browseSolvedFilter === 'unsolved') {
+    filtered = filtered.filter(function(p) { return !solved.includes(p.id); });
+  }
+  if (searchText) {
+    filtered = filtered.filter(function(p) {
+      return p.title.toLowerCase().includes(searchText) ||
+             p.tag.toLowerCase().includes(searchText) ||
+             extractCompany(p.id).toLowerCase().includes(searchText);
+    });
+  }
+
+  // Sort: easy → medium → hard
+  var diffOrder = { easy: 0, medium: 1, hard: 2 };
+  filtered.sort(function(a, b) {
+    return (diffOrder[a.difficulty] || 1) - (diffOrder[b.difficulty] || 1);
+  });
+
+  grid.innerHTML = filtered.map(function(p) {
+    var isSolved = solved.includes(p.id);
+    var company = extractCompany(p.id);
+    return '<div class="browse-card ' + (isSolved ? 'browse-card--solved' : '') + '" onclick="navigateToSolve(\'' + p.id + '\')">' +
+      '<div class="browse-card__header">' +
+        '<span class="difficulty ' + p.difficulty + '">' + p.difficulty + '</span>' +
+        '<span class="prompt-tag">' + escapeHtml(p.tag) + '</span>' +
+        (isSolved ? '<span class="solved-badge">solved</span>' : '') +
+      '</div>' +
+      '<div class="browse-card__title">' + escapeHtml(p.title) + '</div>' +
+      (company ? '<div class="browse-card__meta"><span class="browse-card__company">Asked at ' + escapeHtml(company) + '</span></div>' : '') +
+    '</div>';
+  }).join('');
+
+  // Stats
+  var solvedCount = filtered.filter(function(p) { return solved.includes(p.id); }).length;
+  var statsEl = document.getElementById('browseStats');
+  if (statsEl) statsEl.textContent = solvedCount + ' of ' + filtered.length + ' solved';
+
+  // Update chip counts
+  var allTopics = ['all', 'sql', 'python', 'casestudy', 'puzzles', 'guesstimates'];
+  allTopics.forEach(function(topic) {
+    var chip = document.querySelector('.browse-chip[data-topic="' + topic + '"]');
+    if (!chip) return;
+    var topicItems = topic === 'all' ? PROMPTS : PROMPTS.filter(function(p) { return p.topic === topic; });
+    var topicSolved = topicItems.filter(function(p) { return solved.includes(p.id); }).length;
+    var label = topic === 'all' ? 'All' : (SECTION_TITLES[topic] || topic);
+    chip.textContent = topicSolved > 0 ? label + ' (' + topicSolved + '/' + topicItems.length + ')' : label + ' (' + topicItems.length + ')';
+  });
+}
+
+// ═══════════════════════════════
+// RESULT TABS (Output / Expected / Tests / AI Help)
+// ═══════════════════════════════
+function switchResultTab(tab) {
+  document.querySelectorAll('.results-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.rtab === tab);
+  });
+  // Reset results area for non-output tabs
+  if (tab === 'output') {
+    // Already showing — do nothing
+  } else if (tab === 'expected') {
+    showExpectedOutput();
+  } else if (tab === 'tests') {
+    runTestCases();
+  } else if (tab === 'aihelp') {
+    aiHelp();
+  }
+}
+
 window.onload = () => {
+  route();
   renderPromptList();
   updateKeyStatuses();
   updatePillDisplay();
@@ -10153,6 +10538,7 @@ function toggleSolved(id, e) {
   saveSolvedCases(solved);
   pushToCloud();
   renderPromptList(activeFilter);
+  renderBrowseGrid();
 }
 
 function markCaseSolved(id) {
@@ -10160,6 +10546,7 @@ function markCaseSolved(id) {
   if (!solved.includes(id)) { solved.push(id); saveSolvedCases(solved); }
   pushToCloud();
   renderPromptList(activeFilter);
+  renderBrowseGrid();
   dismissSolvedOverlay();
 }
 
@@ -10460,6 +10847,18 @@ function populateModelSelects() {
 function loadCase(id) {
   activeCaseId = id;
   document.documentElement.classList.add('case-active');
+  // Ensure we're in solve view and URL is updated
+  if (!document.body.classList.contains('view-solve')) {
+    document.body.classList.remove('view-browse');
+    document.body.classList.add('view-solve');
+  }
+  if (new URLSearchParams(window.location.search).get('q') !== id) {
+    history.replaceState({ q: id }, '', '?q=' + id);
+  }
+  // Reset result tabs to Output
+  document.querySelectorAll('.results-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.rtab === 'output');
+  });
   renderPromptList(activeFilter);
   const p = PROMPTS.find(x => x.id === id);
   trackEvent('case_load', id, { tag: p.tag, difficulty: p.difficulty });
@@ -11277,6 +11676,10 @@ function copyTableName(name) {
 
 // ── Code execution (unified) ──
 async function runCode() {
+  // Switch result tab to Output
+  document.querySelectorAll('.results-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.rtab === 'output');
+  });
   trackEvent('code_run', null, { dialect: sqlDialect });
   if (sqlDialect === 'python') {
     await runPython();
