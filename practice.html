@@ -1718,6 +1718,25 @@
   }
   .sql-ai-btn:hover { background: rgba(37,99,235,0.06); border-color: var(--accent); }
 
+  /* Expected Output button */
+  .sql-expected-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: 1px solid rgba(245,158,11,0.3);
+    color: #f59e0b;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .sql-expected-btn:hover { background: rgba(245,158,11,0.06); border-color: #f59e0b; }
+
   /* Test results panel */
   .test-results-panel {
     font-family: 'DM Sans', sans-serif;
@@ -1977,6 +1996,9 @@
             <div class="sql-toolbar-right">
               <span class="sql-exec-info" id="sqlExecInfo"></span>
               <button class="sql-clear-btn" onclick="resetPanelSizes()" title="Reset panel sizes to default">Reset Layout</button>
+              <button class="sql-expected-btn" onclick="showExpectedOutput()" title="Show expected output for this question">
+                &#x1F4CB; Expected Output
+              </button>
               <button class="sql-check-btn" onclick="runTestCases()" title="Run offline test cases against your code (no AI needed)">
                 &#x2705; Test My Code
               </button>
@@ -11753,6 +11775,87 @@ async function runTestCases() {
       markCaseSolved(activeCaseId);
     }
   }
+}
+
+// ── Expected Output (runs expectedQuery from test cases and displays result) ──
+async function showExpectedOutput() {
+  if (!activeCaseId) return;
+  const tests = TEST_CASES[activeCaseId];
+  if (!tests || tests.length === 0) {
+    document.getElementById('sqlResults').innerHTML = `<div class="sql-error" style="border-left-color: #f59e0b; background: #fffbeb;">
+      <strong>⚠️ No expected output</strong><br>
+      No reference queries defined for this case.
+    </div>`;
+    return;
+  }
+
+  const isPy = sqlDialect === 'python';
+  const expectedTests = tests.filter(t => t.expectedQuery && !isPy && sqlDB);
+  if (expectedTests.length === 0) {
+    document.getElementById('sqlResults').innerHTML = `<div class="sql-error" style="border-left-color: #f59e0b; background: #fffbeb;">
+      <strong>⚠️ No expected output</strong><br>
+      This case uses custom validation. Run <em>Test My Code</em> to check your solution.
+    </div>`;
+    return;
+  }
+
+  const resultsEl = document.getElementById('sqlResults');
+  resultsEl.innerHTML = `<div class="ai-feedback-loading"><div class="dots"><span></span><span></span><span></span></div>Loading expected output&hellip;</div>`;
+
+  let html = '<div style="font-family:DM Sans,sans-serif;">';
+  for (let i = 0; i < expectedTests.length; i++) {
+    const test = expectedTests[i];
+    try {
+      let columns = [], rows = [];
+      if (sqlDialect === 'sqlite' || sqlDialect === 'mysql') {
+        const results = sqlDB.exec(test.expectedQuery);
+        if (results.length > 0) {
+          const r = results[results.length - 1];
+          columns = r.columns;
+          rows = r.values;
+        }
+      } else {
+        const stmts = test.expectedQuery.split(';').map(s => s.trim()).filter(s => s.length > 0);
+        for (const stmt of stmts) {
+          try {
+            const result = await sqlDB.query(stmt);
+            if (result.rows && result.fields && result.fields.length > 0) {
+              columns = result.fields.map(f => f.name);
+              rows = result.rows.map(row => columns.map(c => row[c]));
+            }
+          } catch(e) { /* skip CTE-only */ }
+        }
+      }
+
+      if (columns.length === 0) continue;
+
+      html += `<div style="margin-bottom:1rem;">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--accent);margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;">
+          <span style="color:#f59e0b;">&#x1F4CB;</span> ${escapeHtml(test.name)}
+        </div>
+        <table class="sql-result-table"><thead><tr>`;
+      columns.forEach(col => { html += `<th>${escapeHtml(String(col))}</th>`; });
+      html += '</tr></thead><tbody>';
+      const displayRows = rows.slice(0, 50);
+      displayRows.forEach(row => {
+        html += '<tr>';
+        row.forEach(val => {
+          if (val === null || val === undefined) html += '<td><span class="sql-null">NULL</span></td>';
+          else html += `<td>${escapeHtml(String(val))}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      if (rows.length > 50) html += `<div style="padding:0.3rem;color:var(--muted);font-size:0.72rem;text-align:center;">Showing first 50 of ${rows.length} rows</div>`;
+      html += '</div>';
+    } catch(e) {
+      html += `<div style="margin-bottom:1rem;color:var(--muted);font-size:0.8rem;">${escapeHtml(test.name)}: Could not generate expected output</div>`;
+    }
+  }
+  html += '</div>';
+  resultsEl.innerHTML = html;
+  document.getElementById('sqlResultFooter').style.display = 'none';
+  document.getElementById('sqlExecInfo').textContent = 'Expected output';
 }
 
 // ── AI Help (LLM-powered scoring — renders inline in results area) ──
