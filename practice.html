@@ -2232,7 +2232,12 @@
             </button>
             <div class="sql-toolbar-right">
               <span class="sql-exec-info" id="sqlExecInfo"></span>
-              <button class="sql-clear-btn" onclick="resetPanelSizes()" title="Reset panel sizes to default">Reset Layout</button>
+              <button class="sql-check-btn" onclick="switchResultTab('tests')" title="Run offline test cases against your code">
+                &#x2705; Test My Code
+              </button>
+              <button class="sql-ai-btn" onclick="switchResultTab('aihelp')" title="Get AI-powered scoring and feedback">
+                &#x1F916; AI Help
+              </button>
             </div>
           </div>
           <!-- Hint Panel (hidden until user clicks Hint) -->
@@ -2252,8 +2257,6 @@
           <div class="results-tabs" id="resultsTabs">
             <button class="results-tab active" data-rtab="output" onclick="switchResultTab('output')">Output</button>
             <button class="results-tab" data-rtab="expected" onclick="switchResultTab('expected')">Expected Output</button>
-            <button class="results-tab" data-rtab="tests" onclick="switchResultTab('tests')">Test My Code</button>
-            <button class="results-tab" data-rtab="aihelp" onclick="switchResultTab('aihelp')">AI Help</button>
           </div>
           <div class="sql-results" id="sqlResults">
             <div class="sql-results-empty">
