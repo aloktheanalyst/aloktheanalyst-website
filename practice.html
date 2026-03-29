@@ -10500,13 +10500,32 @@ function renderBrowseGrid() {
 // ═══════════════════════════════
 // RESULT TABS (Output / Expected / Tests / AI Help)
 // ═══════════════════════════════
+let _cachedOutputHtml = '';
+let _cachedFooterHtml = '';
+let _cachedFooterVisible = false;
+let _activeResultTab = 'output';
+
 function switchResultTab(tab) {
+  var resultsEl = document.getElementById('sqlResults');
+  var footerEl = document.getElementById('sqlResultFooter');
+
+  // Save current tab content before switching away
+  if (_activeResultTab === 'output') {
+    _cachedOutputHtml = resultsEl.innerHTML;
+    _cachedFooterHtml = footerEl.innerHTML;
+    _cachedFooterVisible = footerEl.style.display !== 'none';
+  }
+
+  _activeResultTab = tab;
   document.querySelectorAll('.results-tab').forEach(function(t) {
     t.classList.toggle('active', t.dataset.rtab === tab);
   });
-  // Reset results area for non-output tabs
+
   if (tab === 'output') {
-    // Already showing — do nothing
+    // Restore cached output
+    resultsEl.innerHTML = _cachedOutputHtml;
+    footerEl.style.display = _cachedFooterVisible ? 'flex' : 'none';
+    footerEl.innerHTML = _cachedFooterHtml;
   } else if (tab === 'expected') {
     showExpectedOutput();
   } else if (tab === 'tests') {
@@ -11680,6 +11699,7 @@ function copyTableName(name) {
 // ── Code execution (unified) ──
 async function runCode() {
   // Switch result tab to Output
+  _activeResultTab = 'output';
   document.querySelectorAll('.results-tab').forEach(function(t) {
     t.classList.toggle('active', t.dataset.rtab === 'output');
   });
@@ -11689,6 +11709,12 @@ async function runCode() {
   } else {
     await runSQL();
   }
+  // Cache the fresh output
+  var resultsEl = document.getElementById('sqlResults');
+  var footerEl = document.getElementById('sqlResultFooter');
+  _cachedOutputHtml = resultsEl.innerHTML;
+  _cachedFooterHtml = footerEl.innerHTML;
+  _cachedFooterVisible = footerEl.style.display !== 'none';
 }
 
 async function runSQL() {
