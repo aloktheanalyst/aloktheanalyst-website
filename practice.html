@@ -340,7 +340,7 @@
 
   /* ── LAYOUT ── */
   .app-layout {
-    display: flex;
+    display: none;
     flex: 1;
     overflow: hidden;
   }
@@ -1781,10 +1781,11 @@
   .test-result-item.fail .test-result-msg { color: #ef4444; }
 
   /* ── BROWSE VIEW ── */
-  .browse-view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .browse-view { display: flex; flex: 1; flex-direction: column; overflow: hidden; }
   body.view-browse .browse-view { display: flex; }
   body.view-browse .app-layout { display: none; }
   body.view-solve .browse-view { display: none; }
+  body.view-solve .app-layout { display: flex; }
 
   .browse-header {
     padding: 1.5rem 2rem 0;
