@@ -1949,6 +1949,32 @@
   .back-to-browse:hover { border-color: var(--accent); color: var(--accent); }
   .back-to-browse svg { width: 14px; height: 14px; }
   body.view-solve .back-to-browse { display: flex; }
+  body.view-solve .sidebar { display: none; }
+
+  .nav-prev-next {
+    display: none;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  body.view-solve .nav-prev-next { display: flex; }
+  .nav-prev-next button {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.55rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-prev-next button:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-prev-next button:disabled { opacity: 0.35; cursor: default; border-color: var(--border); color: var(--muted); }
+  .nav-prev-next button svg { width: 14px; height: 14px; }
 
   /* ── RESULT TABS (replaces toolbar buttons for Expected Output / Test / AI Help) ── */
   .results-tabs {
@@ -2134,6 +2160,16 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           All Problems
         </button>
+        <div class="nav-prev-next">
+          <button id="prevCaseBtn" onclick="navigatePrevNext(-1)" title="Previous question">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            Prev
+          </button>
+          <button id="nextCaseBtn" onclick="navigatePrevNext(1)" title="Next question">
+            Next
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
         <div class="provider-selector" id="providerSelector">
           <button class="provider-pill" id="providerPill" onclick="toggleProviderDropdown()">
             <div class="pill-icon" id="pillIcon" style="background:var(--free-color)"></div>
@@ -10412,6 +10448,28 @@ function navigateToSolve(caseId) {
 
 window.addEventListener('popstate', route);
 
+function getFilteredPrompts() {
+  return activeFilter === 'all' ? PROMPTS : PROMPTS.filter(p => p.topic === activeFilter);
+}
+
+function navigatePrevNext(dir) {
+  if (!activeCaseId) return;
+  const filtered = getFilteredPrompts();
+  const idx = filtered.findIndex(p => p.id === activeCaseId);
+  const next = idx + dir;
+  if (next < 0 || next >= filtered.length) return;
+  navigateToSolve(filtered[next].id);
+}
+
+function updatePrevNextButtons() {
+  const filtered = getFilteredPrompts();
+  const idx = filtered.findIndex(p => p.id === activeCaseId);
+  const prevBtn = document.getElementById('prevCaseBtn');
+  const nextBtn = document.getElementById('nextCaseBtn');
+  if (prevBtn) prevBtn.disabled = idx <= 0;
+  if (nextBtn) nextBtn.disabled = idx >= filtered.length - 1;
+}
+
 // ═══════════════════════════════
 // BROWSE GRID
 // ═══════════════════════════════
@@ -10869,6 +10927,7 @@ function populateModelSelects() {
 // ═══════════════════════════════
 function loadCase(id) {
   activeCaseId = id;
+  updatePrevNextButtons();
   document.documentElement.classList.add('case-active');
   // Ensure we're in solve view and URL is updated
   if (!document.body.classList.contains('view-solve')) {
