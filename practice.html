@@ -1654,31 +1654,178 @@
   .solution-btn:hover { background: rgba(147,197,253,0.2); border-color: #3b82f6; }
 
   /* Solution panel in chat area */
-  .puzzle-solution-panel {
-    display: none;
-    margin: 0.75rem;
+  /* ── SOLUTION SIDE PANEL ── */
+  .solution-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: 480px; max-width: 90vw;
+    height: 100vh;
+    background: #fdfdff;
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+  .solution-panel.show { transform: translateX(0); }
+  .solution-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border: 1px solid #93c5fd;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    line-height: 1.7;
-    color: #1e3a5f;
-    max-height: 50vh;
-    overflow-y: auto;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e8f0fe 100%);
   }
-  .puzzle-solution-panel.show { display: block; }
-  .puzzle-solution-panel strong { color: #1e40af; }
-  .puzzle-solution-close {
-    float: right;
+  .solution-panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.15rem;
+    letter-spacing: 1.5px;
+    color: #0f172a;
+  }
+  .solution-panel-close {
     background: none;
-    border: none;
-    font-size: 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 30px; height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    color: #64748b;
-    padding: 0 0.25rem;
+    color: var(--muted);
+    font-size: 1.1rem;
+    transition: all 0.2s;
   }
-  .puzzle-solution-close:hover { color: #1e40af; }
+  .solution-panel-close:hover { border-color: var(--accent); color: var(--accent); }
+  .solution-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+  .solution-step {
+    border-bottom: 1px solid #eef2f8;
+  }
+  .solution-step:last-child { border-bottom: none; }
+  .solution-step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #1e3a5f;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .solution-step-header:hover { background: #f0f5ff; }
+  .solution-step-header .step-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .solution-step-header .step-chevron {
+    margin-left: auto;
+    width: 16px; height: 16px;
+    color: var(--muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .solution-step.open .step-chevron { transform: rotate(90deg); }
+  .solution-step-content {
+    display: none;
+    padding: 0 1.25rem 1rem 1.25rem;
+    font-size: 0.82rem;
+    line-height: 1.75;
+    color: #334155;
+  }
+  .solution-step.open .solution-step-content { display: block; }
+  .solution-step-content strong { color: #1e40af; }
+  .solution-step-content em { color: #6b7280; font-style: italic; }
+  .solution-step-content pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    margin: 0.5rem 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .solution-step-content code {
+    background: #e8f0fe;
+    color: #1e40af;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .solution-step-content pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+  .solution-step-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    font-size: 0.78rem;
+  }
+  .solution-step-content th,
+  .solution-step-content td {
+    border: 1px solid #e2e8f0;
+    padding: 0.35rem 0.6rem;
+    text-align: left;
+  }
+  .solution-step-content th {
+    background: #f0f5ff;
+    font-weight: 600;
+    color: #1e3a5f;
+  }
+  .solution-step-content ul,
+  .solution-step-content ol {
+    padding-left: 1.2rem;
+    margin: 0.3rem 0;
+  }
+  .solution-step-content li { margin: 0.15rem 0; }
+  .solution-step-content h3 {
+    font-size: 0.88rem;
+    color: #0f172a;
+    margin: 0.6rem 0 0.3rem;
+  }
+  .solution-panel-progress {
+    padding: 0.5rem 1.25rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    border-top: 1px solid #eef2f8;
+    flex-shrink: 0;
+  }
+  .solution-panel-progress .progress-bar {
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 0.35rem;
+    overflow: hidden;
+  }
+  .solution-panel-progress .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  @media (max-width: 768px) {
+    .solution-panel { width: 100vw; max-width: 100vw; }
+  }
 
   /* Check My Answer button */
   .sql-check-btn {
@@ -2310,10 +2457,17 @@
       </div>
     </div>
 
-    <!-- PUZZLE SOLUTION PANEL (hidden by default) -->
-    <div class="puzzle-solution-panel" id="puzzleSolutionPanel">
-      <button class="puzzle-solution-close" onclick="closeSolutionPanel()" title="Close">&times;</button>
-      <div id="puzzleSolutionText"></div>
+    <!-- SOLUTION SIDE PANEL (slides in from right) -->
+    <div class="solution-panel" id="solutionPanel">
+      <div class="solution-panel-header">
+        <div class="solution-panel-title">SOLUTION WALKTHROUGH</div>
+        <button class="solution-panel-close" onclick="closeSolutionPanel()" title="Close (Esc)">&times;</button>
+      </div>
+      <div class="solution-panel-body" id="solutionPanelBody"></div>
+      <div class="solution-panel-progress" id="solutionProgress">
+        <span id="solutionProgressText">Step 1 of 5</span>
+        <div class="progress-bar"><div class="progress-fill" id="solutionProgressFill" style="width:0%"></div></div>
+      </div>
     </div>
     <!-- INPUT AREA -->
     <div class="input-area" id="inputArea">
@@ -10425,6 +10579,7 @@ function showBrowseView() {
   document.body.classList.remove('view-solve');
   document.body.classList.add('view-browse');
   document.documentElement.classList.remove('case-active');
+  closeSolutionPanel();
   renderBrowseGrid();
 }
 
@@ -10601,6 +10756,9 @@ window.onload = () => {
   updatePillDisplay();
   // Set initial status bar label using selected model
   document.getElementById('piLabel').textContent = getProviderLabel(currentProvider);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSolutionPanel();
+  });
 };
 
 // ═══════════════════════════════
@@ -10980,8 +11138,7 @@ function loadCase(id) {
 
   // Show/hide solution button for puzzle cases
   const solBtn = document.getElementById('showSolutionBtn');
-  const solPanel = document.getElementById('puzzleSolutionPanel');
-  if (solPanel) { solPanel.classList.remove('show'); }
+  closeSolutionPanel();
   if (solBtn) {
     const hasSolution = (PUZZLE_SOLUTIONS && PUZZLE_SOLUTIONS[id]) || (typeof GUESSTIMATE_SOLUTIONS !== 'undefined' && GUESSTIMATE_SOLUTIONS[id]) || (typeof CASESTUDY_SOLUTIONS !== 'undefined' && CASESTUDY_SOLUTIONS[id]);
     solBtn.style.display = hasSolution ? 'flex' : 'none';
@@ -11030,23 +11187,109 @@ function showPuzzleSolution() {
               (typeof GUESSTIMATE_SOLUTIONS !== 'undefined' && GUESSTIMATE_SOLUTIONS[activeCaseId]) ||
               (typeof CASESTUDY_SOLUTIONS !== 'undefined' && CASESTUDY_SOLUTIONS[activeCaseId]);
   if (!activeCaseId || !sol) return;
-  const panel = document.getElementById('puzzleSolutionPanel');
-  const text = document.getElementById('puzzleSolutionText');
-  // Convert markdown bold to HTML and newlines to <br>
-  let html = sol
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\\n/g, '\n')
-    .replace(/\n\n/g, '<br><br>')
-    .replace(/\n/g, '<br>');
-  text.innerHTML = html;
+
+  const panel = document.getElementById('solutionPanel');
+  const body = document.getElementById('solutionPanelBody');
+
+  // Parse raw text: unescape \n, split by --- into sections
+  const raw = sol.replace(/\\n/g, '\n');
+  const sections = raw.split(/\n---\n/).map(s => s.trim()).filter(s => s.length > 0);
+
+  // Build accordion HTML
+  body.innerHTML = sections.map((sec, i) => {
+    // Extract title: first **bold** line or first non-empty line
+    const titleMatch = sec.match(/\*\*(.+?)\*\*/);
+    const title = titleMatch ? titleMatch[1].replace(/[*]/g, '') : 'Section ' + (i + 1);
+    const content = formatSolutionMarkdown(sec);
+    return '<div class="solution-step' + (i === 0 ? ' open' : '') + '" data-step="' + i + '">' +
+      '<div class="solution-step-header" onclick="toggleSolutionStep(' + i + ')">' +
+        '<span class="step-num">' + (i + 1) + '</span>' +
+        '<span>' + escapeHtml(title) + '</span>' +
+        '<svg class="step-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>' +
+      '</div>' +
+      '<div class="solution-step-content">' + content + '</div>' +
+    '</div>';
+  }).join('');
+
+  updateSolutionProgress();
   panel.classList.add('show');
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   trackEvent('solution_view', activeCaseId);
 }
 
 function closeSolutionPanel() {
-  const panel = document.getElementById('puzzleSolutionPanel');
+  const panel = document.getElementById('solutionPanel');
   if (panel) panel.classList.remove('show');
+}
+
+function toggleSolutionStep(idx) {
+  const step = document.querySelector('.solution-step[data-step="' + idx + '"]');
+  if (!step) return;
+  step.classList.toggle('open');
+  updateSolutionProgress();
+}
+
+function updateSolutionProgress() {
+  const steps = document.querySelectorAll('.solution-step');
+  const opened = document.querySelectorAll('.solution-step.open');
+  const total = steps.length;
+  const done = opened.length;
+  const textEl = document.getElementById('solutionProgressText');
+  const fillEl = document.getElementById('solutionProgressFill');
+  if (textEl) textEl.textContent = done + ' of ' + total + ' steps revealed';
+  if (fillEl) fillEl.style.width = (total > 0 ? Math.round(100 * done / total) : 0) + '%';
+}
+
+function formatSolutionMarkdown(text) {
+  // Escape HTML first
+  text = escapeHtml(text);
+
+  // Code blocks (triple backticks become real ` at runtime)
+  text = text.replace(/`{3}(\w*)\n?([\s\S]*?)`{3}/g, function(_, lang, code) {
+    return '<pre><code>' + code.trim() + '</code></pre>';
+  });
+
+  // Tables: find consecutive lines starting with |
+  text = text.replace(/((?:^\|.+\|$\n?)+)/gm, function(block) {
+    var rows = block.trim().split('\n').filter(function(r) { return r.trim(); });
+    if (rows.length < 2) return block;
+    // Check for separator row (|---|---|)
+    var sepIdx = rows.findIndex(function(r) { return /^\|[\s\-:|]+\|$/.test(r.trim()); });
+    var html = '<table>';
+    rows.forEach(function(row, ri) {
+      if (ri === sepIdx) return; // skip separator
+      var cells = row.split('|').filter(function(c, ci, arr) { return ci > 0 && ci < arr.length - 1; });
+      var tag = (sepIdx > 0 && ri < sepIdx) ? 'th' : 'td';
+      html += '<tr>' + cells.map(function(c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  });
+
+  // Inline code (single backtick)
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Headers
+  text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  text = text.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+
+  // Bold
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Italic
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Bullet lists (lines starting with • or -)
+  text = text.replace(/^[•\-]\s+(.+)$/gm, '<li>$1</li>');
+  text = text.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  // Arrow lines (→)
+  text = text.replace(/^(→.+)$/gm, '<div style="padding:0.2rem 0 0.2rem 0.5rem;border-left:3px solid var(--accent);margin:0.25rem 0;color:#1e40af;">$1</div>');
+
+  // Newlines
+  text = text.replace(/\n\n/g, '<br><br>');
+  text = text.replace(/\n/g, '<br>');
+
+  return text;
 }
 
 function startQuickCase(id) {
@@ -11479,6 +11722,7 @@ function resetChat() {
   switchTab('chat');
   destroySQLDB();
   resetHints();
+  closeSolutionPanel();
 
   conversationHistory = [];
   activeCaseId = null;
