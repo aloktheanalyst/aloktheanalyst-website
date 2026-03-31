@@ -608,6 +608,8 @@
   }
   .action-btn:hover { border-color: var(--accent); color: var(--accent); }
   .action-btn svg { width: 13px; height: 13px; }
+  #showSolutionBtn { background: #eef4ff; border-color: #93c5fd; color: #1e40af; }
+  #showSolutionBtn:hover { background: #dbeafe; border-color: #3b82f6; }
 
   /* MESSAGES */
   .messages {
@@ -1633,7 +1635,7 @@
   .hint-close:hover { opacity: 1; }
 
   /* Hint button in toolbar */
-  .sql-hint-btn, .solution-btn {
+  .sql-hint-btn {
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -1649,27 +1651,21 @@
     transition: all 0.2s;
     white-space: nowrap;
   }
-  .sql-hint-btn:hover, .solution-btn:hover { background: rgba(253,230,138,0.3); border-color: #f59e0b; }
-  .solution-btn { border-color: #93c5fd; color: #1e40af; }
-  .solution-btn:hover { background: rgba(147,197,253,0.2); border-color: #3b82f6; }
+  .sql-hint-btn:hover { background: rgba(253,230,138,0.3); border-color: #f59e0b; }
 
   /* Solution panel in chat area */
   /* ── SOLUTION SIDE PANEL ── */
   .solution-panel {
-    position: fixed;
-    top: 0; right: 0;
-    width: 480px; max-width: 90vw;
-    height: 100vh;
+    width: 0;
+    overflow: hidden;
     background: #fdfdff;
     border-left: 1px solid var(--border);
-    box-shadow: -4px 0 24px rgba(0,0,0,0.08);
-    z-index: 900;
     display: flex;
     flex-direction: column;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
   }
-  .solution-panel.show { transform: translateX(0); }
+  .solution-panel.show { width: 480px; }
   .solution-panel-header {
     display: flex;
     align-items: center;
@@ -1824,7 +1820,7 @@
     transition: width 0.3s;
   }
   @media (max-width: 768px) {
-    .solution-panel { width: 100vw; max-width: 100vw; }
+    .solution-panel.show { width: 100vw; }
   }
 
   /* Check My Answer button */
@@ -2119,8 +2115,8 @@
     transition: all 0.2s;
     white-space: nowrap;
   }
-  .nav-prev-next button:hover { border-color: var(--accent); color: var(--accent); }
-  .nav-prev-next button:disabled { opacity: 0.35; cursor: default; border-color: var(--border); color: var(--muted); }
+  .nav-prev-next button:hover { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+  .nav-prev-next button:disabled { opacity: 0.35; cursor: default; background: none; border-color: var(--border); color: var(--muted); }
   .nav-prev-next button svg { width: 14px; height: 14px; }
 
   /* ── RESULT TABS (replaces toolbar buttons for Expected Output / Test / AI Help) ── */
@@ -2325,6 +2321,10 @@
           </button>
           <div class="provider-dropdown" id="providerDropdown"></div>
         </div>
+        <button class="action-btn" id="showSolutionBtn" onclick="showPuzzleSolution()" style="display:none" title="View the structured solution">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Solution
+        </button>
         <button class="action-btn" onclick="resetChat()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           New Session
@@ -2457,18 +2457,6 @@
       </div>
     </div>
 
-    <!-- SOLUTION SIDE PANEL (slides in from right) -->
-    <div class="solution-panel" id="solutionPanel">
-      <div class="solution-panel-header">
-        <div class="solution-panel-title">SOLUTION WALKTHROUGH</div>
-        <button class="solution-panel-close" onclick="closeSolutionPanel()" title="Close (Esc)">&times;</button>
-      </div>
-      <div class="solution-panel-body" id="solutionPanelBody"></div>
-      <div class="solution-panel-progress" id="solutionProgress">
-        <span id="solutionProgressText">Step 1 of 5</span>
-        <div class="progress-bar"><div class="progress-fill" id="solutionProgressFill" style="width:0%"></div></div>
-      </div>
-    </div>
     <!-- INPUT AREA -->
     <div class="input-area" id="inputArea">
       <button class="input-toggle-bar" id="inputToggleBtn" onclick="toggleInput()" title="Toggle input bar">
@@ -2484,9 +2472,6 @@
             </button>
           </div>
         </div>
-        <button class="solution-btn" id="showSolutionBtn" onclick="showPuzzleSolution()" style="display:none" title="View the pre-written solution">
-          &#x1F4D6; Show Solution
-        </button>
         <div class="input-hint">
           <span>↵ Enter to send · Shift+Enter for new line</span>
           <div class="provider-indicator">
@@ -2495,6 +2480,19 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- SOLUTION SIDE PANEL -->
+  <div class="solution-panel" id="solutionPanel">
+    <div class="solution-panel-header">
+      <div class="solution-panel-title">SOLUTION WALKTHROUGH</div>
+      <button class="solution-panel-close" onclick="closeSolutionPanel()" title="Close (Esc)">&times;</button>
+    </div>
+    <div class="solution-panel-body" id="solutionPanelBody"></div>
+    <div class="solution-panel-progress" id="solutionProgress">
+      <span id="solutionProgressText">Step 1 of 5</span>
+      <div class="progress-bar"><div class="progress-fill" id="solutionProgressFill" style="width:0%"></div></div>
     </div>
   </div>
 </div>
