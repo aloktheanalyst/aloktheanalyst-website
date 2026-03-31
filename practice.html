@@ -608,8 +608,8 @@
   }
   .action-btn:hover { border-color: var(--accent); color: var(--accent); }
   .action-btn svg { width: 13px; height: 13px; }
-  #showSolutionBtn { background: #eef4ff; border-color: #93c5fd; color: #1e40af; }
-  #showSolutionBtn:hover { background: #dbeafe; border-color: #3b82f6; }
+  #showSolutionBtn:hover { background: #eef4ff; border-color: #93c5fd; color: #1e40af; }
+  #showSolutionBtn.active { background: #dbeafe; border-color: #3b82f6; color: #1e40af; }
 
   /* MESSAGES */
   .messages {
@@ -11188,6 +11188,13 @@ function showPuzzleSolution() {
 
   const panel = document.getElementById('solutionPanel');
   const body = document.getElementById('solutionPanelBody');
+  const btn = document.getElementById('showSolutionBtn');
+
+  // Toggle off if already open
+  if (panel.classList.contains('show')) {
+    closeSolutionPanel();
+    return;
+  }
 
   // Parse raw text: unescape \n, split by --- into sections
   const raw = sol.replace(/\\n/g, '\n');
@@ -11211,12 +11218,15 @@ function showPuzzleSolution() {
 
   updateSolutionProgress();
   panel.classList.add('show');
+  if (btn) btn.classList.add('active');
   trackEvent('solution_view', activeCaseId);
 }
 
 function closeSolutionPanel() {
   const panel = document.getElementById('solutionPanel');
   if (panel) panel.classList.remove('show');
+  const btn = document.getElementById('showSolutionBtn');
+  if (btn) btn.classList.remove('active');
 }
 
 function toggleSolutionStep(idx) {
