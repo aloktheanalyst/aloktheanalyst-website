@@ -7,16 +7,24 @@
 // Required bindings:
 //   SESSION_KV → KV namespace (aloktheanalyst_sessions)
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const ALLOWED_ORIGIN = 'https://aloktheanalyst.com';
 
-function json(body, status = 200) {
+function corsHeaders(requestOrigin) {
+  // Only allow requests from our own domain
+  const origin = (requestOrigin === ALLOWED_ORIGIN || requestOrigin === 'https://www.aloktheanalyst.com')
+    ? requestOrigin : ALLOWED_ORIGIN;
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+}
+
+function json(body, status = 200, cors = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS },
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...cors },
   });
 }
 
@@ -31,28 +39,51 @@ function parseCookies(cookieHeader) {
 
 export async function onRequestGet(context) {
   const { request, env } = context;
+  const origin = request.headers.get('Origin') || '';
+  const cors = corsHeaders(origin);
 
   // CORS preflight
   if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: CORS });
+    return new Response(null, { headers: cors });
+  }
+
+  // ── Origin / Referer check — only allow requests from our site ──
+  const referer = request.headers.get('Referer') || '';
+  const isAllowedOrigin = origin === ALLOWED_ORIGIN || origin === 'https://www.aloktheanalyst.com' || !origin;
+  const isAllowedReferer = !referer || referer.startsWith(ALLOWED_ORIGIN) || referer.startsWith('https://www.aloktheanalyst.com');
+  if (!isAllowedOrigin || !isAllowedReferer) {
+    return json({ error: 'Forbidden' }, 403, cors);
   }
 
   // ── Auth check ──
   if (env.SESSION_KV) {
     const cookies = parseCookies(request.headers.get('Cookie') || '');
     const sessionId = cookies.session;
-    if (!sessionId) return json({ error: 'Unauthorized' }, 401);
+    if (!sessionId) return json({ error: 'Unauthorized' }, 401, cors);
     const sessionData = await env.SESSION_KV.get(`sess:${sessionId}`);
-    if (!sessionData) return json({ error: 'Unauthorized' }, 401);
+    if (!sessionData) return json({ error: 'Unauthorized' }, 401, cors);
   } else {
-    return json({ error: 'Service unavailable' }, 503);
+    return json({ error: 'Service unavailable' }, 503, cors);
+  }
+
+  // ── Rate limiting — prevent bulk scraping ──
+  if (env.SESSION_KV) {
+    const cookies = parseCookies(request.headers.get('Cookie') || '');
+    const sessionId = cookies.session;
+    const rateKey = `content_rate:${sessionId}`;
+    const current = parseInt(await env.SESSION_KV.get(rateKey) || '0', 10);
+    if (current > 60) {
+      // Max 60 content fetches per hour per user — way more than normal usage
+      return json({ error: 'Rate limited. Please slow down.' }, 429, cors);
+    }
+    await env.SESSION_KV.put(rateKey, String(current + 1), { expirationTtl: 3600 });
   }
 
   // ── Get case ID ──
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
   if (!id || typeof id !== 'string' || id.length > 100) {
-    return json({ error: 'Missing or invalid id parameter' }, 400);
+    return json({ error: 'Missing or invalid id parameter' }, 400, cors);
   }
 
   // ── Build response ──
@@ -64,10 +95,10 @@ export async function onRequestGet(context) {
   if (FACTOR_TREE_DATA[id]) result.factorTree = FACTOR_TREE_DATA[id];
 
   if (Object.keys(result).length === 0) {
-    return json({ error: 'Content not found' }, 404);
+    return json({ error: 'Content not found' }, 404, cors);
   }
 
-  return json(result);
+  return json(result, 200, cors);
 }
 
 // ═══════════════════════════════
