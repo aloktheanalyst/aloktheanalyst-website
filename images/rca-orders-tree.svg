@@ -1,0 +1,237 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 680" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">
+  <defs>
+    <linearGradient id="rootGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#1e40af"/>
+    </linearGradient>
+    <linearGradient id="extGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+    <linearGradient id="intGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <filter id="shadowSm" x="-4%" y="-8%" width="108%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="680" rx="12" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="450" y="32" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b" letter-spacing="0.5">EXTERNAL vs INTERNAL FACTOR TREE</text>
+
+  <!-- ROOT NODE -->
+  <rect x="310" y="44" width="280" height="42" rx="21" fill="url(#rootGrad)" filter="url(#shadow)"/>
+  <text x="450" y="70" text-anchor="middle" font-size="13.5" font-weight="700" fill="#fff">Weekly Orders Dropped 25%</text>
+
+  <!-- Connector lines from root -->
+  <line x1="450" y1="86" x2="450" y2="105" stroke="#94a3b8" stroke-width="2"/>
+  <line x1="225" y1="105" x2="675" y2="105" stroke="#94a3b8" stroke-width="2"/>
+  <line x1="225" y1="105" x2="225" y2="120" stroke="#94a3b8" stroke-width="2"/>
+  <line x1="675" y1="105" x2="675" y2="120" stroke="#94a3b8" stroke-width="2"/>
+
+  <!-- EXTERNAL FACTORS header -->
+  <rect x="100" y="120" width="250" height="36" rx="18" fill="url(#extGrad)" filter="url(#shadow)"/>
+  <text x="225" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">EXTERNAL FACTORS</text>
+
+  <!-- INTERNAL FACTORS header -->
+  <rect x="550" y="120" width="250" height="36" rx="18" fill="url(#intGrad)" filter="url(#shadow)"/>
+  <text x="675" y="143" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">INTERNAL FACTORS</text>
+
+  <!-- ========== EXTERNAL BRANCHES ========== -->
+  <!-- Connector from External header to branches -->
+  <line x1="225" y1="156" x2="225" y2="172" stroke="#ef4444" stroke-width="1.5"/>
+  <line x1="112" y1="172" x2="338" y2="172" stroke="#ef4444" stroke-width="1.5"/>
+
+  <!-- Branch lines down -->
+  <line x1="112" y1="172" x2="112" y2="186" stroke="#ef4444" stroke-width="1.5"/>
+  <line x1="225" y1="172" x2="225" y2="186" stroke="#ef4444" stroke-width="1.5"/>
+  <line x1="338" y1="172" x2="338" y2="186" stroke="#ef4444" stroke-width="1.5"/>
+
+  <!-- External Category 1: Seasonality -->
+  <rect x="32" y="186" width="160" height="30" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="42" y="205" font-size="11" font-weight="600" fill="#991b1b">Seasonality</text>
+
+  <!-- Seasonality items -->
+  <line x1="112" y1="216" x2="112" y2="226" stroke="#fca5a5" stroke-width="1"/>
+  <rect x="22" y="226" width="180" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="32" y="241" font-size="9" fill="#7f1d1d">Festival / salary / holiday week</text>
+  <rect x="22" y="252" width="180" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="32" y="267" font-size="9" fill="#7f1d1d">Exam period / payday effect</text>
+  <rect x="22" y="278" width="180" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="32" y="293" font-size="9" fill="#7f1d1d">Day-of-week composition diff</text>
+
+  <!-- External Category 2: Competitive -->
+  <rect x="145" y="186" width="160" height="30" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="155" y="205" font-size="11" font-weight="600" fill="#991b1b">Competitor Actions</text>
+
+  <!-- Competitive items -->
+  <line x1="225" y1="216" x2="225" y2="226" stroke="#fca5a5" stroke-width="1"/>
+  <rect x="145" y="226" width="160" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="155" y="241" font-size="9" fill="#7f1d1d">Flash sale / Big Billion Day</text>
+  <rect x="145" y="252" width="160" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="155" y="267" font-size="9" fill="#7f1d1d">New entrant / aggressive pricing</text>
+  <rect x="145" y="278" width="160" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="155" y="293" font-size="9" fill="#7f1d1d">Viral competitor app update</text>
+
+  <!-- External Category 3: Macro / Sentiment -->
+  <rect x="258" y="186" width="160" height="30" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="268" y="205" font-size="11" font-weight="600" fill="#991b1b">Macro & Sentiment</text>
+
+  <!-- Macro items -->
+  <line x1="338" y1="216" x2="338" y2="226" stroke="#fca5a5" stroke-width="1"/>
+  <rect x="258" y="226" width="160" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="268" y="241" font-size="9" fill="#7f1d1d">Weather / flood / cyclone</text>
+  <rect x="258" y="252" width="160" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="268" y="267" font-size="9" fill="#7f1d1d">Regulation / GST change</text>
+  <rect x="258" y="278" width="160" height="22" rx="4" fill="#fff" stroke="#fecaca" stroke-width="0.5"/>
+  <text x="268" y="293" font-size="9" fill="#7f1d1d">Negative press / backlash</text>
+
+  <!-- ========== INTERNAL BRANCHES ========== -->
+  <!-- Connector from Internal header to branches -->
+  <line x1="675" y1="156" x2="675" y2="172" stroke="#3b82f6" stroke-width="1.5"/>
+  <line x1="508" y1="172" x2="842" y2="172" stroke="#3b82f6" stroke-width="1.5"/>
+
+  <!-- Branch lines down -->
+  <line x1="508" y1="172" x2="508" y2="186" stroke="#3b82f6" stroke-width="1.5"/>
+  <line x1="620" y1="172" x2="620" y2="186" stroke="#3b82f6" stroke-width="1.5"/>
+  <line x1="730" y1="172" x2="730" y2="186" stroke="#3b82f6" stroke-width="1.5"/>
+  <line x1="842" y1="172" x2="842" y2="186" stroke="#3b82f6" stroke-width="1.5"/>
+
+  <!-- Internal Category 1: Marketing -->
+  <rect x="438" y="186" width="140" height="30" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="448" y="205" font-size="11" font-weight="600" fill="#1e3a8a">Marketing</text>
+
+  <!-- Marketing items -->
+  <line x1="508" y1="216" x2="508" y2="226" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="438" y="226" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="448" y="241" font-size="9" fill="#1e3a8a">Campaign paused / ended</text>
+  <rect x="438" y="252" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="448" y="267" font-size="9" fill="#1e3a8a">Coupon code expired</text>
+  <rect x="438" y="278" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="448" y="293" font-size="9" fill="#1e3a8a">SEO ranking dropped</text>
+
+  <!-- Internal Category 2: Product / Tech -->
+  <rect x="550" y="186" width="140" height="30" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="560" y="205" font-size="11" font-weight="600" fill="#1e3a8a">Product / Tech</text>
+
+  <!-- Product/Tech items -->
+  <line x1="620" y1="216" x2="620" y2="226" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="550" y="226" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="560" y="241" font-size="9" fill="#1e3a8a">App crash / checkout bug</text>
+  <rect x="550" y="252" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="560" y="267" font-size="9" fill="#1e3a8a">A/B test degraded UX</text>
+  <rect x="550" y="278" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="560" y="293" font-size="9" fill="#1e3a8a">Push notifications failed</text>
+
+  <!-- Internal Category 3: Pricing -->
+  <rect x="660" y="186" width="140" height="30" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="670" y="205" font-size="11" font-weight="600" fill="#1e3a8a">Pricing</text>
+
+  <!-- Pricing items -->
+  <line x1="730" y1="216" x2="730" y2="226" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="660" y="226" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="670" y="241" font-size="9" fill="#1e3a8a">Price increase on key SKUs</text>
+  <rect x="660" y="252" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="670" y="267" font-size="9" fill="#1e3a8a">Delivery fee / threshold up</text>
+  <rect x="660" y="278" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="670" y="293" font-size="9" fill="#1e3a8a">Loyalty benefits changed</text>
+
+  <!-- Internal Category 4: Inventory / Ops -->
+  <rect x="772" y="186" width="140" height="30" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="782" y="205" font-size="11" font-weight="600" fill="#1e3a8a">Inventory / Ops</text>
+
+  <!-- Inventory items -->
+  <line x1="842" y1="216" x2="842" y2="226" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="772" y="226" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="782" y="241" font-size="9" fill="#1e3a8a">Stock-outs in top SKUs</text>
+  <rect x="772" y="252" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="782" y="267" font-size="9" fill="#1e3a8a">Delivery SLA worsened</text>
+  <rect x="772" y="278" width="140" height="22" rx="4" fill="#fff" stroke="#bfdbfe" stroke-width="0.5"/>
+  <text x="782" y="293" font-size="9" fill="#1e3a8a">Warehouse / dark store offline</text>
+
+  <!-- ========== INVESTIGATION FLOW (Bottom section) ========== -->
+  <line x1="40" y1="325" x2="860" y2="325" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+  <text x="450" y="348" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b" letter-spacing="0.5">INVESTIGATION FLOW</text>
+
+  <!-- Step 0: Clarify -->
+  <rect x="50" y="362" width="140" height="50" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <text x="120" y="383" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">STEP 0</text>
+  <text x="120" y="399" text-anchor="middle" font-size="9.5" fill="#15803d">Clarify the Metric</text>
+
+  <!-- Arrow -->
+  <polygon points="195,387 207,387 207,383 215,389 207,395 207,391 195,391" fill="#94a3b8"/>
+
+  <!-- Step 1: Validate -->
+  <rect x="220" y="362" width="140" height="50" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <text x="290" y="383" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">STEP 1</text>
+  <text x="290" y="399" text-anchor="middle" font-size="9.5" fill="#15803d">Validate the Data</text>
+
+  <!-- Arrow -->
+  <polygon points="365,387 377,387 377,383 385,389 377,395 377,391 365,391" fill="#94a3b8"/>
+
+  <!-- Step 2: Scope -->
+  <rect x="390" y="362" width="140" height="50" rx="8" fill="#fefce8" stroke="#fde047" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <text x="460" y="383" text-anchor="middle" font-size="10" font-weight="700" fill="#854d0e">STEP 2</text>
+  <text x="460" y="399" text-anchor="middle" font-size="9.5" fill="#a16207">Scope the Drop</text>
+
+  <!-- Arrow -->
+  <polygon points="535,387 547,387 547,383 555,389 547,395 547,391 535,391" fill="#94a3b8"/>
+
+  <!-- Step 3: External -->
+  <rect x="560" y="362" width="140" height="50" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <text x="630" y="383" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">STEP 3</text>
+  <text x="630" y="399" text-anchor="middle" font-size="9.5" fill="#b91c1c">External Factors</text>
+
+  <!-- Arrow -->
+  <polygon points="705,387 717,387 717,383 725,389 717,395 717,391 705,391" fill="#94a3b8"/>
+
+  <!-- Step 4: Internal -->
+  <rect x="730" y="362" width="140" height="50" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <text x="800" y="383" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">STEP 4</text>
+  <text x="800" y="399" text-anchor="middle" font-size="9.5" fill="#1d4ed8">Internal Factors</text>
+
+  <!-- ========== SCOPE DIMENSIONS ========== -->
+  <text x="460" y="440" text-anchor="middle" font-size="10" font-weight="600" fill="#854d0e">Scope Dimensions:</text>
+
+  <!-- Scope dimension boxes in a row -->
+  <rect x="115" y="452" width="110" height="28" rx="14" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="170" y="470" text-anchor="middle" font-size="9" font-weight="500" fill="#854d0e">By Platform</text>
+
+  <rect x="240" y="452" width="110" height="28" rx="14" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="295" y="470" text-anchor="middle" font-size="9" font-weight="500" fill="#854d0e">By Geography</text>
+
+  <rect x="365" y="452" width="110" height="28" rx="14" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="420" y="470" text-anchor="middle" font-size="9" font-weight="500" fill="#854d0e">By User Segment</text>
+
+  <rect x="490" y="452" width="110" height="28" rx="14" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="545" y="470" text-anchor="middle" font-size="9" font-weight="500" fill="#854d0e">By Category</text>
+
+  <rect x="615" y="452" width="110" height="28" rx="14" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="670" y="470" text-anchor="middle" font-size="9" font-weight="500" fill="#854d0e">By Time</text>
+
+  <!-- ========== KEY INSIGHT BOX ========== -->
+  <rect x="60" y="505" width="780" height="70" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="80" y="528" font-size="12" font-weight="700" fill="#1e40af">KEY INSIGHT</text>
+  <text x="80" y="548" font-size="10" fill="#1e3a8a">Hard RCA cases have no context by design. The interviewer wants 3 things: (1) you ask clarifying questions</text>
+  <text x="80" y="564" font-size="10" fill="#1e3a8a">before jumping in, (2) you validate data before hypotheses, (3) you work External then Internal systematically.</text>
+
+  <!-- ========== LEGEND ========== -->
+  <rect x="60" y="598" width="780" height="56" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="80" y="618" font-size="10" font-weight="600" fill="#475569">LEGEND:</text>
+  <rect x="150" y="607" width="14" height="14" rx="3" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="170" y="618" font-size="9.5" fill="#64748b">External Factors (outside your control)</text>
+  <rect x="380" y="607" width="14" height="14" rx="3" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="400" y="618" font-size="9.5" fill="#64748b">Internal Factors (within your control)</text>
+  <rect x="610" y="607" width="14" height="14" rx="3" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="630" y="618" font-size="9.5" fill="#64748b">Scoping Dimensions</text>
+  <rect x="150" y="630" width="14" height="14" rx="3" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="170" y="641" font-size="9.5" fill="#64748b">Validation Steps</text>
+  <text x="310" y="641" font-size="9" fill="#94a3b8">A 25% order drop almost always has multiple contributing factors — find the dominant one.</text>
+</svg>
