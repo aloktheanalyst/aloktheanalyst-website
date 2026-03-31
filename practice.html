@@ -2924,8 +2924,17 @@ const PROMPTS = [
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:DM Sans,sans-serif;text-align:center;padding:2rem"><div><h1 style="font-size:1.5rem;color:#0f172a;margin-bottom:1rem">This page requires an active connection</h1><p style="color:#64748b">Please visit <a href="https://aloktheanalyst.com/practice" style="color:#2563eb">aloktheanalyst.com/practice</a> to use the Practice Arena.</p></div></div>';
     throw new Error('Offline usage blocked');
   }
-  // No heartbeat needed — content is fetched on-demand from server,
-  // so offline pages simply can't load any case content.
+  // Light heartbeat (every 30 min) — clear cached content if user goes offline
+  setInterval(function() {
+    fetch('/api/practice-content?id=_ping', { method: 'GET' }).catch(function() {
+      Object.keys(CASE_PROMPTS).forEach(function(k) { delete CASE_PROMPTS[k]; });
+      Object.keys(PUZZLE_SOLUTIONS).forEach(function(k) { delete PUZZLE_SOLUTIONS[k]; });
+      Object.keys(GUESSTIMATE_SOLUTIONS).forEach(function(k) { delete GUESSTIMATE_SOLUTIONS[k]; });
+      Object.keys(CASESTUDY_SOLUTIONS).forEach(function(k) { delete CASESTUDY_SOLUTIONS[k]; });
+      Object.keys(FACTOR_TREE_DATA).forEach(function(k) { delete FACTOR_TREE_DATA[k]; });
+      Object.keys(_contentCache).forEach(function(k) { delete _contentCache[k]; });
+    });
+  }, 1800000);
 })();
 
 // ═══════════════════════════════
