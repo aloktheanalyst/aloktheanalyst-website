@@ -2634,6 +2634,12 @@ const PROMPTS = [
   { id: 'sql_gmvretention',  title: 'GMV Retention by Cohort Week',      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_visitconvert',  title: 'Visits Before Nth Order',           topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
 
+  // ── Pelago ──
+  { id: 'sql_pelago_customers',   title: 'Pelago: Customer Filtering & NULL Handling',          topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_pelago_bookings',    title: 'Pelago: Booking Aggregation & High-Value Customers',  topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_pelago_cumulative',  title: 'Pelago: Monthly Cumulative GMV',                      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_pelago_users',       title: 'Pelago: Daily & New vs Returning User Analysis',      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'ab_sample',     title: 'Sample Size & Power Calculation',      topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study', framework: 'A/B Testing & Statistical Power' },
   { id: 'funnel',        title: 'E-commerce Funnel Drop-off',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
@@ -2788,6 +2794,9 @@ const PROMPTS = [
   { id: 'cf_supply_chain',     title: 'Supply Chain Power: Who Controls Indian Dairy?',       topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
   { id: 'cf_synergy_calc',     title: 'Calculate Synergies: Flipkart Acquires a Logistics Co', topic: 'casestudy', difficulty: 'hard',  tag: 'Case Study' },
   { id: 'cf_market_structure',  title: 'Is Indian EdTech Concentrated or Fragmented?',         topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study', framework: 'Market Structure Analysis' },
+
+  // ── Pelago Case Studies ──
+  { id: 'cs_pelago_paid',       title: 'Pelago: Paid Channel ROI & Product Profitability',    topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
 
   // ── Puzzles ──
   { id: 'pz_45min',       title: 'Measure 45 Minutes (Two Wires)',       topic: 'puzzles', difficulty: 'medium', tag: 'Puzzle' },
@@ -3689,6 +3698,171 @@ INSERT INTO orders VALUES
 (29,5,'200','2024-01-15'),(30,5,'180','2024-01-25'),(31,5,'220','2024-02-08'),(32,5,'160','2024-02-20'),
 (33,5,'300','2024-03-05'),(34,5,'190','2024-03-20'),(35,5,'250','2024-04-05'),(36,5,'210','2024-04-20'),
 (37,6,'175','2024-01-25');`
+    }
+  },
+
+  // ── Pelago SQL Questions ──
+  sql_pelago_customers: {
+    label: 'Pelago: Customer Filtering & NULL Handling',
+    question: '<em>Asked at Pelago.</em><br><br>Using the <strong>bookings</strong> and <strong>customers</strong> tables from Pelago\'s travel booking platform:<br><br><strong>1.</strong> Write a query to return a list of customers (CustomerID, RegistrationDate, Country) who do <em>not</em> have a KrisFlyerNumber.<br><br><strong>2.</strong> Write a query to return a list of customers and their registration date for those who have <em>never</em> made any bookings.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For Q1: KrisFlyerNumber can be NULL or an empty string. Use WHERE KrisFlyerNumber IS NULL OR KrisFlyerNumber = \'\' to cover both cases.',
+      'For Q2: Use NOT IN with a subquery — SELECT CustomerID FROM bookings — or a LEFT JOIN where BookingID IS NULL after joining. Both approaches work.',
+      'NULL safety tip: NOT IN returns no rows if the subquery contains any NULLs. Prefer NOT EXISTS or LEFT JOIN ... IS NULL for production-safe queries.'
+    ],
+    schema: [
+      { name: 'customers', columns: [
+        { name: 'CustomerID', type: 'TEXT PK' }, { name: 'RegistrationDate', type: 'DATE' },
+        { name: 'Country', type: 'TEXT' }, { name: 'KrisFlyerNumber', type: 'TEXT (nullable)' }
+      ]},
+      { name: 'bookings', columns: [
+        { name: 'BookingID', type: 'TEXT PK' }, { name: 'BookingDate', type: 'DATE' },
+        { name: 'CustomerID', type: 'TEXT FK' }, { name: 'GMV', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE customers (CustomerID TEXT PRIMARY KEY, RegistrationDate DATE NOT NULL, Country TEXT NOT NULL, KrisFlyerNumber TEXT);
+INSERT INTO customers VALUES
+('C1','2021-08-10','SG',NULL),('C2','2021-08-20','SG','321'),('C3','2021-08-30','TH','231'),
+('C4','2021-09-01','SG','132'),('C5','2021-09-07','VN',NULL),('C6','2021-09-13','ID','213'),
+('C7','2021-09-20','MY',NULL),('C8','2021-09-25','AU','456'),('C9','2021-10-01','SG',NULL),
+('C10','2021-10-05','TH','789');
+
+CREATE TABLE bookings (BookingID TEXT PRIMARY KEY, BookingDate DATE NOT NULL, CustomerID TEXT NOT NULL, GMV DECIMAL(10,2) NOT NULL);
+INSERT INTO bookings VALUES
+('BID1','2021-09-07','C5',10.50),('BID2','2021-09-07','C7',20.23),('BID3','2021-09-15','C1',30.74),
+('BID4','2021-09-16','C5',40.00),('BID5','2021-09-18','C3',50.19),('BID6','2021-09-25','C9',60.06),
+('BID7','2021-09-28','C1',25.00),('BID8','2021-10-02','C3',35.50),
+('BID9','2021-10-05','C8',15.00),('BID10','2021-10-10','C5',55.00),('BID11','2021-10-12','C1',75.00);`
+    }
+  },
+
+  sql_pelago_bookings: {
+    label: 'Pelago: Booking Aggregation & High-Value Customers',
+    question: '<em>Asked at Pelago.</em><br><br>Using the <strong>bookings</strong> and <strong>customers</strong> tables:<br><br><strong>1.</strong> Write a query to return the number of bookings, total GMV, and number of unique customers — per day per country — sorted by country ascending and date descending.<br><br><strong>2.</strong> Write a query to return customers who spent a combined total of more than $100 across all their bookings. <em>Bonus: solve Q2 without using a subquery.</em>',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For Q1: JOIN bookings with customers on CustomerID to get Country. GROUP BY Country, BookingDate. Use COUNT(DISTINCT BookingID) for bookings and COUNT(DISTINCT CustomerID) for unique customers. ORDER BY Country ASC, BookingDate DESC.',
+      'For Q2: JOIN the tables, GROUP BY CustomerID, then use HAVING SUM(GMV) > 100. The HAVING clause filters after aggregation — no subquery needed.',
+      'HAVING vs WHERE: WHERE filters individual rows before aggregation; HAVING filters groups after. You cannot use aggregate functions like SUM() inside a WHERE clause.'
+    ],
+    schema: [
+      { name: 'customers', columns: [
+        { name: 'CustomerID', type: 'TEXT PK' }, { name: 'RegistrationDate', type: 'DATE' },
+        { name: 'Country', type: 'TEXT' }, { name: 'KrisFlyerNumber', type: 'TEXT (nullable)' }
+      ]},
+      { name: 'bookings', columns: [
+        { name: 'BookingID', type: 'TEXT PK' }, { name: 'BookingDate', type: 'DATE' },
+        { name: 'CustomerID', type: 'TEXT FK' }, { name: 'GMV', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE customers (CustomerID TEXT PRIMARY KEY, RegistrationDate DATE NOT NULL, Country TEXT NOT NULL, KrisFlyerNumber TEXT);
+INSERT INTO customers VALUES
+('C1','2021-08-10','SG',NULL),('C2','2021-08-20','SG','321'),('C3','2021-08-30','TH','231'),
+('C4','2021-09-01','SG','132'),('C5','2021-09-07','VN',NULL),('C6','2021-09-13','ID','213'),
+('C7','2021-09-20','MY',NULL),('C8','2021-09-25','AU','456'),('C9','2021-10-01','SG',NULL),
+('C10','2021-10-05','TH','789');
+
+CREATE TABLE bookings (BookingID TEXT PRIMARY KEY, BookingDate DATE NOT NULL, CustomerID TEXT NOT NULL, GMV DECIMAL(10,2) NOT NULL);
+INSERT INTO bookings VALUES
+('BID1','2021-09-07','C5',10.50),('BID2','2021-09-07','C7',20.23),('BID3','2021-09-15','C1',30.74),
+('BID4','2021-09-16','C5',40.00),('BID5','2021-09-18','C3',50.19),('BID6','2021-09-25','C9',60.06),
+('BID7','2021-09-28','C1',25.00),('BID8','2021-10-02','C3',35.50),
+('BID9','2021-10-05','C8',15.00),('BID10','2021-10-10','C5',55.00),('BID11','2021-10-12','C1',75.00);`
+    }
+  },
+
+  sql_pelago_cumulative: {
+    label: 'Pelago: Monthly Cumulative GMV',
+    question: '<em>Asked at Pelago.</em><br><br>Using the <strong>bookings</strong> and <strong>customers</strong> tables:<br><br>Write a query to return monthly GMV per country along with the cumulative GMV for the year 2020. Expected output columns: <strong>Country, Month (YYYY-MM-01), GMV, CumulativeGMV</strong> — ordered by Country ascending, then Month ascending.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Filter to 2020: WHERE strftime(\'%Y\', BookingDate) = \'2020\' in SQLite, or WHERE YEAR(BookingDate) = 2020 in MySQL. JOIN bookings with customers to get Country.',
+      'Group by month: use strftime(\'%Y-%m-01\', BookingDate) in SQLite or DATE_TRUNC(\'month\', BookingDate) in PostgreSQL. SUM(GMV) gives the monthly total.',
+      'For CumulativeGMV: wrap monthly totals in a CTE, then apply SUM(monthly_gmv) OVER (PARTITION BY Country ORDER BY Month) in the outer query.'
+    ],
+    schema: [
+      { name: 'customers', columns: [
+        { name: 'CustomerID', type: 'TEXT PK' }, { name: 'RegistrationDate', type: 'DATE' },
+        { name: 'Country', type: 'TEXT' }, { name: 'KrisFlyerNumber', type: 'TEXT (nullable)' }
+      ]},
+      { name: 'bookings', columns: [
+        { name: 'BookingID', type: 'TEXT PK' }, { name: 'BookingDate', type: 'DATE' },
+        { name: 'CustomerID', type: 'TEXT FK' }, { name: 'GMV', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE customers (CustomerID TEXT PRIMARY KEY, RegistrationDate DATE NOT NULL, Country TEXT NOT NULL, KrisFlyerNumber TEXT);
+INSERT INTO customers VALUES
+('C1','2019-06-10','SG',NULL),('C2','2019-07-20','SG','321'),('C3','2019-08-30','TH','231'),
+('C4','2019-09-01','SG','132'),('C5','2019-10-07','TH',NULL),('C6','2019-11-13','SG','213'),
+('C7','2020-01-20','MY',NULL),('C8','2020-02-25','SG','456'),('C9','2020-03-01','TH',NULL),
+('C10','2020-04-05','MY','789');
+
+CREATE TABLE bookings (BookingID TEXT PRIMARY KEY, BookingDate DATE NOT NULL, CustomerID TEXT NOT NULL, GMV DECIMAL(10,2) NOT NULL);
+INSERT INTO bookings VALUES
+('B001','2020-01-05','C1',150.00),('B002','2020-01-12','C2',200.00),('B003','2020-01-18','C3',50.00),
+('B004','2020-02-03','C1',300.00),('B005','2020-02-14','C4',180.00),('B006','2020-02-20','C3',420.00),
+('B007','2020-03-08','C2',120.00),('B008','2020-03-15','C5',80.00),('B009','2020-03-22','C6',90.00),
+('B010','2020-04-02','C1',250.00),('B011','2020-04-10','C3',160.00),('B012','2020-04-25','C4',310.00),
+('B013','2020-05-05','C2',180.00),('B014','2020-05-18','C5',220.00),('B015','2020-05-28','C6',140.00),
+('B016','2020-06-03','C1',400.00),('B017','2020-06-15','C3',190.00),('B018','2020-06-20','C4',275.00),
+('B019','2020-07-07','C2',330.00),('B020','2020-07-14','C5',150.00),('B021','2020-07-25','C6',220.00),
+('B022','2020-08-05','C1',280.00),('B023','2020-08-12','C3',300.00),('B024','2020-08-20','C4',175.00),
+('B025','2020-09-02','C2',410.00),('B026','2020-09-16','C5',240.00),('B027','2020-09-28','C6',195.00),
+('B028','2020-10-05','C1',320.00),('B029','2020-10-15','C3',280.00),('B030','2020-10-22','C4',350.00),
+('B031','2020-11-04','C2',260.00),('B032','2020-11-18','C5',310.00),('B033','2020-11-25','C6',230.00),
+('B034','2020-12-06','C1',400.00),('B035','2020-12-15','C3',200.00),('B036','2020-12-28','C4',380.00);`
+    }
+  },
+
+  sql_pelago_users: {
+    label: 'Pelago: Daily Users & New vs Returning Analysis',
+    question: '<em>Asked at Pelago.</em><br><br>Using the <strong>event</strong> table tracking user actions on Pelago\'s platform:<br><br><strong>1.</strong> Write a query to find the number of distinct users per day.<br><br><strong>2.</strong> Write a query to return monthly counts of <em>new users</em> (first activity ever is in that month) vs <em>returning users</em> — columns: year_month, n_new_user, returning_user.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For Q1: Use DATE(EventTime) to extract the date in SQLite, or CAST(EventTime AS DATE) in PostgreSQL. Then COUNT(DISTINCT UID) grouped by that date.',
+      'For Q2: Find each user\'s first event date using MIN(EventTime) OVER (PARTITION BY UID) in a CTE. If that first date falls in the same month as the current event, they are a new user.',
+      'Build a CTE: compute first_event_date per user, then group by year_month. COUNT(DISTINCT CASE WHEN first_month = current_month THEN UID END) = new users. Total users minus new users = returning users.'
+    ],
+    schema: [
+      { name: 'event', columns: [
+        { name: 'EventTime', type: 'DATETIME' }, { name: 'UID', type: 'TEXT' },
+        { name: 'Action', type: 'TEXT' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE event (EventTime DATETIME NOT NULL, UID TEXT NOT NULL, Action TEXT NOT NULL);
+INSERT INTO event VALUES
+('2024-01-01 00:01:23','U001','Action X'),('2024-01-01 00:09:34','U001','Action Y'),
+('2024-01-01 23:40:33','U002','Action Z'),('2024-01-02 08:15:00','U003','Action X'),
+('2024-01-02 10:30:00','U001','Action A'),('2024-01-02 14:22:00','U004','Action X'),
+('2024-01-03 05:24:00','U001','Action A'),('2024-01-03 09:10:00','U002','Action X'),
+('2024-01-03 11:45:00','U003','Action P'),('2024-01-05 07:00:00','U005','Action X'),
+('2024-01-08 09:30:00','U001','Action Y'),('2024-01-08 12:00:00','U003','Action Z'),
+('2024-01-10 08:45:00','U006','Action X'),('2024-01-15 10:20:00','U002','Action A'),
+('2024-01-15 14:30:00','U004','Action Y'),('2024-01-20 09:00:00','U007','Action X'),
+('2024-01-22 11:15:00','U001','Action P'),('2024-02-01 08:00:00','U001','Action X'),
+('2024-02-01 10:30:00','U008','Action X'),('2024-02-03 09:15:00','U002','Action Y'),
+('2024-02-05 11:00:00','U009','Action X'),('2024-02-08 14:30:00','U003','Action Z'),
+('2024-02-10 08:45:00','U001','Action A'),('2024-02-12 10:00:00','U005','Action Y'),
+('2024-02-15 09:30:00','U010','Action X'),('2024-02-18 11:15:00','U006','Action A'),
+('2024-02-20 14:00:00','U002','Action P'),('2024-02-25 09:00:00','U004','Action X'),
+('2024-03-01 08:30:00','U001','Action Y'),('2024-03-03 10:15:00','U011','Action X'),
+('2024-03-05 09:00:00','U007','Action Z'),('2024-03-08 11:30:00','U003','Action X'),
+('2024-03-10 14:00:00','U008','Action A'),('2024-03-12 08:45:00','U012','Action X'),
+('2024-03-15 10:30:00','U002','Action Y'),('2024-03-18 09:15:00','U009','Action P'),
+('2024-03-20 11:00:00','U005','Action X'),('2024-04-01 08:00:00','U013','Action X'),
+('2024-04-05 10:30:00','U001','Action Z'),('2024-04-10 09:00:00','U006','Action Y'),
+('2024-05-03 10:23:34','U001','Action P'),('2024-05-06 23:09:09','U002','Action Y'),
+('2024-05-10 08:30:00','U014','Action X'),('2024-05-15 11:00:00','U003','Action A'),
+('2024-05-20 09:45:00','U007','Action X');`
     }
   }
 };
