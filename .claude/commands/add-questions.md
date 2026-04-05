@@ -1,0 +1,94 @@
+Add interview questions from attached documents to the practice website.
+
+The user has attached one or more documents (PDFs, text files, images) containing interview questions. Parse them and add to the website.
+
+$ARGUMENTS
+
+## Instructions
+
+Follow these steps exactly. Do NOT explore the codebase — all structure info is in CLAUDE.md.
+
+### Step 1: Parse the documents
+
+Read each attached document and extract:
+- **Company name** (from filename or document content)
+- **Individual questions** with their:
+  - Category: SQL, case study, python, puzzle, or guesstimate
+  - Difficulty: easy, medium, or hard
+  - Question text
+  - Any sample tables/data provided
+  - Any solution/answer provided
+
+### Step 2: Categorize and plan
+
+For each question, determine:
+- **SQL**: Has tables + asks to write queries → needs PROMPTS + SQL_DATASETS + CASE_PROMPTS
+- **Case study**: Business analysis, product strategy, RCA → needs PROMPTS + CASE_PROMPTS + CASESTUDY_SOLUTIONS
+- **Python**: Code/pandas questions → needs PROMPTS + PYTHON_DATASETS + CASE_PROMPTS
+- **Puzzle**: Logic/math puzzles → needs PROMPTS + CASE_PROMPTS + PUZZLE_SOLUTIONS
+- **Guesstimate**: Market sizing/estimation → needs PROMPTS + CASE_PROMPTS + GUESSTIMATE_SOLUTIONS
+
+**Combining questions**: If a document has multiple small SQL questions sharing the same schema/tables, combine 2-3 into a single multi-part question. This is better for practice.
+
+**Difficulty rules**:
+- easy: Single concept (basic WHERE, simple GROUP BY, straightforward estimation)
+- medium: 2-3 concepts combined (JOINs + aggregation, multi-step analysis)
+- hard: Advanced patterns (window functions, CTEs, cumulative logic, multi-framework analysis)
+
+### Step 3: Generate IDs
+
+Use the naming convention from CLAUDE.md:
+- `sql_{company}_{topic}` for SQL
+- `cs_{company}_{topic}` for case studies
+- `python_{company}_{topic}` for Python
+- `pz_{shortname}` for puzzles
+- `guess_{shortname}` for guesstimates
+
+### Step 4: Build the data
+
+For **SQL questions**, create:
+1. PROMPTS entry with company name in title
+2. SQL_DATASETS with:
+   - `question`: Start with `<em>Asked at {Company}.</em><br><br>` then the question in HTML
+   - `hints`: 3 progressive hints (first hint = starting direction, second = key technique, third = edge case or trick)
+   - `schema`: Array of table definitions from the document
+   - `setup.shared`: CREATE TABLE + INSERT statements using the sample data from the document. If sample data is small (< 6 rows), expand it to 8-15 rows for better practice
+3. CASE_PROMPTS: AI coaching prompt describing the interview scenario, what to ask, what to push on
+
+For **case study questions**, create:
+1. PROMPTS entry
+2. CASE_PROMPTS: Coaching prompt with full context, data, and guidance
+3. CASESTUDY_SOLUTIONS: Full model solution with framework, step-by-step analysis, tables, and key insight. Use `\n` for newlines in template literals. Follow the existing solution format with emoji framework header, steps, and summary.
+
+### Step 5: Insert into files
+
+Use the Edit tool with the exact insertion anchors from CLAUDE.md:
+- SQL PROMPTS → insert before `{ id: 'ab_test',`
+- Case study PROMPTS → insert before `// ── Puzzles ──`
+- SQL_DATASETS → insert before `};` + `// PYTHON EDITOR` block
+- CASE_PROMPTS (SQL) → insert before `// ── A/B Testing prompts ──`
+- CASE_PROMPTS (case study) → insert before `// ── Puzzle prompts ──`
+- CASESTUDY_SOLUTIONS → insert before `/* FRAMEWORK_REGISTRY:FACTOR_TREE_DATA:START */`
+
+Read 5 lines around each insertion point FIRST to get the exact whitespace match.
+
+### Step 6: Commit and push
+
+Stage only `practice.html` and `functions/api/practice-content.js`. Commit with message:
+```
+Add {N} {Company} interview questions ({breakdown})
+
+- Brief description of what was added
+- Company tag: {Company}
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+```
+
+Then push to the current branch.
+
+### Important rules
+- NEVER skip the CASE_PROMPTS entry — every question needs an AI coaching prompt
+- ALWAYS include `<em>Asked at {Company}.</em>` in SQL/Python question HTML
+- Keep SQL setup data realistic — use the document's sample data but expand if too small
+- If a question is purely analytical (no code), make it a case study, not SQL
+- Verify IDs are unique — grep for the ID before inserting
