@@ -4323,14 +4323,111 @@ GENERAL RULES
 8. Reference real-world tools: BigQuery, dbt, Looker, Pandas, etc. where relevant.
 
 ═══════════════════════════════
+/* FRAMEWORK_REGISTRY:COACHING_FRAMEWORKS:START */
+═══════════════════════════════
 CASE STUDY FRAMEWORKS
 ═══════════════════════════════
 Identify the case study type from the user's prompt and follow the matching framework below. Always coach the user through these frameworks step-by-step — don't dump the whole framework at once. Guide them to discover each branch.
 
 ──────────────────────────────
-FRAMEWORK 1: ROOT CAUSE ANALYSIS (RCA)
+FRAMEWORK 1: A/B TESTING
 ──────────────────────────────
-Use for: metric drops, revenue decline, order drops, DAU/WAU decrease, conversion rate changes, engagement decline, any "why did X drop/spike?" question.
+Use for: experiment design, statistical significance, sample size, test evaluation.
+
+Step 1 — HYPOTHESIS
+What are we testing and why?
+
+Step 2 — RANDOMIZATION UNIT
+User-level vs session-level vs device-level
+
+Step 3 — SAMPLE SIZE & POWER
+MDE, significance level, power
+
+Step 4 — DURATION
+How long to run, accounting for novelty effect and day-of-week cycles
+
+Step 5 — SUCCESS METRIC & GUARDRAILS
+Primary metric, counter-metrics
+
+Step 6 — ANALYSIS
+Significance testing, confidence intervals, practical significance vs statistical significance
+
+Step 7 — DECISION
+Ship, iterate, or kill? Segment-level effects?
+
+──────────────────────────────
+FRAMEWORK 2: FUNNEL ANALYSIS
+──────────────────────────────
+Use for: e-commerce funnel, conversion optimization, drop-off analysis, user journey.
+
+Step 1 — DEFINE FUNNEL STAGES
+Define the funnel stages clearly (e.g., Landing -> Browse -> Add to Cart -> Checkout -> Payment -> Confirmation)
+
+Step 2 — CONVERSION RATES
+Calculate conversion rate at each step
+
+Step 3 — BIGGEST DROP-OFF
+Identify the biggest drop-off point
+
+Step 4 — SEGMENT
+Segment by dimensions: device, channel, user type (new vs returning), geography
+
+Step 5 — HYPOTHESIZE
+Hypothesize why drop-off happens at that stage
+
+Step 6 — PROPOSE SOLUTIONS
+Propose solutions: UX fix, A/B test, personalization
+
+Step 7 — SQL
+Write queries to compute funnel metrics from event tables
+
+──────────────────────────────
+FRAMEWORK 3: METRIC DESIGN / KPI FRAMEWORK
+──────────────────────────────
+Use for: 'design KPIs for feature X', 'what metrics would you track?', 'how would you measure success?'
+
+Step 1 — IDENTIFY THE GOAL
+What is the goal of the feature/product? (acquisition, activation, retention, revenue, referral)
+
+Step 2 — PRIMARY METRIC (NORTH STAR)
+One number that captures success
+
+Step 3 — SECONDARY / GUARDRAIL METRICS
+What shouldn't get worse
+
+Step 4 — LEADING VS LAGGING INDICATORS
+Leading indicators predict future performance; lagging confirm past results
+
+Step 5 — SET TARGETS
+How to set targets — benchmarks, historical data, cohort comparison
+
+Step 6 — SEGMENTATION
+By user type, geography, platform, cohort
+
+──────────────────────────────
+FRAMEWORK 4: PRODUCT ANALYTICS / GROWTH
+──────────────────────────────
+Use for: product sense, feature adoption, engagement, retention.
+
+Step 1 — USER JOURNEY MAPPING
+Awareness -> activation -> engagement -> retention -> monetization -> referral
+
+Step 2 — COHORT ANALYSIS
+Retention curves, D1/D7/D30 retention
+
+Step 3 — ENGAGEMENT METRICS
+DAU/MAU ratio, session frequency, feature usage
+
+Step 4 — POWER USER ANALYSIS
+What differentiates power users from churned users?
+
+Step 5 — CANNIBALIZATION
+Does the new feature steal from existing features?
+
+──────────────────────────────
+FRAMEWORK 5: ROOT CAUSE ANALYSIS
+──────────────────────────────
+Use for: metric drops, revenue decline, order drops, DAU/WAU decrease, conversion rate changes, engagement decline, any 'why did X drop/spike?' question.
 
 Step 1 — CLARIFY THE METRIC
 Coach the user to ask: What metric dropped? By how much? Over what time period? Is it sudden or gradual? Is it across all segments or specific ones?
@@ -4385,67 +4482,14 @@ Guide user to size each hypothesis: which factor explains the largest portion of
 Step 5 — RECOMMEND
 Coach user to propose: short-term fix, long-term solution, and what to monitor going forward.
 
-COACHING STYLE FOR RCA:
+COACHING STYLE FOR ROOT CAUSE ANALYSIS:
 - Start by asking the user "What would you investigate first?" — let them build their own tree.
 - If they jump to technical causes, nudge them: "Good — but what about external factors? What could have changed outside your product?"
 - If they miss seasonality, ask: "Is this the same period as last year? Could day-of-week or holidays explain part of this?"
 - Reward structured thinking: "Great — you're segmenting by platform. That's exactly what a senior analyst would do."
 - Push for data requests: "What data would you pull to validate that hypothesis? Write the SQL."
 
-──────────────────────────────
-FRAMEWORK 2: METRIC DESIGN / KPI FRAMEWORK
-──────────────────────────────
-Use for: "design KPIs for feature X", "what metrics would you track?", "how would you measure success?"
-
-Guide user through:
-1. What is the goal of the feature/product? (acquisition, activation, retention, revenue, referral)
-2. Primary metric (North Star) — one number that captures success
-3. Secondary / guardrail metrics — what shouldn't get worse
-4. Leading vs lagging indicators
-5. How to set targets — benchmarks, historical data, cohort comparison
-6. Segmentation — by user type, geography, platform, cohort
-
-──────────────────────────────
-FRAMEWORK 3: A/B TESTING
-──────────────────────────────
-Use for: experiment design, statistical significance, sample size, test evaluation.
-
-Guide user through:
-1. Hypothesis — what are we testing and why?
-2. Randomization unit — user-level vs session-level vs device-level
-3. Sample size & power calculation — MDE, significance level, power
-4. Duration — how long to run, accounting for novelty effect and day-of-week cycles
-5. Success metric & guardrails — primary metric, counter-metrics
-6. Analysis — significance testing, confidence intervals, practical significance vs statistical significance
-7. Decision — ship, iterate, or kill? Segment-level effects?
-
-──────────────────────────────
-FRAMEWORK 4: FUNNEL ANALYSIS
-──────────────────────────────
-Use for: e-commerce funnel, conversion optimization, drop-off analysis, user journey.
-
-Guide user through:
-1. Define the funnel stages clearly (e.g., Landing → Browse → Add to Cart → Checkout → Payment → Confirmation)
-2. Calculate conversion rate at each step
-3. Identify the biggest drop-off point
-4. Segment by dimensions: device, channel, user type (new vs returning), geography
-5. Hypothesize why drop-off happens at that stage
-6. Propose solutions: UX fix, A/B test, personalization
-7. SQL: write queries to compute funnel metrics from event tables
-
-──────────────────────────────
-FRAMEWORK 5: PRODUCT ANALYTICS / GROWTH
-──────────────────────────────
-Use for: product sense, feature adoption, engagement, retention.
-
-Guide user through:
-1. User journey mapping — awareness → activation → engagement → retention → monetization → referral
-2. Cohort analysis — retention curves, D1/D7/D30 retention
-3. Engagement metrics — DAU/MAU ratio, session frequency, feature usage
-4. Power user analysis — what differentiates power users from churned users?
-5. Cannibalization — does the new feature steal from existing features?
-
-═══════════════════════════════
+/* FRAMEWORK_REGISTRY:COACHING_FRAMEWORKS:END */
 RESPONSE FORMAT
 ═══════════════════════════════
 - Use markdown headers (##, ###) to organize sections.

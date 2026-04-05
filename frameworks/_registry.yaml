@@ -1,0 +1,223 @@
+# Framework Registry — Single source of truth for case-to-framework mapping
+# build.py reads this to generate: FACTOR_TREE_DATA, SYSTEM_PROMPT coaching, framework badges
+
+cases:
+  # ── RCA Cases ──
+  rca_orders:
+    framework: rca
+    diagram:
+      title: "Orders Dropped 25%"
+      external:
+        - { name: Seasonality, items: ["Festival / salary week", "Holiday / exam period", "Day-of-week composition"] }
+        - { name: Competitor, items: ["Flash sale launched", "New entrant / pricing war", "Viral competitor feature"] }
+        - { name: "Macro & Sentiment", items: ["Weather / disaster", "Regulation / GST change", "Negative press / backlash"] }
+      internal:
+        - { name: Marketing, items: ["Campaign paused / ended", "Coupon code expired", "SEO ranking dropped"] }
+        - { name: "Product / Tech", items: ["App crash / checkout bug", "A/B test degraded UX", "Push notifications failed"] }
+        - { name: Pricing, items: ["Price increase on SKUs", "Delivery fee / threshold up", "Loyalty benefits changed"] }
+        - { name: "Inventory / Ops", items: ["Stock-outs in top SKUs", "Delivery SLA worsened", "Warehouse offline"] }
+
+  rca_dau:
+    framework: rca
+    diagram:
+      title: "DAU Down 15%"
+      external:
+        - { name: Geographic, items: ["Regional ISP outage", "Natural disaster", "App ban / restriction"] }
+        - { name: Competitor, items: ["Viral new feature", "Acquisition campaign", "Switch incentives"] }
+        - { name: Macro, items: ["Holiday / travel", "Exam season", "Major event (IPL, elections)"] }
+        - { name: Sentiment, items: ["Negative press / leak", "Social media backlash", "Trust erosion"] }
+      internal:
+        - { name: Non-Technical, items: ["Push notifications stopped", "Email campaigns paused", "Ad spend cut"] }
+        - { name: Policy, items: ["Forced 2FA added", "Paywall expanded", "ToS re-consent needed"] }
+        - { name: Technical, items: ["App crash on launch", "API latency spike", "Login/auth outage", "CDN / blank screens"] }
+
+  rca_signup:
+    framework: rca
+    diagram:
+      title: "Signup Conversion Crashed (32% \u2192 19%)"
+      external:
+        - { name: Traffic Quality, items: ["Low-intent ad campaign", "Viral non-ICP traffic", "Bot traffic spike", "Mobile mix shift"] }
+        - { name: Competitor, items: ["Free tier launched", "SEO comparison content", "Rating downgrade"] }
+        - { name: Sentiment, items: ["Category security breach", "Negative G2/Capterra review"] }
+      internal:
+        - { name: Marketing, items: ["Landing page changed", "CTA wording changed", "Trial length reduced"] }
+        - { name: Policy, items: ["Credit card required", "Phone verification added", "Company email only"] }
+        - { name: Technical, items: ["Form JS error", "Email OTP failing", "OAuth SSO broken", "CAPTCHA too aggressive"] }
+
+  rca_revenue:
+    framework: rca
+    diagram:
+      title: "SaaS Revenue Dropped After Launch"
+      external:
+        - { name: Market, items: ["Economic downturn", "Industry slowdown", "Currency fluctuation"] }
+        - { name: Competitor, items: ["Similar feature, lower price", "Migration deals offered", "Open-source alternative"] }
+        - { name: Regulatory, items: ["Privacy regulation", "Compliance gap", "Negative analyst report"] }
+      internal:
+        - { name: Launch-Related, items: ["Broke existing feature", "Pricing tiers disrupted", "Direction shift"] }
+        - { name: Non-Technical, items: ["Sales team distracted", "Marketing budget shifted", "Renewals deprioritized"] }
+        - { name: "Billing / Tech", items: ["Stripe webhook failures", "Invoice gen broken", "Renewal logic bug"] }
+
+  rca_cart:
+    framework: rca
+    diagram:
+      title: "Cart Abandonment Spiked (68% \u2192 82%)"
+      external:
+        - { name: Payment Infra, items: ["Gateway outage", "Bank UPI outage", "RBI regulation change"] }
+        - { name: Competitor, items: ["Flash sale elsewhere", "Better delivery terms", "Price comparison apps"] }
+        - { name: Logistics, items: ["Extended delivery ETAs", "Pincode API errors", "Weather / strike"] }
+      internal:
+        - { name: Pricing, items: ["Delivery fee increased", "Coupon code expired", "Dynamic pricing shift"] }
+        - { name: Checkout UX, items: ["CTA button moved", "Mandatory new field", "Guest checkout removed"] }
+        - { name: Technical, items: ["Checkout JS error", "Cart total calc bug", "Session timeout", "Coupon API failing"] }
+
+  rca_engagement:
+    framework: rca
+    diagram:
+      title: "Feature Engagement Fell 40%"
+      external:
+        - { name: Competitor, items: ["Better version launched", "Third-party tool", "Feature trend declined"] }
+        - { name: User Behavior, items: ["Seasonal pattern", "User fatigue", "Demographic shift"] }
+        - { name: "Platform / OS", items: ["iOS/Android update broke it", "Browser rendering issue"] }
+      internal:
+        - { name: Discovery, items: ["Feature moved in UI", "A/B test hiding it", "Push/email stopped"] }
+        - { name: Quality, items: ["Performance degraded", "Content quality declined", "Integration broke"] }
+        - { name: Policy, items: ["Gated behind paywall", "New permissions needed", "Segment disabled"] }
+
+  metric_drop:
+    framework: rca
+    diagram:
+      title: "Revenue Dropped 20%"
+      external:
+        - { name: Market, items: ["Consumer spending pullback", "Industry-wide decline", "Geographic disruption"] }
+        - { name: Competitor, items: ["Major sale / promotion", "Pricing undercut", "New entrant"] }
+        - { name: Platform, items: ["Google SEO update", "Ad policy change", "Payment gateway outage"] }
+      internal:
+        - { name: Acquisition, items: ["Ad campaigns paused", "SEO de-indexed", "Push/email stopped"] }
+        - { name: Conversion, items: ["Checkout broken", "Page load slow", "Pricing increased"] }
+        - { name: AOV, items: ["High-value OOS", "Upsell/bundle removed", "Coupon overuse"] }
+
+  # ── Case Studies ──
+  cs_northstar:
+    framework: metric-design
+  cs_cannibalize:
+    framework: product-analytics
+  cs_fraud:
+    framework: rca
+  cs_churn:
+    framework: product-analytics
+  cs_pricing:
+    framework: product-analytics
+  cs_launch:
+    framework: market-entry
+  cs_notif:
+    framework: product-analytics
+  cs_search:
+    framework: funnel-analysis
+  cs_referral:
+    framework: product-analytics
+  cs_seasonality:
+    framework: rca
+  cs_segment:
+    framework: product-analytics
+  cs_abnovelt:
+    framework: ab-testing
+  cs_dashboard:
+    framework: metric-design
+  cs_supply:
+    framework: product-analytics
+  cs_retention:
+    framework: product-analytics
+  cs_cannedresp:
+    framework: product-analytics
+  cs_ltv:
+    framework: product-analytics
+  cs_attribution:
+    framework: product-analytics
+  cs_paywall:
+    framework: funnel-analysis
+  cs_coldstart:
+    framework: product-analytics
+
+  # ── Framework Cases ──
+  fw_market_entry:
+    framework: market-entry
+  fw_profit_decline:
+    framework: profitability
+  fw_acquisition:
+    framework: profitability
+  fw_pricing:
+    framework: product-analytics
+  fw_operations:
+    framework: product-analytics
+  fw_competitive:
+    framework: product-analytics
+  fw_nonprofit:
+    framework: product-analytics
+  fw_pe_invest:
+    framework: profitability
+  fw_drug_pricing:
+    framework: product-analytics
+  fw_fleet_ops:
+    framework: product-analytics
+  fw_ma_edtech:
+    framework: profitability
+  fw_store_close:
+    framework: profitability
+  fw_launch_upi:
+    framework: market-entry
+  fw_hospital_ops:
+    framework: product-analytics
+  fw_airline_profit:
+    framework: profitability
+  fw_export:
+    framework: market-entry
+  fw_subscription:
+    framework: product-analytics
+
+  # ── Business Strategy Cases ──
+  bs_barriers:
+    framework: product-analytics
+  bs_revenue:
+    framework: product-analytics
+  bs_risks:
+    framework: product-analytics
+  bs_crosssell:
+    framework: product-analytics
+  bs_monetize:
+    framework: product-analytics
+  bs_reduce_cost:
+    framework: profitability
+  bs_ipl_sponsor:
+    framework: product-analytics
+  bs_retention:
+    framework: product-analytics
+  bs_rural_internet:
+    framework: product-analytics
+  bs_sustainability:
+    framework: product-analytics
+  bs_fintech_trust:
+    framework: product-analytics
+  bs_teacher_supply:
+    framework: product-analytics
+  bs_food_waste:
+    framework: rca
+  bs_airport_exp:
+    framework: product-analytics
+
+  # ── Business Judgment Cases ──
+  bj_discount:
+    framework: product-analytics
+  bj_build_buy:
+    framework: product-analytics
+  bj_pivot:
+    framework: product-analytics
+  bj_layoff:
+    framework: product-analytics
+  bj_freemium:
+    framework: product-analytics
+  bj_crypto:
+    framework: product-analytics
+  bj_vernacular:
+    framework: product-analytics
+  bj_outsource:
+    framework: product-analytics
