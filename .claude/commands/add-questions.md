@@ -72,7 +72,57 @@ Use the Edit tool with the exact insertion anchors from CLAUDE.md:
 
 Read 5 lines around each insertion point FIRST to get the exact whitespace match.
 
-### Step 6: Commit and push
+### Step 6: Validate syntax before committing
+
+**This step is MANDATORY — never skip it.** A single missing comma will break the entire practice page.
+
+Run this Python validation script to check both files for syntax errors:
+
+```bash
+python -c "
+import re, sys
+sys.stdout.reconfigure(encoding='utf-8')
+errors = []
+
+# Check practice.html - extract main script block and validate backtick balance
+with open('practice.html', 'r', encoding='utf-8') as f:
+    html = f.read()
+scripts = re.findall(r'<script(?![^>]*type=[\"']module[\"'])[^>]*>(.*?)</script>', html, re.DOTALL)
+for i, s in enumerate(scripts):
+    if 'SQL_DATASETS' not in s:
+        continue
+    bt = s.count(chr(96))
+    esc = s.count(chr(92) + chr(96))
+    effective = bt - 2 * esc
+    if effective % 2 != 0:
+        errors.append(f'practice.html script block {i}: ODD backtick count ({effective}) - broken template literal')
+    braces_open = s.count('{')
+    braces_close = s.count('}')
+    if braces_open != braces_close:
+        errors.append(f'practice.html script block {i}: Unbalanced braces (open={braces_open}, close={braces_close})')
+
+# Check for missing commas between SQL_DATASETS entries (closing }\\n  // or }\\n\\n  id:)
+# Pattern: entry closing with }  } but no comma before next entry
+bad_commas = re.findall(r'\}\s*\}\s*\n\s*(?://[^\n]*\n\s*)*\n?\s*\w+:', s)
+for match in bad_commas:
+    errors.append(f'practice.html: Missing comma between SQL_DATASETS entries near: {match[:60]}...')
+
+if errors:
+    print('VALIDATION FAILED:')
+    for e in errors:
+        print(f'  - {e}')
+    sys.exit(1)
+else:
+    print('Validation passed: backticks balanced, braces matched, no missing commas detected')
+"
+```
+
+If validation fails, **fix the error before committing**. Common fixes:
+- Missing comma after `}` closing an entry → add `,`
+- Unescaped backtick inside a template literal → escape with `\``
+- Unclosed template literal → find the entry with mismatched backticks
+
+### Step 7: Commit and push
 
 Stage only `practice.html` and `functions/api/practice-content.js`. Commit with message:
 ```
@@ -95,10 +145,12 @@ Before creating a new question, check if it already exists by searching for the 
 3. **Update the CASE_PROMPTS** entry to mention the new company in the interview context
 4. **Report** which questions were skipped and which got new company tags
 
-Also after merging to main, verify no JS syntax errors by checking that the last line of each edited object has a trailing comma before `};`.
+Also after merging to main, verify no JS syntax errors by checking that the last line of each edited object has a trailing comma before `};`. **Always run the Step 6 validation script before committing.**
 
 ### Important rules
+- **ALWAYS add a trailing comma** after every object entry closing `},` — including the LAST entry before `};`. This is the #1 cause of site outages.
 - NEVER skip the CASE_PROMPTS entry — every question needs an AI coaching prompt
+- NEVER skip the Step 6 validation — run it even if you're confident the syntax is correct
 - ALWAYS include `<em>Asked at {Company}.</em>` in SQL/Python question HTML
 - Keep SQL setup data realistic — use the document's sample data but expand if too small
 - If a question is purely analytical (no code), make it a case study, not SQL
