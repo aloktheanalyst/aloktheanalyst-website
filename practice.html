@@ -2640,6 +2640,21 @@ const PROMPTS = [
   { id: 'sql_pelago_cumulative',  title: 'Pelago: Monthly Cumulative GMV',                      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
   { id: 'sql_pelago_users',       title: 'Pelago: Daily & New vs Returning User Analysis',      topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
 
+  // ── Porter ──
+  { id: 'sql_porter_orders',      title: 'Porter: Customer Order Analytics',                    topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_porter_drivers',     title: 'Porter: Driver Performance Analysis',                 topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+
+  // ── Rippling ──
+  { id: 'sql_rippling_bookings',  title: 'Rippling: Cumulative Bookings & % Change',            topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+  { id: 'sql_rippling_customers', title: 'Rippling: Active & New Customers by Month',           topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+
+  // ── Tredence ──
+  { id: 'sql_tredence_rolling',   title: 'Tredence: Rolling 14-Day GMV',                        topic: 'sql',   difficulty: 'hard',   tag: 'SQL' },
+
+  // ── Games24x7 ──
+  { id: 'sql_games247_bst',       title: 'Games24x7: Binary Tree Node Classification',          topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+  { id: 'sql_games247_hierarchy', title: 'Games24x7: Employee Manager Hierarchy',                topic: 'sql',   difficulty: 'medium', tag: 'SQL' },
+
   { id: 'ab_test',       title: 'A/B Test: Statistical Significance',   topic: 'casestudy', difficulty: 'hard',   tag: 'Case Study' },
   { id: 'ab_sample',     title: 'Sample Size & Power Calculation',      topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study', framework: 'A/B Testing & Statistical Power' },
   { id: 'funnel',        title: 'E-commerce Funnel Drop-off',           topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
@@ -2652,6 +2667,7 @@ const PROMPTS = [
   { id: 'python_debug',  title: 'Debug & List Comprehension',           topic: 'python',  difficulty: 'easy',   tag: 'Python' },
   { id: 'python_palindrome', title: 'Longest Palindromic Substring',    topic: 'python',  difficulty: 'medium', tag: 'Python' },
   { id: 'python_fd',    title: 'FD Interest Calculator (Fintech)',      topic: 'python',  difficulty: 'hard',   tag: 'Python' },
+  { id: 'python_porter_closest', title: 'Porter: Closest to Zero',            topic: 'python',  difficulty: 'easy',   tag: 'Python' },
 
   { id: 'viz_choose',    title: 'Choosing the Right Chart Type',        topic: 'casestudy', difficulty: 'easy',   tag: 'Case Study', framework: 'Data Visualization' },
   { id: 'storytelling',  title: 'Data Storytelling for Stakeholders',   topic: 'casestudy', difficulty: 'medium', tag: 'Case Study' },
@@ -3865,6 +3881,240 @@ INSERT INTO event VALUES
 ('2024-05-20 09:45:00','U007','Action X');`
     }
   }
+  // ── Porter SQL Questions ──
+
+  sql_porter_orders: {
+    label: 'Porter: Customer Order Analytics',
+    question: '<em>Asked at Porter.</em><br><br>Using the <strong>orders</strong> and <strong>customers</strong> tables:<br><br><strong>1.</strong> Find the highest order value for each customer in their joining month (the month matching their join_date).<br><br><strong>2.</strong> Get the second order date and second order value for all customers. <em>Order by customer ID.</em>',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For Q1: JOIN orders with customers on cust_id. Filter where the month of order_date matches the month of join_date. Then GROUP BY customer and use MAX(order_value).',
+      'For Q2: Use ROW_NUMBER() OVER (PARTITION BY cust_id ORDER BY order_date) to rank orders per customer. Then filter WHERE rn = 2 to get the second order.',
+      'Alternative for Q2 without window functions: self-join orders to itself, finding the MIN order_date that is strictly after the customer\'s first order date (which itself is MIN(order_date) per customer).'
+    ],
+    schema: [
+      { name: 'orders', columns: [
+        { name: 'order_date', type: 'DATE' }, { name: 'cust_id', type: 'INTEGER' },
+        { name: 'order_value', type: 'INTEGER' }
+      ]},
+      { name: 'customers', columns: [
+        { name: 'join_date', type: 'DATE' }, { name: 'cust_id', type: 'INTEGER PK' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE orders (order_date DATE NOT NULL, cust_id INTEGER NOT NULL, order_value INTEGER NOT NULL);
+INSERT INTO orders VALUES
+('2020-09-10',348,386),('2020-11-01',1729,196),('2020-01-21',348,1350),
+('2020-12-27',4942,1065),('2020-12-11',1287,398),('2020-12-24',1729,516),
+('2020-10-31',348,788),('2020-07-27',4942,876),('2020-08-30',1287,432),
+('2020-09-11',1729,145),('2020-01-15',348,453),('2020-12-14',1729,345),
+('2020-02-24',4942,1159),('2020-01-15',348,453),('2020-08-23',1287,905),
+('2020-09-03',1729,901),('2020-08-11',1287,209),('2020-01-10',348,387),
+('2020-11-09',1287,544),('2020-02-15',4942,1592);
+
+CREATE TABLE customers (join_date DATE NOT NULL, cust_id INTEGER PRIMARY KEY);
+INSERT INTO customers VALUES
+('2020-01-12',348),('2020-09-02',1729),('2020-08-01',1287),('2020-02-15',4942);`
+    }
+  },
+
+  sql_porter_drivers: {
+    label: 'Porter: Driver Performance Analysis',
+    question: '<em>Asked at Porter.</em><br><br>Using the <strong>orders_info</strong> and <strong>fare_info</strong> tables from a ride-hailing platform:<br><br><strong>1.</strong> Find drivers who had fewer than 2 orders in the last month (September 2022).<br><br><strong>2.</strong> Find drivers who earned less than $200 in total revenue in the last month (September 2022).',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For Q1: JOIN orders_info with fare_info on order_id. Filter WHERE order_date is in September 2022. GROUP BY driver_id and use HAVING COUNT(*) < 2.',
+      'For Q2: Same join and date filter, but use HAVING SUM(order_fare) < 200 to find low-revenue drivers.',
+      'Consider using a LEFT JOIN from a distinct drivers list so you also capture drivers with ZERO orders in September (they won\'t appear in an INNER JOIN). Use COALESCE(COUNT(...), 0).'
+    ],
+    schema: [
+      { name: 'orders_info', columns: [
+        { name: 'order_date', type: 'DATE' }, { name: 'driver_id', type: 'INTEGER' },
+        { name: 'order_id', type: 'INTEGER PK' }
+      ]},
+      { name: 'fare_info', columns: [
+        { name: 'order_id', type: 'INTEGER FK' }, { name: 'order_fare', type: 'INTEGER' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE orders_info (order_date DATE NOT NULL, driver_id INTEGER NOT NULL, order_id INTEGER PRIMARY KEY);
+INSERT INTO orders_info VALUES
+('2022-08-01',348,1),('2022-08-09',1729,2),('2022-08-21',348,3),
+('2022-08-24',4942,4),('2022-09-10',1287,5),('2022-09-11',1729,6),
+('2022-09-24',348,7),('2022-09-27',348,8),('2022-09-30',4942,9),
+('2022-09-30',1287,10);
+
+CREATE TABLE fare_info (order_id INTEGER PRIMARY KEY, order_fare INTEGER NOT NULL);
+INSERT INTO fare_info VALUES
+(1,78),(2,340),(3,215),(4,123),(5,94),(6,56),(7,78),(8,215),(9,302),(10,87);`
+    }
+  },
+
+  sql_rippling_bookings: {
+    label: 'Rippling: Cumulative Bookings & % Change',
+    question: '<em>Asked at Rippling.</em><br><br>Using the <strong>bookings</strong> table, write a <strong>single query</strong> that outputs:<br><br><strong>Month, Product, Type, Amount_Booked</strong> (aggregated at month/product/type level), <strong>Cumulative_Amount_Booked</strong> (running total at product/type level across months), and <strong>Pct_Change</strong> (percentage change in cumulative amount vs previous month).',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Start with a CTE that aggregates: SUM(AMOUNT) GROUP BY Month, Product, Type to get Amount_Booked per group.',
+      'Add a second CTE with SUM(Amount_Booked) OVER (PARTITION BY Product, Type ORDER BY Month) to compute the cumulative running total.',
+      'For percentage change: use LAG(Cumulative_Amount_Booked) OVER (PARTITION BY Product, Type ORDER BY Month) to get the previous month\'s cumulative, then calculate (current - previous) / previous * 100. Handle NULL for the first month.'
+    ],
+    schema: [
+      { name: 'bookings', columns: [
+        { name: 'customer_id', type: 'VARCHAR' }, { name: 'month', type: 'DATE' },
+        { name: 'product', type: 'VARCHAR' }, { name: 'type', type: 'VARCHAR' },
+        { name: 'amount', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE bookings (customer_id TEXT NOT NULL, month DATE NOT NULL, product TEXT NOT NULL, type TEXT NOT NULL, amount DECIMAL(10,2) NOT NULL);
+INSERT INTO bookings VALUES
+('C001','2024-01-01','Platform','new_customer',5000),
+('C002','2024-01-01','Platform','new_customer',3000),
+('C003','2024-01-01','Payroll','new_customer',8000),
+('C001','2024-02-01','Platform','expansion',2000),
+('C004','2024-02-01','Platform','new_customer',4500),
+('C003','2024-02-01','Payroll','expansion',3000),
+('C005','2024-02-01','Payroll','new_customer',6000),
+('C001','2024-03-01','Platform','expansion',1500),
+('C002','2024-03-01','Platform','expansion',2500),
+('C006','2024-03-01','Payroll','new_customer',7000),
+('C003','2024-03-01','Payroll','expansion',4000),
+('C004','2024-04-01','Platform','expansion',3500),
+('C007','2024-04-01','Platform','new_customer',5500),
+('C005','2024-04-01','Payroll','expansion',2000),
+('C008','2024-04-01','Payroll','new_customer',9000),
+('C001','2024-05-01','Platform','expansion',1000),
+('C006','2024-05-01','Payroll','expansion',3500);`
+    }
+  },
+
+  sql_rippling_customers: {
+    label: 'Rippling: Active & New Customers by Month',
+    question: '<em>Asked at Rippling.</em><br><br>Using the <strong>customers</strong> and <strong>dates</strong> tables, write a query to output:<br><br><strong>Month, Number of Active Customers, Number of New Customers</strong><br><br>A customer is <em>active</em> on a date if that date falls between their start date and churn date (or current date if not churned). A customer is <em>new</em> in a month if their start date falls in that month.',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'JOIN dates with customers WHERE dates.date is BETWEEN customer_start_date AND COALESCE(customer_churn_date, CURRENT_DATE). This gives you all active customer-date pairs.',
+      'To identify new customers: use a CASE WHEN — a customer is new on dates where DATE = CUSTOMER_START_DATE (or where the month of start_date matches the month of the date).',
+      'GROUP BY month, then COUNT(DISTINCT customer_id) for active customers and COUNT(DISTINCT CASE WHEN date = customer_start_date THEN customer_id END) for new customers.'
+    ],
+    schema: [
+      { name: 'customers', columns: [
+        { name: 'customer_id', type: 'INTEGER PK' }, { name: 'customer_start_date', type: 'DATE' },
+        { name: 'customer_churn_date', type: 'DATE (nullable)' }, { name: 'num_us_employees', type: 'INTEGER' },
+        { name: 'hq_state', type: 'TEXT' }, { name: 'industry', type: 'TEXT' }
+      ]},
+      { name: 'dates', columns: [
+        { name: 'date', type: 'DATE PK' }, { name: 'month', type: 'DATE' }, { name: 'year', type: 'INTEGER' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, customer_start_date DATE NOT NULL, customer_churn_date DATE, num_us_employees INTEGER, hq_state TEXT, industry TEXT);
+INSERT INTO customers VALUES
+(1,'2024-01-15',NULL,50,'CA','Technology'),
+(2,'2024-01-20','2024-04-10',120,'NY','Finance'),
+(3,'2024-02-05',NULL,30,'TX','Healthcare'),
+(4,'2024-02-18','2024-05-01',200,'CA','Technology'),
+(5,'2024-03-01',NULL,75,'WA','Retail'),
+(6,'2024-03-15','2024-06-15',45,'NY','Finance'),
+(7,'2024-04-01',NULL,90,'CA','Technology'),
+(8,'2024-05-10',NULL,60,'TX','Healthcare');
+
+CREATE TABLE dates (date DATE PRIMARY KEY, month DATE NOT NULL, year INTEGER NOT NULL);
+INSERT INTO dates VALUES
+('2024-01-15','2024-01-01',2024),('2024-01-20','2024-01-01',2024),
+('2024-02-05','2024-02-01',2024),('2024-02-18','2024-02-01',2024),
+('2024-03-01','2024-03-01',2024),('2024-03-15','2024-03-01',2024),
+('2024-04-01','2024-04-01',2024),('2024-04-10','2024-04-01',2024),
+('2024-05-01','2024-05-01',2024),('2024-05-10','2024-05-01',2024),
+('2024-06-01','2024-06-01',2024),('2024-06-15','2024-06-01',2024);`
+    }
+  },
+
+  sql_tredence_rolling: {
+    label: 'Tredence: Rolling 14-Day GMV',
+    question: '<em>Asked at Tredence.</em><br><br>Using the <strong>orders</strong> table:<br><br><strong>1.</strong> Calculate the total GMV captured by each customer on each order_date.<br><br><strong>2.</strong> Calculate the rolling GMV captured in the last 14 days per customer. <em>Use a window frame with RANGE BETWEEN.</em>',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'For Q1: GROUP BY customer_id, order_date and SUM(gmv) to get daily totals per customer.',
+      'For Q2: Use SUM(gmv) OVER (PARTITION BY customer_id ORDER BY order_date RANGE BETWEEN INTERVAL \'14\' DAY PRECEDING AND CURRENT ROW). Note: in SQLite, RANGE with intervals is limited — use a self-join approach or ROWS with a subquery instead.',
+      'SQLite alternative: use a correlated subquery — SELECT (SELECT SUM(gmv) FROM orders o2 WHERE o2.customer_id = o1.customer_id AND o2.order_date BETWEEN DATE(o1.order_date, \'-14 days\') AND o1.order_date) as rolling_14d_gmv.'
+    ],
+    schema: [
+      { name: 'orders', columns: [
+        { name: 'customer_id', type: 'INTEGER' }, { name: 'order_id', type: 'INTEGER PK' },
+        { name: 'order_date', type: 'DATE' }, { name: 'gmv', type: 'DECIMAL' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE orders (customer_id INTEGER NOT NULL, order_id INTEGER PRIMARY KEY, order_date DATE NOT NULL, gmv DECIMAL(10,2) NOT NULL);
+INSERT INTO orders VALUES
+(101,1,'2024-01-05',150.00),(101,2,'2024-01-10',200.00),(101,3,'2024-01-18',300.00),
+(101,4,'2024-01-22',175.00),(101,5,'2024-02-01',250.00),(101,6,'2024-02-08',180.00),
+(102,7,'2024-01-03',400.00),(102,8,'2024-01-12',350.00),(102,9,'2024-01-15',220.00),
+(102,10,'2024-01-28',500.00),(102,11,'2024-02-05',300.00),(102,12,'2024-02-14',275.00),
+(103,13,'2024-01-08',120.00),(103,14,'2024-01-20',180.00),(103,15,'2024-02-01',350.00),
+(103,16,'2024-02-10',200.00),(103,17,'2024-02-18',450.00),(103,18,'2024-03-01',160.00);`
+    }
+  },
+
+  sql_games247_bst: {
+    label: 'Games24x7: Binary Tree Node Classification',
+    question: '<em>Asked at Games24x7.</em><br><br>You are given a table <strong>BST</strong> containing two columns: <strong>N</strong> (node value) and <strong>P</strong> (parent node). Write a query to classify each node as:<br><br><strong>Root</strong> — if the node has no parent (P IS NULL)<br><strong>Leaf</strong> — if the node is not a parent of any other node<br><strong>Inner</strong> — if the node has a parent and is also a parent of other nodes<br><br><em>Order by N ascending.</em>',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'A Root node has P IS NULL. A Leaf node is one whose N value never appears in the P column. An Inner node has a parent AND appears as someone else\'s parent.',
+      'Use CASE WHEN P IS NULL THEN \'Root\' WHEN N NOT IN (SELECT DISTINCT P FROM BST WHERE P IS NOT NULL) THEN \'Leaf\' ELSE \'Inner\' END.',
+      'Be careful with NOT IN and NULLs! The subquery for parents must exclude NULLs: SELECT DISTINCT P FROM BST WHERE P IS NOT NULL. Otherwise NOT IN returns no rows.'
+    ],
+    schema: [
+      { name: 'BST', columns: [
+        { name: 'N', type: 'INTEGER' }, { name: 'P', type: 'INTEGER (nullable)' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE BST (N INTEGER NOT NULL, P INTEGER);
+INSERT INTO BST VALUES
+(1,2),(3,2),(2,5),(6,8),(9,8),(5,NULL),(8,5);`
+    }
+  },
+
+  sql_games247_hierarchy: {
+    label: 'Games24x7: Employee Manager Hierarchy',
+    question: '<em>Asked at Games24x7.</em><br><br>Using the <strong>employees</strong> table, write a query that outputs for each employee:<br><br><strong>id, name, manager_name</strong> (name of their manager), <strong>is_manager</strong> (1 if they manage anyone, 0 otherwise), and <strong>num_reports</strong> (number of employees directly under them).<br><br><em>Order by id ascending.</em>',
+    defaultQuery: '-- Write your SQL here\n',
+    hints: [
+      'Use a self-JOIN: LEFT JOIN employees AS mgr ON e.manager_id = mgr.id to get manager_name. LEFT JOIN because the top-level manager has no manager.',
+      'For is_manager: use a CASE WHEN e.id IN (SELECT DISTINCT manager_id FROM employees WHERE manager_id IS NOT NULL) THEN 1 ELSE 0 END.',
+      'For num_reports: use a LEFT JOIN with a subquery that does COUNT(*) GROUP BY manager_id. Or use a correlated subquery: (SELECT COUNT(*) FROM employees e2 WHERE e2.manager_id = e.id).'
+    ],
+    schema: [
+      { name: 'employees', columns: [
+        { name: 'id', type: 'INTEGER PK' }, { name: 'name', type: 'TEXT' },
+        { name: 'age', type: 'INTEGER' }, { name: 'address', type: 'TEXT' },
+        { name: 'salary', type: 'DECIMAL' }, { name: 'manager_id', type: 'INTEGER (nullable)' }
+      ]}
+    ],
+    setup: {
+      shared: `
+CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT NOT NULL, age INTEGER, address TEXT, salary DECIMAL(10,2), manager_id INTEGER);
+INSERT INTO employees VALUES
+(1,'Ramesh',32,'Ahmedabad',25000,2),
+(2,'Khilan',25,'Delhi',45000,NULL),
+(3,'Kaushik',23,'Kota',30000,2),
+(4,'Chaitali',28,'Mumbai',35000,5),
+(5,'Hardik',27,'Bhopal',40000,2),
+(6,'Komal',22,'Hyderabad',28000,5),
+(7,'Muffy',24,'Indore',32000,5);`
+    }
+  },
+
 };
 
 // ═══════════════════════════════
@@ -4046,6 +4296,25 @@ test_scenarios = [
         ]
     }
 ]
+`
+  },
+
+  python_porter_closest: {
+    label: 'Porter: Closest to Zero',
+    question: '<em>Asked at Porter.</em><br><br>Given an input list of integers, write a function that finds the number <strong>closest to zero</strong>.<br><br>If there is a tie (e.g., -3 and 3), return the <strong>positive number</strong>.<br><br>Test with: <code>[-3, 3, 4, 5]</code> → expected output: <code>3</code><br><code>[-1, -2, 1, 2]</code> → expected output: <code>1</code><br><code>[-5, -2]</code> → expected output: <code>-2</code>',
+    hints: [
+      'Start by sorting the list by absolute value: sorted(lst, key=lambda x: abs(x)). The first element is closest to zero — but ties need special handling.',
+      'For ties: if abs(a) == abs(b), prefer the positive one. You can sort by (abs(x), -x) so positive values come first among ties.',
+      'One-liner approach: min(lst, key=lambda x: (abs(x), -x)) — this uses tuple comparison to break ties in favor of positive numbers.'
+    ],
+    defaultQuery: `# Write a function to find the number closest to zero\n# If there's a tie, return the positive number\n\ndef closest_to_zero(lst):\n    pass\n\n# Test cases\nprint(closest_to_zero([-3, 3, 4, 5]))   # Expected: 3\nprint(closest_to_zero([-1, -2, 1, 2]))  # Expected: 1\nprint(closest_to_zero([-5, -2]))        # Expected: -2\n`,
+    schema: [
+      { name: 'Function', columns: [
+        { name: 'Input', type: 'List[int]' }, { name: 'Output', type: 'int' }
+      ]}
+    ],
+    setupCode: `
+# No setup needed — pure algorithm question
 `
   }
 };
