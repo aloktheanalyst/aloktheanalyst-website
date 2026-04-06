@@ -86,9 +86,21 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 Then push to the current branch.
 
+### Handling duplicate questions
+
+Before creating a new question, check if it already exists by searching for the question topic/pattern in PROMPTS and SQL_DATASETS. If a matching question already exists:
+
+1. **Do NOT create a duplicate** — skip it
+2. **Add the new company tag** to the existing question's `<em>Asked at ...</em>` text. Append the new company: e.g., `<em>Asked at eBay, Tredence.</em>` becomes `<em>Asked at eBay, Tredence, NewCompany.</em>`
+3. **Update the CASE_PROMPTS** entry to mention the new company in the interview context
+4. **Report** which questions were skipped and which got new company tags
+
+Also after merging to main, verify no JS syntax errors by checking that the last line of each edited object has a trailing comma before `};`.
+
 ### Important rules
 - NEVER skip the CASE_PROMPTS entry — every question needs an AI coaching prompt
 - ALWAYS include `<em>Asked at {Company}.</em>` in SQL/Python question HTML
 - Keep SQL setup data realistic — use the document's sample data but expand if too small
 - If a question is purely analytical (no code), make it a case study, not SQL
 - Verify IDs are unique — grep for the ID before inserting
+- After inserting into CASESTUDY_SOLUTIONS, verify the previous entry ends with a comma (`,`) before the new entry — missing commas cause build failures
