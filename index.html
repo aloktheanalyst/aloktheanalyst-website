@@ -36,13 +36,13 @@
   h1 .highlight { color: transparent; -webkit-text-stroke: 2px var(--accent2); }
   .hero-desc { font-size: 1.15rem; color: var(--muted); line-height: 1.7; max-width: 560px; margin-bottom: 2.5rem; font-weight: 300; }
   .hero-desc strong { color: var(--text); font-weight: 600; }
-  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
   .btn-primary { display: inline-flex; align-items: center; gap: 0.6rem; background: var(--accent); color: #fff; font-weight: 700; font-size: 0.95rem; padding: 0.85rem 2rem; border-radius: 4px; text-decoration: none; transition: all 0.2s; letter-spacing: 0.5px; }
   .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,99,235,0.3); }
   .btn-secondary { display: inline-flex; align-items: center; gap: 0.6rem; background: transparent; color: var(--text); font-weight: 500; font-size: 0.95rem; padding: 0.85rem 2rem; border-radius: 4px; text-decoration: none; border: 1px solid var(--border); transition: all 0.2s; }
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
-  .btn-topmate { display: inline-flex; align-items: center; gap: 0.6rem; background: #1e293b; color: #fff; font-weight: 700; font-size: 0.95rem; padding: 0.85rem 2rem; border-radius: 4px; text-decoration: none; transition: all 0.2s; letter-spacing: 0.5px; }
-  .btn-topmate:hover { background: #0f172a; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(15,23,42,0.35); }
+  .btn-topmate { display: inline-flex; align-items: center; gap: 0.6rem; background: #1e293b; color: #fff; font-weight: 600; font-size: 0.88rem; padding: 0.7rem 1.6rem; border-radius: 4px; text-decoration: none; transition: all 0.2s; letter-spacing: 0.3px; }
+  .btn-topmate:hover { background: #0f172a; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(15,23,42,0.25); }
   .hero-stats { display: flex; gap: 3rem; margin-top: 4rem; padding-top: 3rem; border-top: 1px solid var(--border); }
   .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: var(--white); letter-spacing: 1px; line-height: 1; }
   .stat-num span { color: var(--accent); }
@@ -348,13 +348,15 @@
       <h1>YOUR DATA<br>CAREER <span class="highlight">STARTS</span><br>HERE</h1>
       <p class="hero-desc">Hey, I'm Alok — I turn <strong>confused career-switchers</strong> into data analysts who actually get hired. Real SQL, real case studies, an AI practice arena, and zero BS.</p>
       <div class="hero-actions">
-        <a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" target="_blank" class="btn-primary">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-          Subscribe on YouTube
+        <a href="/practice.html" class="btn-primary">
+          Start Practicing Free
         </a>
         <a href="https://topmate.io/aloktheanalyst" target="_blank" class="btn-topmate">
           <svg viewBox="0 0 47 46" fill="currentColor" width="16" height="16"><path d="M33.0038 29.6411C31.5707 31.6672 29.5206 33.1752 27.1598 33.9401C24.7989 34.705 22.254 34.6857 19.905 33.8851C17.5561 33.0844 15.5291 31.5454 14.1269 29.4978C12.7247 27.4503 12.0225 25.0041 12.1251 22.5246C12.2277 20.045 13.1296 17.6652 14.6962 15.7405C16.2627 13.8158 18.4099 12.4495 20.817 11.8456C23.224 11.2418 25.7619 11.4328 28.0515 12.3901C30.341 13.3474 32.2595 15.0197 33.5204 17.1572L23.6152 23L33.0038 29.6411Z"/></svg>
           Book a 1:1 Call
+        </a>
+        <a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" target="_blank" title="Subscribe on YouTube" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:#fee2e2;text-decoration:none;transition:all 0.2s;align-self:center;" onmouseover="this.style.background='#ff0000';this.querySelector('svg').setAttribute('fill','#fff')" onmouseout="this.style.background='#fee2e2';this.querySelector('svg').setAttribute('fill','#ff0000')">
+          <svg viewBox="0 0 24 24" fill="#ff0000" width="20" height="20"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
         </a>
       </div>
       <div class="hero-stats">
@@ -375,44 +377,6 @@
       </div>
     </div>
   </div>
-</section>
-
-<!-- YOUTUBE -->
-<section id="youtube">
-  <div class="section-label">// Latest Content</div>
-  <div class="section-title">YOUTUBE VIDEOS</div>
-  <p class="section-sub">SQL tutorials, Python for analysts, interview prep, and real-world case studies. New videos every week.</p>
-  <div class="videos-grid" id="videoGrid">
-    <div class="video-card" style="opacity:.5;pointer-events:none" aria-hidden="true">
-      <div class="video-thumb" style="background:var(--bg3)"></div>
-      <div class="video-info"><h3 style="color:var(--muted)">Loading latest videos…</h3></div>
-    </div>
-  </div>
-  <div class="yt-cta"><a href="https://www.youtube.com/@aloktheanalyst" target="_blank" class="btn-primary">View All Videos on YouTube →</a></div>
-</section>
-
-<!-- LINKEDIN -->
-<section id="linkedin">
-  <div class="section-label">// Thoughts & Insights</div>
-  <div class="section-title">LINKEDIN POSTS</div>
-  <p class="section-sub">Tips, career advice, SQL snippets, and data analytics breakdowns — straight from my LinkedIn feed.</p>
-  <div id="linkedinGrid" class="posts-grid">
-    <p style="color:var(--muted);grid-column:1/-1">Loading posts…</p>
-  </div>
-  <div class="yt-cta" style="margin-top:2.5rem"><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="btn-secondary">Follow on LinkedIn →</a></div>
-</section>
-
-<!-- COURSES -->
-<section id="courses">
-  <div class="section-label">// Learn With Alok</div>
-  <div class="section-title">COURSES</div>
-  <p class="section-sub">Structured, project-based courses built from real analytics experience. Coming soon — join the waitlist.</p>
-  <div class="courses-grid">
-    <div class="course-card featured fade-in"><div class="coming-soon-badge">🔥 Coming Soon</div><div class="course-icon">📖</div><h3>Data Storytelling</h3><p>Turn raw numbers into compelling narratives. Learn how to structure insights, build executive-ready decks, and make your data impossible to ignore.</p><div class="course-tags"><span class="ctag">Storytelling</span><span class="ctag">Visualization</span><span class="ctag">Presentations</span><span class="ctag">Insights</span></div></div>
-    <div class="course-card fade-in"><div class="coming-soon-badge">Coming Soon</div><div class="course-icon">🧩</div><h3>How to Solve a Case Study?</h3><p>A step-by-step framework to tackle any analytics case study — from structuring the problem to delivering a sharp, data-backed recommendation.</p><div class="course-tags"><span class="ctag">Case Studies</span><span class="ctag">Frameworks</span><span class="ctag">Problem Solving</span></div></div>
-    <div class="course-card fade-in"><div class="coming-soon-badge">Coming Soon</div><div class="course-icon">🛒</div><h3>Domain Knowledge (E-commerce)</h3><p>Understand the metrics, funnels, and business levers that drive e-commerce decisions. Built for analysts who want to speak the language of the business.</p><div class="course-tags"><span class="ctag">E-commerce</span><span class="ctag">Metrics</span><span class="ctag">Domain</span><span class="ctag">Funnels</span></div></div>
-  </div>
-  <div class="yt-cta" style="margin-top:2.5rem"><a href="mailto:hello@aloktheanalyst.com" class="btn-primary">Join Waitlist — Be First to Know</a></div>
 </section>
 
 <!-- PRACTICE ARENA -->
@@ -478,6 +442,31 @@
   </div>
 </section>
 
+<!-- YOUTUBE -->
+<section id="youtube">
+  <div class="section-label">// Latest Content</div>
+  <div class="section-title">YOUTUBE VIDEOS</div>
+  <p class="section-sub">SQL tutorials, Python for analysts, interview prep, and real-world case studies. New videos every week.</p>
+  <div class="videos-grid" id="videoGrid">
+    <div class="video-card" style="opacity:.5;pointer-events:none" aria-hidden="true">
+      <div class="video-thumb" style="background:var(--bg3)"></div>
+      <div class="video-info"><h3 style="color:var(--muted)">Loading latest videos…</h3></div>
+    </div>
+  </div>
+  <div class="yt-cta"><a href="https://www.youtube.com/@aloktheanalyst" target="_blank" class="btn-primary">View All Videos on YouTube →</a></div>
+</section>
+
+<!-- LINKEDIN -->
+<section id="linkedin">
+  <div class="section-label">// Thoughts & Insights</div>
+  <div class="section-title">LINKEDIN POSTS</div>
+  <p class="section-sub">Tips, career advice, SQL snippets, and data analytics breakdowns — straight from my LinkedIn feed.</p>
+  <div id="linkedinGrid" class="posts-grid">
+    <p style="color:var(--muted);grid-column:1/-1">Loading posts…</p>
+  </div>
+  <div class="yt-cta" style="margin-top:2.5rem"><a href="https://www.linkedin.com/in/aloktheanalyst/" target="_blank" class="btn-secondary">Follow on LinkedIn →</a></div>
+</section>
+
 <!-- CONTACT -->
 <section id="contact">
   <div class="section-label">// Stay Connected</div>
@@ -500,6 +489,19 @@
     </a>
   </div>
   <p class="social-tagline">Follow for daily SQL tips, career advice, and analytics breakdowns.</p>
+</section>
+
+<!-- COURSES -->
+<section id="courses">
+  <div class="section-label">// Learn With Alok</div>
+  <div class="section-title">COURSES</div>
+  <p class="section-sub">Structured, project-based courses built from real analytics experience. Coming soon — join the waitlist.</p>
+  <div class="courses-grid">
+    <div class="course-card featured fade-in"><div class="coming-soon-badge">🔥 Coming Soon</div><div class="course-icon">📖</div><h3>Data Storytelling</h3><p>Turn raw numbers into compelling narratives. Learn how to structure insights, build executive-ready decks, and make your data impossible to ignore.</p><div class="course-tags"><span class="ctag">Storytelling</span><span class="ctag">Visualization</span><span class="ctag">Presentations</span><span class="ctag">Insights</span></div></div>
+    <div class="course-card fade-in"><div class="coming-soon-badge">Coming Soon</div><div class="course-icon">🧩</div><h3>How to Solve a Case Study?</h3><p>A step-by-step framework to tackle any analytics case study — from structuring the problem to delivering a sharp, data-backed recommendation.</p><div class="course-tags"><span class="ctag">Case Studies</span><span class="ctag">Frameworks</span><span class="ctag">Problem Solving</span></div></div>
+    <div class="course-card fade-in"><div class="coming-soon-badge">Coming Soon</div><div class="course-icon">🛒</div><h3>Domain Knowledge (E-commerce)</h3><p>Understand the metrics, funnels, and business levers that drive e-commerce decisions. Built for analysts who want to speak the language of the business.</p><div class="course-tags"><span class="ctag">E-commerce</span><span class="ctag">Metrics</span><span class="ctag">Domain</span><span class="ctag">Funnels</span></div></div>
+  </div>
+  <div class="yt-cta" style="margin-top:2.5rem"><a href="mailto:hello@aloktheanalyst.com" class="btn-primary">Join Waitlist — Be First to Know</a></div>
 </section>
 
 <!-- FOOTER -->

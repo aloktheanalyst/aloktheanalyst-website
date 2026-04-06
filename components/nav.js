@@ -218,7 +218,7 @@
       </a>
       <ul class="snav-links">
         ${liHTML}
-        <li><a href="https://www.youtube.com/@aloktheanalyst?sub_confirmation=1" target="_blank" rel="noopener" class="snav-cta">Subscribe</a></li>
+        <li><a href="/practice.html" class="snav-cta">Practice Arena</a></li>
       </ul>
       <div class="snav-right">
         <div class="snav-auth" id="snavAuth">
