@@ -1,8 +1,21 @@
 # AlokTheAnalyst Website
 
-## Adding Interview Questions
+## Architecture: Hybrid Data Model
 
-Questions live in two files. Both must be updated when adding new questions.
+Data lives in TWO places:
+
+1. **`practice.html`** (client-side inline) — PROMPTS, SQL_DATASETS, PYTHON_DATASETS, TEST_CASES
+2. **Cloudflare D1 database** `bcba85e7-9594-4182-ad42-66bb989102a0` (server-side) — questions, case_prompts, solutions, sql_datasets, python_datasets, test_cases, factor_trees
+
+`functions/api/practice-content.js` is the API layer that reads from D1. Do NOT put inline data in it.
+
+### Framework registry: `frameworks/_registry.yaml`
+
+Single source of truth for case-to-framework mapping. Every case study question MUST have an entry here.
+
+Framework codes: `rca`, `metric-design`, `product-analytics`, `market-entry`, `profitability`, `funnel-analysis`, `ab-testing`
+
+## Adding Interview Questions
 
 ### File 1: `practice.html`
 
@@ -11,7 +24,7 @@ Questions live in two files. Both must be updated when adding new questions.
 { id: 'sql_company_topic', title: 'Company: Question Title', topic: 'sql', difficulty: 'medium', tag: 'SQL' }
 // topic: sql | casestudy | python | puzzles | guesstimates
 // tag:   SQL | Case Study | Python | Puzzle | Guesstimate
-// optional: framework: 'Framework Name'
+// optional: framework: 'Specific Framework Display Name'  (case studies only)
 ```
 
 **SQL_DATASETS** (~line 2984) — interactive SQL editor data:
@@ -23,38 +36,54 @@ sql_id: {
   hints: ['hint1', 'hint2', 'hint3'],
   schema: [{ name: 'table_name', columns: [{ name: 'col', type: 'TYPE' }] }],
   setup: { shared: `CREATE TABLE...; INSERT INTO...;` }
-}
+},
 ```
 
 **PYTHON_DATASETS** (~line 3699) — same pattern but with `setupCode` instead of `setup.shared`.
 
-### File 2: `functions/api/practice-content.js`
-
-**CASE_PROMPTS** (~line 108) — AI coaching prompt for ALL question types (SQL, Python, case studies):
+**TEST_CASES** (~line 4327) — validation tests for SQL and Python questions:
 ```javascript
-question_id: 'You are interviewing a candidate... Guide them through...',
+sql_id: [
+  { name: 'Test name', expectedQuery: `SELECT ...`, minMatchRatio: 0.4, failMsg: 'Hint' },
+  { name: 'Pattern test', check(out) { /* return {pass, msg} */ } }
+],
 ```
 
-**CASESTUDY_SOLUTIONS** (~line 5759) — full model solution for case studies only:
-```javascript
-cs_id: `**Framework Used: ...**\n\nSolution content with \\n newlines...`,
+### File 2: D1 Database (via MCP tool)
+
+Use `d1_database_query` with `database_id: bcba85e7-9594-4182-ad42-66bb989102a0`.
+
+**Tables:**
+- `questions` — mirrors PROMPTS (id, title, topic, difficulty, tag, framework, sort_order)
+- `case_prompts` — AI coaching prompt for ALL question types (question_id, prompt)
+- `solutions` — model solutions for casestudy/puzzle/guesstimate (question_id, solution_type, solution)
+- `sql_datasets` — mirrors SQL_DATASETS (question_id, label, question_html, default_query, hints, schema_json, setup_sql)
+- `python_datasets` — mirrors PYTHON_DATASETS (question_id, label, question_html, default_query, hints, schema_json, setup_code)
+- `test_cases` — mirrors TEST_CASES (question_id, test_index, name, expected_query, min_match_ratio, fail_msg, max_rows, min_cols, check_function)
+- `factor_trees` — RCA diagram data (question_id, tree_data JSON)
+
+**D1 escaping:** Use `''` (doubled single quotes) in SQL strings, NOT `\'`.
+
+### File 3: `frameworks/_registry.yaml`
+
+Add framework mapping for every case study question:
+```yaml
+  cs_company_topic:
+    framework: product-analytics
 ```
 
-**PUZZLE_SOLUTIONS** (~line 5519), **GUESSTIMATE_SOLUTIONS** (~line 5707) — solutions for those types.
-
-### Insertion Points (use these anchors for Edit tool)
+### Insertion Points in practice.html (use these anchors for Edit tool)
 
 | What | Insert before this text |
 |------|------------------------|
 | SQL PROMPTS entries | `{ id: 'ab_test',` |
 | Case study PROMPTS entries | `// ── Puzzles ──` |
 | Guesstimate PROMPTS entries | `// ── Puzzles ──` |
+| Puzzle PROMPTS entries | `// ── Guesstimates ──` |
 | SQL_DATASETS entries | `};\n\n// ═══════════════════════════════\n// PYTHON EDITOR` |
-| SQL CASE_PROMPTS | `// ── A/B Testing prompts ──` |
-| Case study CASE_PROMPTS | `// ── Puzzle prompts ──` |
-| CASESTUDY_SOLUTIONS | `};\n\n/* FRAMEWORK_REGISTRY:FACTOR_TREE_DATA:START */` |
-| PUZZLE_SOLUTIONS | closing `};` before `const GUESSTIMATE_SOLUTIONS` |
-| GUESSTIMATE_SOLUTIONS | closing `};` before `const CASESTUDY_SOLUTIONS` |
+| PYTHON_DATASETS entries | closing `};\n` before `function isSQLCase` |
+| SQL TEST_CASES entries | `// ── Python Cases ──` inside TEST_CASES |
+| Python TEST_CASES entries | closing `};\n\nconst SYSTEM_PROMPT` |
 
 ### Company Tag Convention
 - SQL/Python questions: include `<em>Asked at CompanyName.</em>` at the start of the `question` HTML
@@ -65,13 +94,19 @@ cs_id: `**Framework Used: ...**\n\nSolution content with \\n newlines...`,
 - Case study: `cs_company_topic` (e.g., `cs_pelago_paid`)
 - Python: `python_company_topic`
 - Puzzle: `pz_shortname`
-- Guesstimate: `guess_shortname`
+- Guesstimate: `ge_shortname`
 
 ### Checklist for adding a question
-1. Add entry to PROMPTS array in `practice.html`
-2. If SQL: add SQL_DATASETS entry in `practice.html`
-3. If Python: add PYTHON_DATASETS entry in `practice.html`
-4. Add CASE_PROMPTS entry in `practice-content.js` (ALL question types need this)
-5. If case study: add CASESTUDY_SOLUTIONS entry in `practice-content.js`
-6. If puzzle: add PUZZLE_SOLUTIONS entry
-7. If guesstimate: add GUESSTIMATE_SOLUTIONS entry
+
+1. ✅ Add entry to PROMPTS array in `practice.html`
+2. ✅ If SQL: add SQL_DATASETS entry in `practice.html`
+3. ✅ If Python: add PYTHON_DATASETS entry in `practice.html`
+4. ✅ If SQL/Python: add TEST_CASES entry in `practice.html` (MANDATORY — at least 2 tests)
+5. ✅ Insert into D1 `questions` table
+6. ✅ Insert into D1 `case_prompts` table (ALL question types need this)
+7. ✅ If case study: insert into D1 `solutions` table + add to `_registry.yaml`
+8. ✅ If puzzle/guesstimate: insert into D1 `solutions` table
+9. ✅ If SQL: insert into D1 `sql_datasets` + `test_cases` tables
+10. ✅ If Python: insert into D1 `python_datasets` + `test_cases` tables
+11. ✅ Run validation script on practice.html
+12. ✅ Run D1 verification queries
