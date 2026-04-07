@@ -51,10 +51,12 @@ export async function onRequestGet(context) {
   }
 
   // ── Origin / Referer check — only allow requests from our site ──
+  // Require at least one of Origin or Referer to be present and valid.
+  // This blocks direct curl/Postman requests that send neither header.
   const referer = request.headers.get('Referer') || '';
-  const isAllowedOrigin = origin === ALLOWED_ORIGIN || origin === 'https://www.aloktheanalyst.com' || !origin;
-  const isAllowedReferer = !referer || referer.startsWith(ALLOWED_ORIGIN) || referer.startsWith('https://www.aloktheanalyst.com');
-  if (!isAllowedOrigin || !isAllowedReferer) {
+  const isAllowedOrigin = origin === ALLOWED_ORIGIN || origin === 'https://www.aloktheanalyst.com';
+  const isAllowedReferer = referer.startsWith(ALLOWED_ORIGIN) || referer.startsWith('https://www.aloktheanalyst.com');
+  if (!isAllowedOrigin && !isAllowedReferer) {
     return json({ error: 'Forbidden' }, 403, cors);
   }
 
