@@ -4633,6 +4633,185 @@ const TEST_CASES = {
     }
   ],
 
+  // ── Porter Cases ──
+
+  sql_porter_orders: [
+    { name: 'Q1: Max order value per customer in joining month',
+      expectedQuery: `SELECT c.cust_id, MAX(o.order_value) AS max_order_value FROM orders o JOIN customers c ON o.cust_id = c.cust_id WHERE EXTRACT(MONTH FROM o.order_date) = EXTRACT(MONTH FROM c.join_date) AND EXTRACT(YEAR FROM o.order_date) = EXTRACT(YEAR FROM c.join_date) GROUP BY c.cust_id ORDER BY c.cust_id`,
+      minMatchRatio: 0.3,
+      failMsg: 'JOIN orders with customers, filter WHERE month(order_date) = month(join_date), then GROUP BY cust_id with MAX(order_value).',
+      maxRows: 10
+    },
+    { name: 'Q2: Second order date and value per customer (4 rows)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length < 3 || dataLines.length > 8) return { pass: false, msg: `Expected 4 data rows (one per customer), got ${dataLines.length - 1}` };
+        const hasDate = /\d{4}-\d{2}-\d{2}/.test(out);
+        if (!hasDate) return { pass: false, msg: 'Expected date values in output — use ROW_NUMBER() OVER (PARTITION BY cust_id ORDER BY order_date) and filter rn = 2' };
+        return { pass: true, msg: 'Second order per customer returned' };
+      }
+    }
+  ],
+
+  sql_porter_drivers: [
+    { name: 'Q1: Drivers with fewer than 2 orders in Sept 2022 (drivers 1729 and 4942)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has1729 = out.includes('1729');
+        const has4942 = out.includes('4942');
+        const wrong348  = /\b348\b/.test(out);
+        const wrong1287 = /\b1287\b/.test(out);
+        if (wrong348 || wrong1287) return { pass: false, msg: 'Drivers 348 and 1287 had 2 orders each in Sept 2022 — they should NOT appear. Only drivers with < 2 orders.' };
+        if (!has1729 || !has4942) return { pass: false, msg: 'Expected drivers 1729 and 4942 (each had only 1 order in Sept 2022). Filter September 2022 rows then HAVING COUNT(*) < 2.' };
+        return { pass: true, msg: 'Correctly returned drivers 1729 and 4942' };
+      }
+    },
+    { name: 'Q2: Drivers with < $200 revenue in Sept 2022 (drivers 1287 and 1729)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has1287 = out.includes('1287');
+        const has1729 = out.includes('1729');
+        const wrong348  = /\b348\b/.test(out);
+        const wrong4942 = /\b4942\b/.test(out);
+        if (wrong348 || wrong4942) return { pass: false, msg: 'Drivers 348 ($293) and 4942 ($302) earned ≥ $200 in Sept 2022 — they should NOT appear.' };
+        if (!has1287 || !has1729) return { pass: false, msg: 'Expected drivers 1287 ($181) and 1729 ($56). JOIN fare_info on order_id, filter Sept 2022, HAVING SUM(order_fare) < 200.' };
+        return { pass: true, msg: 'Correctly returned drivers 1287 and 1729' };
+      }
+    }
+  ],
+
+  // ── Rippling Cases ──
+
+  sql_rippling_bookings: [
+    { name: 'Output has 6 required columns (Month, Product, Type, Amount_Booked, Cumulative, Pct_Change)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const firstLine = out.trim().split('\n')[0];
+        const colCount = (firstLine.match(/\|/g) || []).length + 1;
+        if (colCount < 5) return { pass: false, msg: `Expected at least 6 columns (Month, Product, Type, Amount_Booked, Cumulative_Amount_Booked, Pct_Change), got ${colCount}` };
+        const hasPercent = /pct|percent|change/i.test(out);
+        if (!hasPercent) return { pass: false, msg: 'Expected a Pct_Change column — use LAG(cumulative) to calculate (current - prev) / prev * 100' };
+        return { pass: true, msg: `${colCount} columns including Pct_Change` };
+      }
+    },
+    { name: 'Cumulative total increases monotonically per product/type group',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const hasCumulative = /cumul|running|total/i.test(out);
+        if (!hasCumulative) return { pass: false, msg: 'Expected a cumulative running total column — use SUM(Amount_Booked) OVER (PARTITION BY Product, Type ORDER BY Month)' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length < 5) return { pass: false, msg: 'Expected multiple rows (one per month/product/type combination)' };
+        return { pass: true, msg: 'Cumulative column present with multiple rows' };
+      }
+    }
+  ],
+
+  sql_rippling_customers: [
+    { name: 'Output has 3 columns: month, active customers, new customers',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const firstLine = out.trim().split('\n')[0];
+        const colCount = (firstLine.match(/\|/g) || []).length + 1;
+        if (colCount < 3) return { pass: false, msg: `Expected 3 columns (Month, Active_Customers, New_Customers), got ${colCount}` };
+        const hasMonth = /\d{4}-\d{2}/.test(out);
+        if (!hasMonth) return { pass: false, msg: 'Expected month values (e.g., 2024-01). JOIN customers with dates table, GROUP BY month.' };
+        return { pass: true, msg: `${colCount} columns with month values` };
+      }
+    },
+    { name: 'January 2024 shows 2 active and 2 new customers',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lines = out.trim().split('\n').filter(l => l.includes('2024-01'));
+        if (lines.length === 0) return { pass: false, msg: 'No January 2024 row found. Use the dates table to drive months and JOIN customers on BETWEEN start_date AND COALESCE(churn_date, CURRENT_DATE).' };
+        const numbers = lines[0].match(/\d+/g) || [];
+        const hasTwos = numbers.filter(n => n === '2').length >= 2;
+        if (!hasTwos) return { pass: false, msg: `January 2024 should show 2 active and 2 new customers (C1 joined Jan 15, C2 joined Jan 20). Found: ${lines[0]}` };
+        return { pass: true, msg: 'January 2024: 2 active, 2 new ✓' };
+      }
+    }
+  ],
+
+  // ── Tredence Cases ──
+
+  sql_tredence_rolling: [
+    { name: 'Q1: Daily GMV per customer (GROUP BY customer_id, order_date)',
+      expectedQuery: `SELECT customer_id, order_date, SUM(gmv) AS daily_gmv FROM orders GROUP BY customer_id, order_date ORDER BY customer_id, order_date`,
+      minMatchRatio: 0.4,
+      failMsg: 'GROUP BY customer_id, order_date and SUM(gmv) for daily totals per customer.',
+      maxRows: 20
+    },
+    { name: 'Q2: Rolling 14-day GMV column present',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const hasRolling = /rolling|14|window|range/i.test(out);
+        const firstLine = out.trim().split('\n')[0];
+        const colCount = (firstLine.match(/\|/g) || []).length + 1;
+        if (colCount < 3) return { pass: false, msg: `Expected at least 3 columns (customer_id, order_date, rolling_gmv), got ${colCount}` };
+        const numbers = out.match(/\d+\.\d+|\d{3,}/g);
+        if (!numbers || numbers.length < 5) return { pass: false, msg: 'Use SUM(gmv) OVER (PARTITION BY customer_id ORDER BY order_date RANGE BETWEEN INTERVAL \'14\' DAY PRECEDING AND CURRENT ROW) for rolling 14-day GMV.' };
+        return { pass: true, msg: `${colCount} columns including rolling GMV values` };
+      }
+    }
+  ],
+
+  // ── Games24x7 Cases ──
+
+  sql_games247_bst: [
+    { name: 'All 7 nodes classified (Root/Inner/Leaf)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lower = out.toLowerCase();
+        const hasRoot = lower.includes('root');
+        const hasLeaf = lower.includes('leaf');
+        const hasInner = lower.includes('inner');
+        if (!hasRoot || !hasLeaf || !hasInner) return { pass: false, msg: 'Expected three labels: Root (node 5), Inner (nodes 2 and 8), Leaf (nodes 1,3,6,9). Use CASE WHEN P IS NULL THEN \'Root\' WHEN N NOT IN (parents) THEN \'Leaf\' ELSE \'Inner\' END.' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length < 8 || dataLines.length > 10) return { pass: false, msg: `Expected 7 rows (one per node), got ${dataLines.length - 1}` };
+        return { pass: true, msg: 'All 3 labels (Root/Inner/Leaf) present across 7 nodes' };
+      }
+    },
+    { name: 'Node 5 is Root, nodes 2 and 8 are Inner',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lines = out.trim().split('\n');
+        const line5 = lines.find(l => /\b5\b/.test(l));
+        const line2 = lines.find(l => /\b2\b/.test(l));
+        const line8 = lines.find(l => /\b8\b/.test(l));
+        if (line5 && !/root/i.test(line5)) return { pass: false, msg: 'Node 5 has P IS NULL — it should be classified as Root' };
+        if (line2 && !/inner/i.test(line2)) return { pass: false, msg: 'Node 2 has a parent (5) and is a parent of 1,3 — it should be Inner' };
+        if (line8 && !/inner/i.test(line8)) return { pass: false, msg: 'Node 8 has a parent (5) and is a parent of 6,9 — it should be Inner' };
+        return { pass: true, msg: 'Node 5=Root, nodes 2 and 8=Inner ✓' };
+      }
+    }
+  ],
+
+  sql_games247_hierarchy: [
+    { name: 'All 7 employees returned with 5 columns',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length < 8 || dataLines.length > 10) return { pass: false, msg: `Expected 7 rows (one per employee), got ${dataLines.length - 1}` };
+        const firstLine = out.trim().split('\n')[0];
+        const colCount = (firstLine.match(/\|/g) || []).length + 1;
+        if (colCount < 5) return { pass: false, msg: `Expected 5 columns (id, name, manager_name, is_manager, num_reports), got ${colCount}` };
+        return { pass: true, msg: `7 employees, ${colCount} columns ✓` };
+      }
+    },
+    { name: 'Khilan has is_manager=1 and 3 reports; Hardik has is_manager=1 and 3 reports',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lines = out.trim().split('\n');
+        const khilanLine = lines.find(l => /khilan/i.test(l));
+        const hardikLine = lines.find(l => /hardik/i.test(l));
+        if (!khilanLine) return { pass: false, msg: 'Khilan not found in output. Use LEFT JOIN employees mgr ON e.manager_id = mgr.id for manager_name.' };
+        if (!/\b1\b/.test(khilanLine) || !/\b3\b/.test(khilanLine)) return { pass: false, msg: `Khilan should have is_manager=1 and num_reports=3 (manages Ramesh, Kaushik, Hardik). Found: ${khilanLine}` };
+        if (hardikLine && (!/\b1\b/.test(hardikLine) || !/\b3\b/.test(hardikLine))) return { pass: false, msg: `Hardik should have is_manager=1 and num_reports=3 (manages Chaitali, Komal, Muffy). Found: ${hardikLine}` };
+        return { pass: true, msg: 'Khilan and Hardik correctly show is_manager=1 with 3 reports each ✓' };
+      }
+    }
+  ],
+
   // ── Python Cases ──
 
   python_clean: [
