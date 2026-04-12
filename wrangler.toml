@@ -1,0 +1,46 @@
+# ─── Cloudflare Pages local dev config ───────────────────────────────
+# Run with:  npx wrangler pages dev . --port 8787 --remote
+#
+# --remote connects to your REAL Cloudflare D1, KV, and Workers AI
+# (without --remote, D1/KV are local-only empty stubs)
+
+name = "aloktheanalyst-website"
+pages_build_output_dir = "."
+compatibility_date = "2024-01-01"
+
+# ─── D1 Databases ────────────────────────────────────────────────────
+
+[[d1_databases]]
+binding = "CONTENT_DB"
+database_name = "aloktheanalyst_content"
+database_id = "bcba85e7-9594-4182-ad42-66bb989102a0"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aloktheanalyst_users"
+database_id = "3979cd4f-b83d-49cc-97b6-4058785db33f"
+
+# ─── KV Namespaces ───────────────────────────────────────────────────
+
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "b1873827b532483eaddf9996a3a2aed0"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "b1873827b532483eaddf9996a3a2aed0"
+
+[[kv_namespaces]]
+binding = "LINKEDIN_POSTS_KV"
+id = "c83f5ae585354ed18398e0d379eb3761"
+
+# ─── Workers AI ──────────────────────────────────────────────────────
+
+[ai]
+binding = "AI"
+
+# ─── Analytics Engine ────────────────────────────────────────────────
+
+[[analytics_engine_datasets]]
+binding = "ANALYTICS"
+dataset = "practice_events"

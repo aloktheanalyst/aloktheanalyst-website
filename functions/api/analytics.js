@@ -1,12 +1,21 @@
-// Cloudflare Pages Function — lightweight practice arena analytics.
+// Cloudflare Pages Function — practice arena analytics via Workers Analytics Engine.
 // Deployed automatically by Cloudflare Pages at /api/analytics
 //
 // Required bindings:
-//   DB          → D1 database (aloktheanalyst_users)
+//   ANALYTICS   → Analytics Engine dataset (practice_events)
 //   SESSION_KV  → KV namespace (aloktheanalyst_sessions)
 //
-// Table (auto-created on first request):
-//   practice_events (id, user_id, event_type, case_id, metadata, created_at)
+// Data point schema (index1 + blob1-6 + double1-3):
+//   index1  — user_id          (primary cardinality dimension)
+//   blob1   — event_type
+//   blob2   — case_id
+//   blob3   — tag              (SQL / Case Study / Python / …)
+//   blob4   — difficulty       (easy / medium / hard)
+//   blob5   — dialect          (sql / python)
+//   blob6   — referrer         (session_start only)
+//   double1 — score            (score_received)
+//   double2 — hint_number      (hint_used)
+//   double3 — code_length      (answer_checked)
 
 // ── Allowed event types (whitelist — reject anything else) ──
 const ALLOWED_EVENTS = [
@@ -18,11 +27,12 @@ const ALLOWED_EVENTS = [
   'tab_switch',        // user switched between Code Editor / AI Coach
   'session_start',     // user landed on practice page
   'chat_message',      // user sent a message in AI Coach
+  'solution_view',     // user revealed the solution
+  'test_cases_run',    // user ran test cases
 ];
 
-const MAX_METADATA_LEN = 1024;  // limit metadata JSON size
-const RATE_LIMIT = 120;         // max analytics events per IP per window
-const RATE_WINDOW = 3600;       // 1 hour in seconds
+const RATE_LIMIT = 120;   // max events per IP per window
+const RATE_WINDOW = 3600; // 1 hour in seconds
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -46,42 +56,6 @@ function parseCookies(cookieHeader) {
   return cookies;
 }
 
-// ── Auto-create table if it doesn't exist ──
-let tableReady = false;
-
-async function ensureTable(db) {
-  if (tableReady) return;
-  try {
-    await db.prepare(`
-      CREATE TABLE IF NOT EXISTS practice_events (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL,
-        event_type TEXT NOT NULL,
-        case_id TEXT,
-        metadata TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `).run();
-
-    // Index for common queries (by user, by event type, by date)
-    await db.prepare(`
-      CREATE INDEX IF NOT EXISTS idx_events_user ON practice_events(user_id)
-    `).run();
-    await db.prepare(`
-      CREATE INDEX IF NOT EXISTS idx_events_type ON practice_events(event_type, created_at)
-    `).run();
-    await db.prepare(`
-      CREATE INDEX IF NOT EXISTS idx_events_case ON practice_events(case_id, event_type)
-    `).run();
-
-    tableReady = true;
-  } catch (err) {
-    console.error('Table creation failed:', err);
-    // Don't throw — table might already exist from a previous deployment
-    tableReady = true;
-  }
-}
-
 export async function onRequest(context) {
   const { env, request } = context;
 
@@ -94,12 +68,12 @@ export async function onRequest(context) {
     return json({ error: 'Method not allowed' }, 405);
   }
 
-  // ── Check DB binding ──
-  if (!env.DB) {
-    return json({ error: 'Database not configured' }, 503);
+  // ── Check Analytics Engine binding ──
+  if (!env.ANALYTICS) {
+    return json({ error: 'Analytics not configured' }, 503);
   }
 
-  // ── Authenticate — require valid session ──
+  // ── Authenticate — resolve user from session cookie ──
   let userId = 'anonymous';
   if (env.SESSION_KV) {
     const cookies = parseCookies(request.headers.get('Cookie') || '');
@@ -139,43 +113,35 @@ export async function onRequest(context) {
 
   const { event, case_id, metadata } = body;
 
-  // Validate event type (strict whitelist)
+  // Validate event type
   if (!event || !ALLOWED_EVENTS.includes(event)) {
     return json({ error: 'Invalid event type' }, 400);
   }
 
-  // Validate case_id if provided (alphanumeric + underscore only, max 50 chars)
+  // Validate case_id if provided
   if (case_id && (typeof case_id !== 'string' || case_id.length > 50 || !/^[a-zA-Z0-9_]+$/.test(case_id))) {
     return json({ error: 'Invalid case_id' }, 400);
   }
 
-  // Validate and limit metadata
-  let metadataStr = null;
-  if (metadata) {
-    try {
-      metadataStr = JSON.stringify(metadata);
-      if (metadataStr.length > MAX_METADATA_LEN) {
-        metadataStr = metadataStr.substring(0, MAX_METADATA_LEN);
-      }
-    } catch {
-      metadataStr = null;
-    }
-  }
+  // ── Build and write data point ──
+  const m = (metadata && typeof metadata === 'object') ? metadata : {};
 
-  // ── Insert event ──
-  try {
-    await ensureTable(env.DB);
+  env.ANALYTICS.writeDataPoint({
+    indexes: [userId],
+    blobs: [
+      event,                          // blob1 — event_type
+      case_id || '',                  // blob2 — case_id
+      String(m.tag || ''),            // blob3 — tag
+      String(m.difficulty || ''),     // blob4 — difficulty
+      String(m.dialect || ''),        // blob5 — dialect
+      String(m.referrer || ''),       // blob6 — referrer (session_start)
+    ],
+    doubles: [
+      Number(m.score) || 0,           // double1 — score (score_received)
+      Number(m.hint_number) || 0,     // double2 — hint_number (hint_used)
+      Number(m.code_length) || 0,     // double3 — code_length (answer_checked)
+    ],
+  });
 
-    await env.DB.prepare(
-      `INSERT INTO practice_events (user_id, event_type, case_id, metadata)
-       VALUES (?1, ?2, ?3, ?4)`
-    )
-      .bind(userId, event, case_id || null, metadataStr)
-      .run();
-
-    return json({ ok: true });
-  } catch (err) {
-    console.error('Analytics insert failed:', err);
-    return json({ error: 'Failed to record event' }, 500);
-  }
+  return json({ ok: true });
 }
