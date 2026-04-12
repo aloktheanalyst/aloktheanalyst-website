@@ -27,12 +27,17 @@ function corsHeaders(requestOrigin) {
 // Parse JS object/array literals that aren't valid JSON (single quotes, unquoted keys)
 function safeParseJS(str) {
   try { return JSON.parse(str); } catch {}
-  // Step 1: Extract single-quoted strings into placeholders (so key-quoting won't corrupt them)
+  // Pre-process: doubled single quotes ('') from SQL escaping → placeholder
+  let s = str.replace(/''/g, '\x01');
+  // Step 1: Extract single-quoted strings into placeholders
   const strings = [];
-  let s = str.replace(/'((?:[^'\\]|\\.)*)'/g, (_, c) => {
+  s = s.replace(/'((?:[^'\\]|\\.)*)'/g, (_, c) => {
+    c = c.replace(/\x01/g, "'"); // restore '' as literal single quote in content
     strings.push('"' + c.replace(/\\'/g, "'").replace(/"/g, '\\"') + '"');
     return '\x00S' + (strings.length - 1) + '\x00';
   });
+  // Restore any remaining placeholders outside strings as empty-string pairs
+  s = s.replace(/\x01/g, '""');
   // Step 2: Quote unquoted keys (safe now — no string content to confuse the regex)
   s = s.replace(/([{,]\s*)([a-zA-Z_]\w*)\s*:/g, '$1"$2":');
   // Step 3: Restore strings
