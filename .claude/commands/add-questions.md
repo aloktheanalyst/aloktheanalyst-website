@@ -126,7 +126,37 @@ VALUES ('sql_company_topic', 0, 'Test name', 'SELECT ... reference query ...', 0
 INSERT OR IGNORE INTO test_cases (question_id, test_index, name, expected_query, min_match_ratio, fail_msg, max_rows, min_cols, check_function)
 VALUES ('sql_company_topic', 1, 'Second test', NULL, NULL, NULL, NULL, NULL,
   'function check(out) { if (!out) return { pass: false, msg: "No output" }; const lower = out.toLowerCase(); if (!lower.includes("expected_value")) return { pass: false, msg: "Hint" }; return { pass: true, msg: "Correct" }; }');
+
+-- 5. solutions table (model solution — REQUIRED for all new SQL/Python questions)
+INSERT OR IGNORE INTO solutions (question_id, solution_type, solution)
+VALUES ('sql_company_topic', 'sql', '**🎯 Approach: [Technique Name]**
+
+Brief explanation of the key insight.
+
+---
+
+**📝 Solution**
+
+` ` `sql
+-- The reference SQL solution here
+SELECT ...
+` ` `
+
+---
+
+**💡 Key Concepts**
+
+- **Concept 1** — explanation
+- **Concept 2** — explanation');
 ```
+
+**Solution format rules:**
+- `solution_type` must be `'sql'` or `'python'` for code questions
+- Use `---` to separate sections (rendered as accordion panels in the UI)
+- First `**bold**` text in each section becomes the accordion title
+- Include at minimum: Approach, Solution (with code block), Key Concepts
+- Optionally add an Alternative Approach section
+- The solution button is hidden until the user runs or tests their code at least once
 
 **Test case rules:**
 - At least 2 tests per SQL/Python question — no exceptions
@@ -193,8 +223,8 @@ SELECT id, title, topic, difficulty FROM questions WHERE id IN ('new_id_1', 'new
 -- case_prompts exist for ALL new questions
 SELECT question_id FROM case_prompts WHERE question_id IN ('new_id_1', 'new_id_2');
 
--- solutions exist for case study / puzzle / guesstimate
-SELECT question_id, solution_type FROM solutions WHERE question_id IN ('cs_id');
+-- solutions exist for ALL new questions (sql, python, casestudy, puzzle, guesstimate)
+SELECT question_id, solution_type FROM solutions WHERE question_id IN ('new_id_1', 'new_id_2');
 
 -- test_cases exist for all SQL/Python (min 2 per question), and test_index 0 has expected_query
 SELECT question_id, test_index,
@@ -251,6 +281,7 @@ If a match exists:
 ### Important rules
 
 - **EVERY SQL/Python question MUST have at least 2 TEST_CASES** — no exceptions.
+- **EVERY question MUST have a `solutions` entry** — SQL/Python use `solution_type = 'sql'/'python'`, case studies use `'casestudy'`, puzzles use `'puzzle'`, guesstimates use `'guesstimate'`.
 - **EVERY case study question MUST have a `_registry.yaml` entry**.
 - **EVERY question MUST have a D1 `case_prompts` entry**.
 - **ALWAYS include `<em>Asked at {Company}.</em>`** in SQL/Python question HTML (use "Classic SQL" if no company).

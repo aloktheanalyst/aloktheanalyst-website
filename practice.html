@@ -2938,6 +2938,7 @@ let conversationHistory = [];
 let isLoading = false;
 let activeFilter = 'all';
 let activeCaseId = null;
+let _codeSolutionReady = false; // true when a code question has a solution waiting to be revealed after first run
 
 // Code Editor state
 let sqlDB = null;             // Active DB instance (sql.js Database or PGlite)
@@ -3836,9 +3837,16 @@ async function loadCase(id) {
   // Show/hide solution button based on fetched content
   const solBtn = document.getElementById('showSolutionBtn');
   closeSolutionPanel();
+  _codeSolutionReady = false; // reset per-case
   if (solBtn) {
     const hasSolution = !!content.solution;
-    solBtn.style.display = hasSolution ? 'flex' : 'none';
+    if (hasSolution && isCodeCase(id)) {
+      // For SQL/Python: hide until user runs or tests their code at least once
+      solBtn.style.display = 'none';
+      _codeSolutionReady = true; // flag: solution exists, waiting for first run
+    } else {
+      solBtn.style.display = hasSolution ? 'flex' : 'none';
+    }
   }
 
   // For puzzle/guesstimate cases: display statically (no LLM call)
@@ -4751,6 +4759,14 @@ function copyTableName(name) {
   navigator.clipboard.writeText(name).catch(() => {});
 }
 
+// ── Reveal solution button for code questions after first run/test ──
+function revealCodeSolution() {
+  if (!_codeSolutionReady) return;
+  const btn = document.getElementById('showSolutionBtn');
+  if (btn) btn.style.display = 'flex';
+  _codeSolutionReady = false; // only reveal once
+}
+
 // ── Code execution (unified) ──
 async function runCode() {
   // Switch result tab to Output
@@ -4764,6 +4780,7 @@ async function runCode() {
   } else {
     await runSQL();
   }
+  revealCodeSolution(); // Show solution button after first code run
   // Cache the fresh output
   var resultsEl = document.getElementById('sqlResults');
   var footerEl = document.getElementById('sqlResultFooter');
@@ -5219,6 +5236,7 @@ async function runTestCases() {
     }
   }
 
+  revealCodeSolution(); // Show solution button after running tests
   // Render results
   const passed = results.filter(r => r.pass).length;
   const total = results.length;

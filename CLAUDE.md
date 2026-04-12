@@ -52,11 +52,11 @@ Framework codes: `rca`, `metric-design`, `product-analytics`, `market-entry`, `p
 
 1. ✅ Insert into D1 `questions` table
 2. ✅ Insert into D1 `case_prompts` table (ALL question types)
-3. ✅ If SQL: insert into D1 `sql_datasets` + `test_cases` tables (min 2 tests)
-4. ✅ If Python: insert into D1 `python_datasets` + `test_cases` tables (min 2 tests)
-5. ✅ If case study: insert into D1 `solutions` table + add to `frameworks/_registry.yaml`
-6. ✅ If puzzle/guesstimate: insert into D1 `solutions` table
-7. ✅ Run D1 verification queries
+3. ✅ Insert into D1 `solutions` table (ALL question types — `solution_type`: `'sql'`/`'python'`/`'casestudy'`/`'puzzle'`/`'guesstimate'`)
+4. ✅ If SQL: insert into D1 `sql_datasets` + `test_cases` tables (min 2 tests, test_index 0 must have `expected_query`)
+5. ✅ If Python: insert into D1 `python_datasets` + `test_cases` tables (min 2 tests, test_index 0 must have `expected_query`)
+6. ✅ If case study: add to `frameworks/_registry.yaml`
+7. ✅ Run D1 verification queries (questions, case_prompts, solutions, test_cases, datasets all present)
 8. ✅ Commit and push (only `frameworks/_registry.yaml` needs staging — practice.html is NOT modified for question data)
 
 ### topic and tag values
