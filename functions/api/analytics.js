@@ -5,14 +5,15 @@
 //   ANALYTICS   → Analytics Engine dataset (practice_events)
 //   SESSION_KV  → KV namespace (aloktheanalyst_sessions)
 //
-// Data point schema (index1 + blob1-6 + double1-3):
-//   index1  — user_id          (primary cardinality dimension)
+// Data point schema (index1 + blob1-7 + double1-3):
+//   index1  — email            (primary cardinality dimension)
 //   blob1   — event_type
 //   blob2   — case_id
 //   blob3   — tag              (SQL / Case Study / Python / …)
 //   blob4   — difficulty       (easy / medium / hard)
 //   blob5   — dialect          (sql / python)
 //   blob6   — referrer         (session_start only)
+//   blob7   — google_id
 //   double1 — score            (score_received)
 //   double2 — hint_number      (hint_used)
 //   double3 — code_length      (answer_checked)
@@ -75,6 +76,7 @@ export async function onRequest(context) {
 
   // ── Authenticate — resolve user from session cookie ──
   let userId = 'anonymous';
+  let googleId = '';
   if (env.SESSION_KV) {
     const cookies = parseCookies(request.headers.get('Cookie') || '');
     const sessionId = cookies.session;
@@ -83,7 +85,8 @@ export async function onRequest(context) {
         const raw = await env.SESSION_KV.get(`sess:${sessionId}`);
         if (raw) {
           const session = JSON.parse(raw);
-          userId = session.google_id || session.email || 'authenticated';
+          userId = session.email || session.google_id || 'authenticated';
+          googleId = session.google_id || '';
         }
       } catch { /* proceed with anonymous */ }
     }
@@ -135,6 +138,7 @@ export async function onRequest(context) {
       String(m.difficulty || ''),     // blob4 — difficulty
       String(m.dialect || ''),        // blob5 — dialect
       String(m.referrer || ''),       // blob6 — referrer (session_start)
+      googleId,                       // blob7 — google_id
     ],
     doubles: [
       Number(m.score) || 0,           // double1 — score (score_received)
