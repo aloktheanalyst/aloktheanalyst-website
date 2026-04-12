@@ -2703,6 +2703,9 @@ async function fetchDataset(id) {
     const res = await fetch('/api/practice-content?dataset=' + encodeURIComponent(id));
     if (!res.ok) return null;
     const data = await res.json();
+    // hints and schema arrive as raw JS literal strings — parse client-side
+    if (typeof data.hints === 'string') try { data.hints = eval(data.hints); } catch(e) { data.hints = []; }
+    if (typeof data.schema === 'string') try { data.schema = eval('(' + data.schema + ')'); } catch(e) { data.schema = []; }
     if (data.type === 'sql') SQL_DATASETS[id] = data;
     else if (data.type === 'python') PYTHON_DATASETS[id] = data;
     return data;

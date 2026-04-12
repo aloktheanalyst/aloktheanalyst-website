@@ -134,8 +134,8 @@ export async function onRequestGet(context) {
         label: row.label,
         question: row.question_html,
         defaultQuery: row.default_query,
-        hints: safeParseJS(row.hints),
-        schema: safeParseJS(row.schema_json),
+        hints: row.hints,
+        schema: row.schema_json,
         setup: { shared: row.setup_sql },
       }, 200, cors);
     }
@@ -151,8 +151,8 @@ export async function onRequestGet(context) {
         label: row.label,
         question: row.question_html,
         defaultQuery: row.default_query,
-        hints: safeParseJS(row.hints),
-        schema: safeParseJS(row.schema_json),
+        hints: row.hints,
+        schema: row.schema_json,
         setupCode: row.setup_code,
       }, 200, cors);
     }
