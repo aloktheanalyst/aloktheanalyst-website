@@ -4633,6 +4633,221 @@ const TEST_CASES = {
     }
   ],
 
+  // ── Meesho / Jio / Medbikri Cases ──
+
+  sql_revsegment: [
+    { name: 'Two segments returned: high_freq_2023 and other_users',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lower = out.toLowerCase();
+        const hasHigh = lower.includes('high_freq') || lower.includes('high freq');
+        const hasOther = lower.includes('other');
+        if (!hasHigh || !hasOther) return { pass: false, msg: 'Expected two segment labels: high_freq_2023 and other_users. Use a CTE to identify users with 12+ 2023 orders, then CASE to label April 2024 orders.' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length > 6) return { pass: false, msg: 'Expected exactly 2 data rows (one per segment), not individual orders' };
+        return { pass: true, msg: 'Both segment labels present' };
+      }
+    },
+    { name: 'Percentage contribution columns present (high_freq ~65%, other ~35%)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const decimals = out.match(/\d+\.\d+/g);
+        if (!decimals || decimals.length < 2) return { pass: false, msg: 'Expected percentage values per segment. Divide each segment revenue by total April 2024 revenue × 100.' };
+        const pcts = decimals.map(Number).filter(n => n > 1 && n < 100);
+        if (pcts.length < 2) return { pass: false, msg: 'Percentage values should be between 1 and 100. high_freq_2023 ≈ 65%, other_users ≈ 35%.' };
+        return { pass: true, msg: 'Percentage contributions present' };
+      }
+    }
+  ],
+
+  sql_tieredreward: [
+    { name: 'Gold/Silver/Bronze tiers assigned (no unqualified users)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lower = out.toLowerCase();
+        if (!lower.includes('gold')) return { pass: false, msg: 'Expected Gold tier — Alice and Grace have 20+ logins and $1000+ spend. Use CASE WHEN checking Gold first, then Silver, then Bronze.' };
+        if (!lower.includes('silver')) return { pass: false, msg: 'Expected Silver tier — Bob and Ivy have 10+ logins and $500+ spend.' };
+        if (!lower.includes('bronze')) return { pass: false, msg: 'Expected Bronze tier — Charlie, Diana, Frank have 5+ logins and $100+ spend.' };
+        const hasEve = /\beve\b/i.test(out);
+        const hasHank = /\bhank\b/i.test(out);
+        if (hasEve || hasHank) return { pass: false, msg: 'Eve (3 logins) and Hank (3 logins) do not meet any tier threshold — exclude users with no qualifying tier.' };
+        return { pass: true, msg: 'Gold, Silver, Bronze all present; unqualified users excluded' };
+      }
+    },
+    { name: 'Alice and Grace are Gold; ordered Gold first',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const lines = out.trim().split('\n');
+        const aliceLine = lines.find(l => /alice/i.test(l));
+        const graceLine = lines.find(l => /grace/i.test(l));
+        if (!aliceLine || !/gold/i.test(aliceLine)) return { pass: false, msg: 'Alice has 22 logins and $1200 spend — she should be Gold' };
+        if (!graceLine || !/gold/i.test(graceLine)) return { pass: false, msg: 'Grace has 20 logins and $1130 spend — she should be Gold' };
+        const goldIdx = lines.findIndex(l => /gold/i.test(l));
+        const silverIdx = lines.findIndex(l => /silver/i.test(l));
+        if (silverIdx > 0 && goldIdx > silverIdx) return { pass: false, msg: 'Order by tier rank: Gold first, then Silver, then Bronze' };
+        return { pass: true, msg: 'Alice and Grace correctly classified as Gold ✓' };
+      }
+    }
+  ],
+
+  sql_activeweeks: [
+    { name: 'Users 1 and 2 qualify (6 consecutive active weeks); user 3 does not',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const has1 = /\b1\b/.test(out);
+        const has2 = /\b2\b/.test(out);
+        if (!has1 || !has2) return { pass: false, msg: 'Expected users 1 and 2 — both have activity on 3+ distinct days for 6 consecutive calendar weeks. Use islands-and-gaps: week_number - ROW_NUMBER() to group consecutive weeks.' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length > 5) return { pass: false, msg: `Expected only 2 qualifying users, but got ${dataLines.length - 1} rows` };
+        return { pass: true, msg: 'Users 1 and 2 qualify with 6+ consecutive active weeks ✓' };
+      }
+    },
+    { name: 'Active week defined as 3+ distinct days (not just any activity)',
+      expectedQuery: `WITH weekly AS (SELECT user_id, strftime('%Y-%W', activity_date) AS week_key, COUNT(DISTINCT activity_date) AS active_days FROM user_activity GROUP BY user_id, week_key HAVING active_days >= 3), ranked AS (SELECT user_id, week_key, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY week_key) AS rn FROM weekly), islands AS (SELECT user_id, week_key, CAST(strftime('%W', week_key||'-01') AS INT) - rn AS grp FROM ranked) SELECT user_id FROM islands GROUP BY user_id, grp HAVING COUNT(*) >= 6`,
+      minMatchRatio: 0.3,
+      failMsg: 'Step 1: count distinct days per user per week. Step 2: keep weeks with 3+ days. Step 3: use ROW_NUMBER gap trick to find consecutive week runs of 6+.'
+    }
+  ],
+
+  sql_gmvretention: [
+    { name: 'Output has 6 columns: week_start + gmv_week_0 through gmv_week_4',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const firstLine = out.trim().split('\n')[0];
+        const colCount = (firstLine.match(/\|/g) || []).length + 1;
+        if (colCount < 5) return { pass: false, msg: `Expected 6 columns (week_start_date, gmv_week_0, gmv_week_1, gmv_week_2, gmv_week_3, gmv_week_4), got ${colCount}` };
+        const hasWeek = /\d{4}-\d{2}-\d{2}/.test(out);
+        if (!hasWeek) return { pass: false, msg: 'Expected date values for cohort week_start_date. Use DATE_TRUNC(week) or strftime to get week start.' };
+        return { pass: true, msg: `${colCount} columns with weekly cohort dates ✓` };
+      }
+    },
+    { name: 'Week 0 GMV is non-null for all cohorts; later weeks may have NULLs',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const dataLines = out.trim().split('\n').filter(l => l.trim() && !l.startsWith('-') && !/^\s*$/.test(l));
+        if (dataLines.length < 3) return { pass: false, msg: 'Expected multiple cohort rows (one per unique first-order week). GROUP BY cohort week after computing week_offset = (order_date - cohort_week) / 7.' };
+        const numbers = out.match(/\d+\.\d+|\d{3,}/g);
+        if (!numbers || numbers.length < 4) return { pass: false, msg: 'Expected GMV values (e.g. 1250.00). Use SUM(CASE WHEN week_offset=0 THEN total END) for each week column.' };
+        return { pass: true, msg: `${dataLines.length - 1} cohort rows with GMV values ✓` };
+      }
+    }
+  ],
+
+  sql_visitconvert: [
+    { name: 'Q1: Average visits before 1st order ≈ 2.5',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const nums = out.match(/\d+\.?\d*/g) || [];
+        const has2_5 = nums.some(n => Math.abs(parseFloat(n) - 2.5) < 0.1);
+        if (!has2_5) return { pass: false, msg: 'Expected avg visits before 1st order ≈ 2.5. Find MIN(created) per user in orders, then COUNT visits WHERE visit_date < first_order_date, then AVG.' };
+        return { pass: true, msg: 'Average ≈ 2.5 visits before first order ✓' };
+      }
+    },
+    { name: 'Q2: Only users with 8+ orders included; average and median present',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const hasAvg = /avg|average|mean/i.test(out);
+        const hasMedian = /median|percentile|middle/i.test(out);
+        const nums = out.match(/\d+\.?\d*/g) || [];
+        if (nums.length < 2) return { pass: false, msg: 'Expected both average and median values. Use ROW_NUMBER() to find the 8th order date per user; users 1, 2, 3, 5 have 8+ orders.' };
+        if (!hasAvg && !hasMedian && nums.length < 2) return { pass: false, msg: 'Label your output columns clearly (avg_visits, median_visits).' };
+        return { pass: true, msg: 'Avg and median visits before 8th order present ✓' };
+      }
+    }
+  ],
+
+  // ── Pelago Cases ──
+
+  sql_pelago_customers: [
+    { name: 'Q1: 4 customers without KrisFlyerNumber (C1, C5, C7, C9)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const hasC1 = out.includes('C1'), hasC5 = out.includes('C5');
+        const hasC7 = out.includes('C7'), hasC9 = out.includes('C9');
+        const wrongC2 = /\bC2\b/.test(out), wrongC4 = /\bC4\b/.test(out);
+        if (wrongC2 || wrongC4) return { pass: false, msg: 'C2 and C4 have KrisFlyerNumbers — they should not appear. Filter WHERE KrisFlyerNumber IS NULL.' };
+        if (!hasC1 || !hasC5 || !hasC7 || !hasC9) return { pass: false, msg: 'Expected C1, C5, C7, C9 (all have KrisFlyerNumber IS NULL). Check both NULL and empty string cases.' };
+        return { pass: true, msg: 'C1, C5, C7, C9 — all 4 customers without KrisFlyerNumber ✓' };
+      }
+    },
+    { name: 'Q2: Customers who never booked (C2, C4, C6, C10)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const hasC2 = out.includes('C2'), hasC4 = out.includes('C4');
+        const hasC6 = out.includes('C6'), hasC10 = out.includes('C10');
+        const wrongC1 = /\bC1\b/.test(out), wrongC5 = /\bC5\b/.test(out);
+        if (wrongC1 || wrongC5) return { pass: false, msg: 'C1 and C5 have bookings — they should not appear. Use NOT IN (SELECT CustomerID FROM bookings) or LEFT JOIN WHERE BookingID IS NULL.' };
+        if (!hasC2 || !hasC4 || !hasC6 || !hasC10) return { pass: false, msg: 'Expected C2, C4, C6, C10 (no entries in bookings table).' };
+        return { pass: true, msg: 'C2, C4, C6, C10 — all customers with no bookings ✓' };
+      }
+    }
+  ],
+
+  sql_pelago_bookings: [
+    { name: 'Q1: Bookings per day per country (3+ columns, ordered by country ASC)',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const firstLine = out.trim().split('\n')[0];
+        const colCount = (firstLine.match(/\|/g) || []).length + 1;
+        if (colCount < 3) return { pass: false, msg: `Expected at least 4 columns (Country, BookingDate, num_bookings, total_gmv, unique_customers), got ${colCount}` };
+        const hasCountry = /AU|ID|MY|SG|TH|VN/i.test(out);
+        if (!hasCountry) return { pass: false, msg: 'Expected country codes in output (SG, TH, VN, etc). JOIN bookings with customers on CustomerID to get Country.' };
+        return { pass: true, msg: `${colCount} columns with country breakdown ✓` };
+      }
+    },
+    { name: 'Q2: C1 and C5 are the only customers with >$100 total GMV',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const hasC1 = out.includes('C1'), hasC5 = out.includes('C5');
+        const wrongC3 = /\bC3\b/.test(out), wrongC9 = /\bC9\b/.test(out);
+        if (wrongC3 || wrongC9) return { pass: false, msg: 'C3 ($85.69) and C9 ($60.06) are below $100 total — exclude them. Use HAVING SUM(GMV) > 100.' };
+        if (!hasC1 || !hasC5) return { pass: false, msg: 'Expected C1 ($130.74) and C5 ($105.50) — both exceed $100 total GMV. GROUP BY CustomerID with HAVING SUM(GMV) > 100.' };
+        return { pass: true, msg: 'C1 and C5 correctly identified as high-value customers ✓' };
+      }
+    }
+  ],
+
+  sql_pelago_cumulative: [
+    { name: 'Output has 4 columns: Country, Month, GMV, CumulativeGMV',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const firstLine = out.trim().split('\n')[0];
+        const colCount = (firstLine.match(/\|/g) || []).length + 1;
+        if (colCount < 4) return { pass: false, msg: `Expected 4 columns (Country, Month, GMV, CumulativeGMV), got ${colCount}` };
+        const hasMonth = /2020-\d{2}/.test(out);
+        if (!hasMonth) return { pass: false, msg: 'Expected 2020 month values. Filter WHERE year = 2020, then GROUP BY Country, month using DATE_TRUNC or strftime.' };
+        return { pass: true, msg: `${colCount} columns with 2020 monthly data ✓` };
+      }
+    },
+    { name: 'CumulativeGMV increases within each country group',
+      expectedQuery: `WITH monthly AS (SELECT c.Country, strftime('%Y-%m-01', b.BookingDate) AS Month, SUM(b.GMV) AS GMV FROM bookings b JOIN customers c ON b.CustomerID = c.CustomerID WHERE strftime('%Y', b.BookingDate) = '2020' GROUP BY c.Country, Month) SELECT Country, Month, GMV, SUM(GMV) OVER (PARTITION BY Country ORDER BY Month) AS CumulativeGMV FROM monthly ORDER BY Country ASC, Month ASC`,
+      minMatchRatio: 0.3,
+      failMsg: 'Use SUM(monthly_gmv) OVER (PARTITION BY Country ORDER BY Month) for the cumulative running total. Filter to 2020, JOIN customers for Country, GROUP BY Country+Month first.'
+    }
+  ],
+
+  sql_pelago_users: [
+    { name: 'Q1: Distinct users per day (date column + count column)',
+      expectedQuery: `SELECT DATE(EventTime) AS event_date, COUNT(DISTINCT UID) AS distinct_users FROM event GROUP BY event_date ORDER BY event_date`,
+      minMatchRatio: 0.4,
+      failMsg: 'Use DATE(EventTime) to extract the date, then COUNT(DISTINCT UID) grouped by date.',
+      maxRows: 20
+    },
+    { name: 'Q2: January 2024 has 7 new users; columns year_month, n_new_user, returning_user',
+      check(out) {
+        if (!out) return { pass: false, msg: 'No output' };
+        const hasYearMonth = /year_month|2024-01|2024-02/i.test(out);
+        if (!hasYearMonth) return { pass: false, msg: 'Expected year_month column with values like 2024-01. Use strftime(\'%Y-%m\', EventTime) to group by month.' };
+        const lines = out.trim().split('\n').filter(l => /2024-01/.test(l));
+        if (lines.length === 0) return { pass: false, msg: 'No January 2024 row found. Find each user\'s MIN(EventTime) as first_event, then label them new if first_event month = current month.' };
+        const nums = (lines[0].match(/\d+/g) || []).map(Number).filter(n => n > 0 && n < 20);
+        const has7 = nums.includes(7);
+        if (!has7) return { pass: false, msg: `January 2024 should have 7 new users (U001–U007 all first appear in Jan). Found: ${lines[0]}` };
+        return { pass: true, msg: 'January 2024: 7 new users ✓' };
+      }
+    }
+  ],
+
   // ── Porter Cases ──
 
   sql_porter_orders: [
