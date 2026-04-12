@@ -24,6 +24,15 @@ function corsHeaders(requestOrigin) {
   };
 }
 
+// Parse JS object/array literals that aren't valid JSON (single quotes, unquoted keys)
+function safeParseJS(str) {
+  try { return JSON.parse(str); } catch {}
+  let s = str
+    .replace(/'((?:[^'\\]|\\.)*)'/g, (_, c) => '"' + c.replace(/\\'/g, "'").replace(/"/g, '\\"') + '"')
+    .replace(/([{,]\s*)([a-zA-Z_]\w*)\s*:/g, '$1"$2":');
+  return JSON.parse(s);
+}
+
 function json(body, status = 200, cors = {}) {
   return new Response(JSON.stringify(body), {
     status,
@@ -113,8 +122,8 @@ export async function onRequestGet(context) {
         label: row.label,
         question: row.question_html,
         defaultQuery: row.default_query,
-        hints: JSON.parse(row.hints),
-        schema: JSON.parse(row.schema_json),
+        hints: safeParseJS(row.hints),
+        schema: safeParseJS(row.schema_json),
         setup: { shared: row.setup_sql },
       }, 200, cors);
     }
@@ -130,8 +139,8 @@ export async function onRequestGet(context) {
         label: row.label,
         question: row.question_html,
         defaultQuery: row.default_query,
-        hints: JSON.parse(row.hints),
-        schema: JSON.parse(row.schema_json),
+        hints: safeParseJS(row.hints),
+        schema: safeParseJS(row.schema_json),
         setupCode: row.setup_code,
       }, 200, cors);
     }
