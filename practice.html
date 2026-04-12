@@ -4657,6 +4657,11 @@ const TEST_CASES = {
         if (pcts.length < 2) return { pass: false, msg: 'Percentage values should be between 1 and 100. high_freq_2023 ≈ 65%, other_users ≈ 35%.' };
         return { pass: true, msg: 'Percentage contributions present' };
       }
+    },
+    { name: 'Expected: segment revenue and % contribution',
+      expectedQuery: `WITH hf AS (SELECT user_id FROM orders WHERE order_date >= '2023-01-01' AND order_date < '2024-01-01' GROUP BY user_id HAVING COUNT(*) >= 12), apr AS (SELECT CASE WHEN user_id IN (SELECT user_id FROM hf) THEN 'high_freq_2023' ELSE 'other_users' END AS segment, SUM(amount) AS revenue FROM orders WHERE order_date >= '2024-04-01' AND order_date < '2024-05-01' GROUP BY segment), tot AS (SELECT SUM(revenue) AS t FROM apr) SELECT segment, revenue, ROUND(revenue*100.0/t, 2) AS pct_contribution FROM apr, tot ORDER BY segment DESC`,
+      minMatchRatio: 0.3,
+      failMsg: 'Expected high_freq_2023 (~$1545, ~65%) and other_users (~$830, ~35%) for April 2024 revenue.'
     }
   ],
 
@@ -4687,6 +4692,11 @@ const TEST_CASES = {
         if (silverIdx > 0 && goldIdx > silverIdx) return { pass: false, msg: 'Order by tier rank: Gold first, then Silver, then Bronze' };
         return { pass: true, msg: 'Alice and Grace correctly classified as Gold ✓' };
       }
+    },
+    { name: 'Expected: Alice/Grace=Gold, Bob/Ivy=Silver, Charlie/Diana/Frank=Bronze',
+      expectedQuery: `WITH lg AS (SELECT user_id, COUNT(*) AS cnt FROM activity_logs WHERE activity_type='login' AND activity_date >= DATE('2024-06-30','-30 days') GROUP BY user_id), sp AS (SELECT user_id, SUM(amount) AS tot FROM transactions WHERE transaction_date >= DATE('2024-06-30','-30 days') GROUP BY user_id) SELECT u.user_name, CASE WHEN COALESCE(lg.cnt,0)>=20 AND COALESCE(sp.tot,0)>=1000 THEN 'Gold' WHEN COALESCE(lg.cnt,0)>=10 AND COALESCE(sp.tot,0)>=500 THEN 'Silver' WHEN COALESCE(lg.cnt,0)>=5 AND COALESCE(sp.tot,0)>=100 THEN 'Bronze' END AS tier FROM users u LEFT JOIN lg ON u.user_id=lg.user_id LEFT JOIN sp ON u.user_id=sp.user_id WHERE CASE WHEN COALESCE(lg.cnt,0)>=20 AND COALESCE(sp.tot,0)>=1000 THEN 1 WHEN COALESCE(lg.cnt,0)>=10 AND COALESCE(sp.tot,0)>=500 THEN 1 WHEN COALESCE(lg.cnt,0)>=5 AND COALESCE(sp.tot,0)>=100 THEN 1 END=1 ORDER BY CASE WHEN COALESCE(lg.cnt,0)>=20 AND COALESCE(sp.tot,0)>=1000 THEN 1 WHEN COALESCE(lg.cnt,0)>=10 AND COALESCE(sp.tot,0)>=500 THEN 2 ELSE 3 END, u.user_name`,
+      minMatchRatio: 0.3,
+      failMsg: 'Expected 5 qualifying users: Alice & Grace = Gold, Bob & Ivy = Silver, Charlie/Diana/Frank = Bronze. Eve, Hank, Jack excluded.'
     }
   ],
 
@@ -4730,6 +4740,11 @@ const TEST_CASES = {
         if (!numbers || numbers.length < 4) return { pass: false, msg: 'Expected GMV values (e.g. 1250.00). Use SUM(CASE WHEN week_offset=0 THEN total END) for each week column.' };
         return { pass: true, msg: `${dataLines.length - 1} cohort rows with GMV values ✓` };
       }
+    },
+    { name: 'Expected: GMV cohort matrix by week (week_start → gmv_week_0..4)',
+      expectedQuery: `WITH cohorts AS (SELECT user_id, DATE(MIN(created),'weekday 1','-6 days') AS cw FROM orders GROUP BY user_id), tagged AS (SELECT o.user_id, o.total, CAST((JULIANDAY(o.created)-JULIANDAY(c.cw))/7 AS INT) AS wk, c.cw FROM orders o JOIN cohorts c ON o.user_id=c.user_id) SELECT cw AS week_start_date, SUM(CASE WHEN wk=0 THEN total END) AS gmv_week_0, SUM(CASE WHEN wk=1 THEN total END) AS gmv_week_1, SUM(CASE WHEN wk=2 THEN total END) AS gmv_week_2, SUM(CASE WHEN wk=3 THEN total END) AS gmv_week_3, SUM(CASE WHEN wk=4 THEN total END) AS gmv_week_4 FROM tagged GROUP BY cw ORDER BY cw`,
+      minMatchRatio: 0.25,
+      failMsg: 'Use DATE(MIN(created),weekday 1,-6 days) for cohort week start. week_offset = CAST((order_date - cohort_week)/7 AS INT). Pivot with SUM(CASE WHEN offset=N).'
     }
   ],
 
@@ -4753,6 +4768,11 @@ const TEST_CASES = {
         if (!hasAvg && !hasMedian && nums.length < 2) return { pass: false, msg: 'Label your output columns clearly (avg_visits, median_visits).' };
         return { pass: true, msg: 'Avg and median visits before 8th order present ✓' };
       }
+    },
+    { name: 'Expected Q1: avg visits before 1st order (≈ 2.5)',
+      expectedQuery: `WITH fo AS (SELECT user_id, MIN(created) AS first_order FROM orders GROUP BY user_id), vc AS (SELECT v.user_id, COUNT(*) AS cnt FROM visits v JOIN fo ON v.user_id=fo.user_id WHERE v.created < fo.first_order GROUP BY v.user_id) SELECT ROUND(AVG(cnt),2) AS avg_visits_before_1st_order FROM vc`,
+      minMatchRatio: 0.3,
+      failMsg: 'Find MIN(created) per user in orders. COUNT visits WHERE visit.created < first_order per user. Then AVG those counts. Expected: 2.5'
     }
   ],
 
@@ -4780,6 +4800,11 @@ const TEST_CASES = {
         if (!hasC2 || !hasC4 || !hasC6 || !hasC10) return { pass: false, msg: 'Expected C2, C4, C6, C10 (no entries in bookings table).' };
         return { pass: true, msg: 'C2, C4, C6, C10 — all customers with no bookings ✓' };
       }
+    },
+    { name: 'Expected Q1: C1, C5, C7, C9 have no KrisFlyerNumber',
+      expectedQuery: `SELECT CustomerID, RegistrationDate, Country FROM customers WHERE KrisFlyerNumber IS NULL ORDER BY CustomerID`,
+      minMatchRatio: 0.4,
+      failMsg: 'WHERE KrisFlyerNumber IS NULL returns C1, C5, C7, C9. Also consider OR KrisFlyerNumber = \'\' for empty strings.'
     }
   ],
 
@@ -4804,6 +4829,11 @@ const TEST_CASES = {
         if (!hasC1 || !hasC5) return { pass: false, msg: 'Expected C1 ($130.74) and C5 ($105.50) — both exceed $100 total GMV. GROUP BY CustomerID with HAVING SUM(GMV) > 100.' };
         return { pass: true, msg: 'C1 and C5 correctly identified as high-value customers ✓' };
       }
+    },
+    { name: 'Expected Q2: customers with >$100 total GMV',
+      expectedQuery: `SELECT CustomerID, ROUND(SUM(GMV),2) AS total_gmv FROM bookings GROUP BY CustomerID HAVING SUM(GMV) > 100 ORDER BY CustomerID`,
+      minMatchRatio: 0.4,
+      failMsg: 'GROUP BY CustomerID, HAVING SUM(GMV) > 100. Expected: C1=$130.74, C5=$105.50.'
     }
   ],
 
@@ -4893,6 +4923,11 @@ const TEST_CASES = {
         if (!has1287 || !has1729) return { pass: false, msg: 'Expected drivers 1287 ($181) and 1729 ($56). JOIN fare_info on order_id, filter Sept 2022, HAVING SUM(order_fare) < 200.' };
         return { pass: true, msg: 'Correctly returned drivers 1287 and 1729' };
       }
+    },
+    { name: 'Expected Q1: drivers with <2 orders in Sept 2022',
+      expectedQuery: `SELECT driver_id, COUNT(*) AS order_count FROM orders_info WHERE strftime('%Y-%m', order_date)='2022-09' GROUP BY driver_id HAVING COUNT(*) < 2 ORDER BY driver_id`,
+      minMatchRatio: 0.35,
+      failMsg: 'Filter Sept 2022, GROUP BY driver_id, HAVING COUNT(*) < 2. Expected: driver 1729 (1 order), driver 4942 (1 order).'
     }
   ],
 
@@ -4919,6 +4954,11 @@ const TEST_CASES = {
         if (dataLines.length < 5) return { pass: false, msg: 'Expected multiple rows (one per month/product/type combination)' };
         return { pass: true, msg: 'Cumulative column present with multiple rows' };
       }
+    },
+    { name: 'Expected: 6-column cumulative booking matrix with Pct_Change',
+      expectedQuery: `WITH m AS (SELECT month, product, type, SUM(amount) AS Amount_Booked FROM bookings GROUP BY month, product, type), c AS (SELECT month, product, type, Amount_Booked, SUM(Amount_Booked) OVER (PARTITION BY product, type ORDER BY month) AS Cumulative FROM m) SELECT month, product, type, Amount_Booked, Cumulative AS Cumulative_Amount_Booked, ROUND((Cumulative-LAG(Cumulative) OVER (PARTITION BY product,type ORDER BY month))*100.0/LAG(Cumulative) OVER (PARTITION BY product,type ORDER BY month),2) AS Pct_Change FROM c ORDER BY month, product, type`,
+      minMatchRatio: 0.25,
+      failMsg: 'CTE 1: aggregate by month/product/type. CTE 2: add cumulative SUM OVER(PARTITION BY product,type ORDER BY month). Outer: add LAG-based Pct_Change.'
     }
   ],
 
@@ -4944,6 +4984,11 @@ const TEST_CASES = {
         if (!hasTwos) return { pass: false, msg: `January 2024 should show 2 active and 2 new customers (C1 joined Jan 15, C2 joined Jan 20). Found: ${lines[0]}` };
         return { pass: true, msg: 'January 2024: 2 active, 2 new ✓' };
       }
+    },
+    { name: 'Expected: monthly active and new customer counts',
+      expectedQuery: `SELECT d.month, COUNT(DISTINCT c.customer_id) AS active_customers, COUNT(DISTINCT CASE WHEN d.date=c.customer_start_date THEN c.customer_id END) AS new_customers FROM dates d JOIN customers c ON d.date BETWEEN c.customer_start_date AND COALESCE(c.customer_churn_date,'9999-12-31') GROUP BY d.month ORDER BY d.month`,
+      minMatchRatio: 0.3,
+      failMsg: 'JOIN dates with customers WHERE date BETWEEN start_date AND COALESCE(churn_date,9999-12-31). COUNT(DISTINCT id) for active; COUNT(DISTINCT CASE WHEN date=start_date) for new.'
     }
   ],
 
@@ -4967,6 +5012,11 @@ const TEST_CASES = {
         if (!numbers || numbers.length < 5) return { pass: false, msg: 'Use SUM(gmv) OVER (PARTITION BY customer_id ORDER BY order_date RANGE BETWEEN INTERVAL \'14\' DAY PRECEDING AND CURRENT ROW) for rolling 14-day GMV.' };
         return { pass: true, msg: `${colCount} columns including rolling GMV values` };
       }
+    },
+    { name: 'Expected Q2: rolling 14-day GMV per customer',
+      expectedQuery: `WITH daily AS (SELECT customer_id, order_date, SUM(gmv) AS daily_gmv FROM orders GROUP BY customer_id, order_date) SELECT customer_id, order_date, daily_gmv, (SELECT SUM(gmv) FROM orders o2 WHERE o2.customer_id=d.customer_id AND o2.order_date BETWEEN DATE(d.order_date,'-14 days') AND d.order_date) AS rolling_14d_gmv FROM daily d ORDER BY customer_id, order_date`,
+      minMatchRatio: 0.25,
+      failMsg: 'SQLite: use correlated subquery SUM(gmv) WHERE order_date BETWEEN DATE(current,\'-14 days\') AND current. PostgreSQL: RANGE BETWEEN INTERVAL \'14\' DAY PRECEDING AND CURRENT ROW.'
     }
   ],
 
@@ -4998,6 +5048,11 @@ const TEST_CASES = {
         if (line8 && !/inner/i.test(line8)) return { pass: false, msg: 'Node 8 has a parent (5) and is a parent of 6,9 — it should be Inner' };
         return { pass: true, msg: 'Node 5=Root, nodes 2 and 8=Inner ✓' };
       }
+    },
+    { name: 'Expected: all 7 nodes classified as Root/Inner/Leaf',
+      expectedQuery: `SELECT N, CASE WHEN P IS NULL THEN 'Root' WHEN N NOT IN (SELECT DISTINCT P FROM BST WHERE P IS NOT NULL) THEN 'Leaf' ELSE 'Inner' END AS node_type FROM BST ORDER BY N`,
+      minMatchRatio: 0.4,
+      failMsg: 'CASE: P IS NULL → Root. N not in non-null parents → Leaf. Else → Inner. Always filter WHERE P IS NOT NULL in the NOT IN subquery to avoid NULL pitfalls.'
     }
   ],
 
@@ -5024,6 +5079,11 @@ const TEST_CASES = {
         if (hardikLine && (!/\b1\b/.test(hardikLine) || !/\b3\b/.test(hardikLine))) return { pass: false, msg: `Hardik should have is_manager=1 and num_reports=3 (manages Chaitali, Komal, Muffy). Found: ${hardikLine}` };
         return { pass: true, msg: 'Khilan and Hardik correctly show is_manager=1 with 3 reports each ✓' };
       }
+    },
+    { name: 'Expected: 7 employees with id, name, manager_name, is_manager, num_reports',
+      expectedQuery: `SELECT e.id, e.name, m.name AS manager_name, CASE WHEN e.id IN (SELECT DISTINCT manager_id FROM employees WHERE manager_id IS NOT NULL) THEN 1 ELSE 0 END AS is_manager, (SELECT COUNT(*) FROM employees e2 WHERE e2.manager_id=e.id) AS num_reports FROM employees e LEFT JOIN employees m ON e.manager_id=m.id ORDER BY e.id`,
+      minMatchRatio: 0.3,
+      failMsg: 'LEFT JOIN employees to itself for manager_name. Use IN subquery for is_manager and correlated COUNT for num_reports.'
     }
   ],
 
