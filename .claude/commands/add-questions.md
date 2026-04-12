@@ -130,8 +130,9 @@ VALUES ('sql_company_topic', 1, 'Second test', NULL, NULL, NULL, NULL, NULL,
 
 **Test case rules:**
 - At least 2 tests per SQL/Python question — no exceptions
+- **test_index 0 MUST have an `expected_query`** — this powers the "Expected Output" tab in the UI. Without it, users see "No expected output" which is confusing. The `expected_query` should be a complete reference SQL that produces the correct answer.
 - `expectedQuery`: reference SQL that produces the correct answer; the runner extracts numeric values and checks if they appear in user output. Use `minMatchRatio` 0.3–0.5
-- `check_function`: a JS function string `function check(out) { ... return {pass, msg}; }` for pattern matching
+- `check_function`: a JS function string `function check(out) { ... return {pass, msg}; }` for pattern matching. A test can have BOTH `expected_query` and `check_function` — use both on test_index 0 when the expected output alone isn't enough to validate correctness.
 - `failMsg` should hint at the technique, not reveal the answer
 - Use `maxRows` / `minCols` constraints when relevant
 
@@ -195,15 +196,26 @@ SELECT question_id FROM case_prompts WHERE question_id IN ('new_id_1', 'new_id_2
 -- solutions exist for case study / puzzle / guesstimate
 SELECT question_id, solution_type FROM solutions WHERE question_id IN ('cs_id');
 
--- test_cases exist for all SQL/Python (min 2 per question)
-SELECT question_id, COUNT(*) as test_count FROM test_cases
-WHERE question_id IN ('sql_id_1', 'sql_id_2') GROUP BY question_id;
+-- test_cases exist for all SQL/Python (min 2 per question), and test_index 0 has expected_query
+SELECT question_id, test_index,
+  CASE WHEN expected_query IS NOT NULL THEN 'YES' ELSE 'MISSING' END AS has_expected_output,
+  CASE WHEN check_function IS NOT NULL THEN 'YES' ELSE 'NO' END AS has_check_fn
+FROM test_cases
+WHERE question_id IN ('sql_id_1', 'sql_id_2')
+ORDER BY question_id, test_index;
 
 -- sql_datasets / python_datasets exist
 SELECT question_id FROM sql_datasets WHERE question_id IN ('sql_id_1');
 ```
 
-If any are missing, add them before committing.
+**Verify expected output**: Every SQL/Python question MUST have `expected_query` set on `test_index = 0`. This powers the "Expected Output" tab in the UI. If any test_index 0 row shows `has_expected_output = MISSING`, UPDATE it to add a reference query:
+
+```sql
+UPDATE test_cases SET expected_query = 'SELECT ...reference query...', min_match_ratio = 0.3
+WHERE question_id = 'sql_id' AND test_index = 0;
+```
+
+If any data is missing, fix it before committing.
 
 ### Step 8: Commit and push
 
