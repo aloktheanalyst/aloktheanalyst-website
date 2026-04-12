@@ -148,7 +148,7 @@ export async function onRequestGet(context) {
     }
 
     const { results } = await env.CONTENT_DB.prepare(
-      'SELECT name, expected_query, min_match_ratio, fail_msg, max_rows, min_cols, check_function FROM test_cases WHERE question_id = ? ORDER BY test_index'
+      'SELECT name, expected_query, min_match_ratio, fail_msg, max_rows, min_rows, min_cols, check_function, assertion FROM test_cases WHERE question_id = ? ORDER BY test_index'
     ).bind(testId).all();
 
     if (results.length === 0) {
@@ -162,8 +162,10 @@ export async function onRequestGet(context) {
       if (r.min_match_ratio !== null) test.minMatchRatio = r.min_match_ratio;
       if (r.fail_msg) test.failMsg = r.fail_msg;
       if (r.max_rows !== null) test.maxRows = r.max_rows;
+      if (r.min_rows !== null) test.minRows = r.min_rows;
       if (r.min_cols !== null) test.minCols = r.min_cols;
       if (r.check_function) test.checkFunction = r.check_function;
+      if (r.assertion) test.assertion = r.assertion;
       return test;
     });
 
