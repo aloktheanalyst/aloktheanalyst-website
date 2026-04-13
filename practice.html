@@ -3381,7 +3381,7 @@ function renderBrowseGrid() {
   if (statsEl) statsEl.textContent = solvedCount + ' of ' + filtered.length + ' solved';
 
   // Update chip counts
-  var allTopics = ['all', 'sql', 'python', 'casestudy', 'puzzles', 'guesstimates'];
+  var allTopics = ['all', 'sql', 'python', 'casestudy', 'puzzles', 'guesstimates', 'bi', 'behavioral'];
   allTopics.forEach(function(topic) {
     var chip = document.querySelector('.browse-chip[data-topic="' + topic + '"]');
     if (!chip) return;
