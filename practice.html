@@ -5030,15 +5030,35 @@ async function runSQL() {
       const r = results[results.length - 1];
       columns = r.columns; rows = r.values;
     } else {
-      const result = await sqlDB.query(query);
+      // PGlite doesn't support multiple statements in one query() call —
+      // split on ';' and run each statement, showing the last result.
+      const stmts = query.split(';').map(s => s.trim()).filter(s => s.length > 0);
+      const multiQuery = stmts.length > 1;
+      let result = null;
+      for (const stmt of stmts) {
+        result = await sqlDB.query(stmt);
+      }
+      if (!result || (!result.rows?.length && !(result.fields?.length))) {
+        showCodeSuccess(startTime); return;
+      }
       if (!result.rows || result.rows.length === 0) {
-        if (result.fields && result.fields.length > 0) {
-          columns = result.fields.map(f => f.name); rows = [];
-        } else { showCodeSuccess(startTime); return; }
+        columns = result.fields.map(f => f.name); rows = [];
       } else {
         columns = result.fields.map(f => f.name);
         rows = result.rows.map(row => columns.map(col => row[col]));
       }
+      const elapsed = (performance.now() - startTime).toFixed(1);
+      renderSQLResults(columns, rows, elapsed);
+      if (multiQuery) {
+        const partHint = document.getElementById('partSelector')?.style.display !== 'none'
+          ? ' Use the <strong>Testing:</strong> dropdown to switch parts.'
+          : '';
+        const info = document.createElement('div');
+        info.style.cssText = 'padding:6px 12px;font-size:0.75rem;color:var(--muted);border-top:1px solid var(--border);';
+        info.innerHTML = `ℹ️ Multiple queries detected — showing result of the last query.${partHint}`;
+        document.getElementById('sqlResults').appendChild(info);
+      }
+      return;
     }
     const elapsed = (performance.now() - startTime).toFixed(1);
     renderSQLResults(columns, rows, elapsed);
