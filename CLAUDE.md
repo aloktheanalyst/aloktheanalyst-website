@@ -22,8 +22,8 @@ Framework codes: `rca`, `metric-design`, `product-analytics`, `market-entry`, `p
 **PROMPTS array** (~line 2606) — metadata for every question:
 ```javascript
 { id: 'sql_company_topic', title: 'Company: Question Title', topic: 'sql', difficulty: 'medium', tag: 'SQL' }
-// topic: sql | casestudy | python | puzzles | guesstimates
-// tag:   SQL | Case Study | Python | Puzzle | Guesstimate
+// topic: sql | casestudy | python | puzzles | guesstimates | bi | behavioral
+// tag:   SQL | Case Study | Python | Puzzle | Guesstimate | BI | Behavioral
 // optional: framework: 'Specific Framework Display Name'  (case studies only)
 ```
 
@@ -95,6 +95,8 @@ Add framework mapping for every case study question:
 - Python: `python_company_topic`
 - Puzzle: `pz_shortname`
 - Guesstimate: `ge_shortname`
+- BI: `bi_shortname`
+- Behavioral: `beh_shortname`
 
 ### Checklist for adding a question
 
@@ -105,7 +107,7 @@ Add framework mapping for every case study question:
 5. ✅ Insert into D1 `questions` table
 6. ✅ Insert into D1 `case_prompts` table (ALL question types need this)
 7. ✅ If case study: insert into D1 `solutions` table + add to `_registry.yaml`
-8. ✅ If puzzle/guesstimate: insert into D1 `solutions` table
+8. ✅ If puzzle/guesstimate/bi/behavioral: insert into D1 `solutions` table
 9. ✅ If SQL: insert into D1 `sql_datasets` + `test_cases` tables
 10. ✅ If Python: insert into D1 `python_datasets` + `test_cases` tables
 11. ✅ Run validation script on practice.html

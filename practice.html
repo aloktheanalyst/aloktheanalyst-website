@@ -2289,6 +2289,8 @@
     <span class="browse-chip" data-topic="casestudy" onclick="setBrowseFilter('topic', 'casestudy', this)">Case Studies</span>
     <span class="browse-chip" data-topic="puzzles" onclick="setBrowseFilter('topic', 'puzzles', this)">Puzzles</span>
     <span class="browse-chip" data-topic="guesstimates" onclick="setBrowseFilter('topic', 'guesstimates', this)">Guesstimates</span>
+    <span class="browse-chip" data-topic="bi" onclick="setBrowseFilter('topic', 'bi', this)">BI Questions</span>
+    <span class="browse-chip" data-topic="behavioral" onclick="setBrowseFilter('topic', 'behavioral', this)">Behavioral</span>
     <select class="browse-difficulty-select" id="browseDifficultySelect" onchange="setBrowseFilter('difficulty', this.value)">
       <option value="all">All Difficulties</option>
       <option value="easy">Easy</option>
@@ -2325,6 +2327,8 @@
         <span class="topic-chip" data-topic="python" onclick="filterTopic('python', this)">Python Questions</span>
         <span class="topic-chip" data-topic="puzzles" onclick="filterTopic('puzzles', this)">Puzzles</span>
         <span class="topic-chip" data-topic="guesstimates" onclick="filterTopic('guesstimates', this)">Guesstimates</span>
+        <span class="topic-chip" data-topic="bi" onclick="filterTopic('bi', this)">BI Questions</span>
+        <span class="topic-chip" data-topic="behavioral" onclick="filterTopic('behavioral', this)">Behavioral</span>
       </div>
     </div>
     <div class="sidebar-scroll">
@@ -3538,7 +3542,9 @@ const SECTION_TITLES = {
   sql: 'SQL Questions',
   python: 'Python Questions',
   puzzles: 'Puzzles',
-  guesstimates: 'Guesstimates'
+  guesstimates: 'Guesstimates',
+  bi: 'BI Questions',
+  behavioral: 'Behavioral Questions'
 };
 
 function updateFilterCounts() {
@@ -3844,7 +3850,7 @@ async function loadCase(id) {
   // For puzzle/guesstimate cases: display statically (no LLM call)
   // For other cases: send prompt to AI as before
   const casePrompt = CASE_PROMPTS[id];
-  const isStaticCase = (p.topic === 'puzzles' || p.topic === 'guesstimates' || p.topic === 'casestudy') && casePrompt;
+  const isStaticCase = (p.topic === 'puzzles' || p.topic === 'guesstimates' || p.topic === 'casestudy' || p.topic === 'bi' || p.topic === 'behavioral') && casePrompt;
   if (isStaticCase) {
     // Extract the problem statement (before coaching instructions)
     const cutMarkers = ['Guide the user:', '**Your Coaching Approach:**', 'Walk me through', 'Guide me through', 'Push me to'];
@@ -3867,7 +3873,9 @@ async function loadCase(id) {
     const suffixes = {
       guesstimates: '\n\nThink through this step by step. Start by asking clarifying questions, choose an approach (top-down or bottom-up), then build your assumptions. Share your approach and I\'ll guide you. You can also click **Show Solution** to see a worked example.',
       puzzles: '\n\nTake your time to think through this. When you\'re ready, share your approach and I\'ll guide you step by step. You can also click **Show Solution** below if you want to see the answer directly.',
-      casestudy: '\n\nThink about how you\'d approach this. What clarifying questions would you ask? What metrics would you look at? Share your thinking and I\'ll coach you through it. You can also click **Show Solution** to see a structured answer.'
+      casestudy: '\n\nThink about how you\'d approach this. What clarifying questions would you ask? What metrics would you look at? Share your thinking and I\'ll coach you through it. You can also click **Show Solution** to see a structured answer.',
+      bi: '\n\nThink through how you\'d build this in a BI tool. What data model would you use? What visuals would you choose and why? Share your approach and I\'ll coach you through it. You can also click **Show Solution** to see a model answer.',
+      behavioral: '\n\nUse the STAR method (Situation, Task, Action, Result) to structure your response. Share your answer and I\'ll give you feedback on clarity, specificity, and impact. You can also click **Show Solution** to see a strong model response.'
     };
     const suffix = suffixes[p.topic] || suffixes.casestudy;
     appendMessage('bot', displayText + suffix);
