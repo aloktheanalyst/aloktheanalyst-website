@@ -5,7 +5,7 @@
 //   ANALYTICS   → Analytics Engine dataset (practice_events)
 //   SESSION_KV  → KV namespace (aloktheanalyst_sessions)
 //
-// Data point schema (index1 + blob1-7 + double1-3):
+// Data point schema (index1 + blob1-14 + double1-3):
 //   index1  — email            (primary cardinality dimension)
 //   blob1   — event_type
 //   blob2   — case_id
@@ -14,6 +14,13 @@
 //   blob5   — dialect          (sql / python)
 //   blob6   — referrer         (session_start only)
 //   blob7   — google_id
+//   blob8   — country          (e.g. IN, US, SG)
+//   blob9   — city             (e.g. Mumbai, New York)
+//   blob10  — continent        (e.g. AS, EU, NA)
+//   blob11  — timezone         (e.g. Asia/Kolkata)
+//   blob12  — browser          (e.g. Chrome, Safari, Firefox)
+//   blob13  — os               (e.g. Windows, macOS, iOS, Android)
+//   blob14  — device_type      (desktop / mobile / tablet)
 //   double1 — score            (score_received)
 //   double2 — hint_number      (hint_used)
 //   double3 — code_length      (answer_checked)
@@ -55,6 +62,39 @@ function parseCookies(cookieHeader) {
     if (key) cookies[key.trim()] = val.join('=').trim();
   });
   return cookies;
+}
+
+// ── Parse browser, OS, and device type from User-Agent ──
+function parseUserAgent(ua) {
+  if (!ua) return { browser: '', os: '', deviceType: '' };
+
+  // Device type
+  let deviceType = 'desktop';
+  if (/tablet|ipad|playbook|silk/i.test(ua)) {
+    deviceType = 'tablet';
+  } else if (/mobile|iphone|ipod|android.*mobile|windows phone|blackberry/i.test(ua)) {
+    deviceType = 'mobile';
+  }
+
+  // OS
+  let os = '';
+  if (/windows phone/i.test(ua))       os = 'Windows Phone';
+  else if (/win/i.test(ua))            os = 'Windows';
+  else if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
+  else if (/mac/i.test(ua))            os = 'macOS';
+  else if (/android/i.test(ua))        os = 'Android';
+  else if (/linux/i.test(ua))          os = 'Linux';
+
+  // Browser
+  let browser = '';
+  if (/edg\//i.test(ua))              browser = 'Edge';
+  else if (/opr\//i.test(ua))         browser = 'Opera';
+  else if (/chrome/i.test(ua))        browser = 'Chrome';
+  else if (/safari/i.test(ua))        browser = 'Safari';
+  else if (/firefox/i.test(ua))       browser = 'Firefox';
+  else if (/msie|trident/i.test(ua))  browser = 'IE';
+
+  return { browser, os, deviceType };
 }
 
 export async function onRequest(context) {
@@ -126,19 +166,30 @@ export async function onRequest(context) {
     return json({ error: 'Invalid case_id' }, 400);
   }
 
+  // ── Geo & device metadata from Cloudflare request ──
+  const cf = request.cf || {};
+  const { browser, os, deviceType } = parseUserAgent(request.headers.get('user-agent') || '');
+
   // ── Build and write data point ──
   const m = (metadata && typeof metadata === 'object') ? metadata : {};
 
   env.ANALYTICS.writeDataPoint({
     indexes: [userId],
     blobs: [
-      event,                          // blob1 — event_type
-      case_id || '',                  // blob2 — case_id
-      String(m.tag || ''),            // blob3 — tag
-      String(m.difficulty || ''),     // blob4 — difficulty
-      String(m.dialect || ''),        // blob5 — dialect
-      String(m.referrer || ''),       // blob6 — referrer (session_start)
-      googleId,                       // blob7 — google_id
+      event,                          // blob1  — event_type
+      case_id || '',                  // blob2  — case_id
+      String(m.tag || ''),            // blob3  — tag
+      String(m.difficulty || ''),     // blob4  — difficulty
+      String(m.dialect || ''),        // blob5  — dialect
+      String(m.referrer || ''),       // blob6  — referrer (session_start)
+      googleId,                       // blob7  — google_id
+      String(cf.country || ''),       // blob8  — country
+      String(cf.city || ''),          // blob9  — city
+      String(cf.continent || ''),     // blob10 — continent
+      String(cf.timezone || ''),      // blob11 — timezone
+      browser,                        // blob12 — browser
+      os,                             // blob13 — os
+      deviceType,                     // blob14 — device_type
     ],
     doubles: [
       Number(m.score) || 0,           // double1 — score (score_received)
