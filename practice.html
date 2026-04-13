@@ -1501,28 +1501,25 @@
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--border);
   }
-  .question-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
-    padding: 0 0.3rem;
-  }
-  .question-panel-header .schema-title {
-    margin-bottom: 0;
-    padding: 0;
+  .part-selector { display: flex; align-items: center; gap: 6px; }
+  .part-selector-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    white-space: nowrap;
   }
   .part-selector select {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
+    font-size: 0.7rem;
     background: var(--surface);
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 5px;
-    padding: 3px 6px;
+    padding: 4px 8px;
     cursor: pointer;
     outline: none;
-    max-width: 190px;
+    max-width: 200px;
+    height: 30px;
   }
   .part-selector select:hover { border-color: var(--accent); }
   .question-text {
@@ -2557,12 +2554,7 @@
         <!-- Schema Reference Sidebar -->
         <div class="schema-sidebar" id="schemaSidebar">
           <div class="question-panel" id="questionPanel">
-            <div class="question-panel-header">
-              <div class="schema-title">&#x1F3AF; QUESTION</div>
-              <div class="part-selector" id="partSelector" style="display:none;">
-                <select id="partSelect" onchange="switchPart(parseInt(this.value))"></select>
-              </div>
-            </div>
+            <div class="schema-title">&#x1F3AF; QUESTION</div>
             <div class="question-text" id="questionText"></div>
           </div>
           <div class="schema-title">TABLE SCHEMA</div>
@@ -2590,6 +2582,10 @@
             </button>
             <div class="sql-toolbar-right">
               <span class="sql-exec-info" id="sqlExecInfo"></span>
+              <div class="part-selector" id="partSelector" style="display:none;">
+                <span class="part-selector-label">Testing:</span>
+                <select id="partSelect" onchange="switchPart(parseInt(this.value))"></select>
+              </div>
               <button class="sql-check-btn" onclick="switchResultTab('tests')" title="Run offline test cases against your code">
                 &#x2705; Test My Code
               </button>
