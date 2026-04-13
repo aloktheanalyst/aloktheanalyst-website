@@ -125,11 +125,11 @@ export async function onRequestGet(context) {
 
     // Try SQL dataset first
     let row = await env.CONTENT_DB.prepare(
-      'SELECT question_id, label, question_html, default_query, hints, schema_json, setup_sql FROM sql_datasets WHERE question_id = ?'
+      'SELECT question_id, label, question_html, default_query, hints, schema_json, setup_sql, parts_json FROM sql_datasets WHERE question_id = ?'
     ).bind(datasetId).first();
 
     if (row) {
-      return json({
+      const resp = {
         type: 'sql',
         label: row.label,
         question: row.question_html,
@@ -137,16 +137,20 @@ export async function onRequestGet(context) {
         hints: row.hints,
         schema: row.schema_json,
         setup: { shared: row.setup_sql },
-      }, 200, cors);
+      };
+      if (row.parts_json) {
+        try { resp.parts = JSON.parse(row.parts_json); } catch {}
+      }
+      return json(resp, 200, cors);
     }
 
     // Try Python dataset
     row = await env.CONTENT_DB.prepare(
-      'SELECT question_id, label, question_html, default_query, hints, schema_json, setup_code FROM python_datasets WHERE question_id = ?'
+      'SELECT question_id, label, question_html, default_query, hints, schema_json, setup_code, parts_json FROM python_datasets WHERE question_id = ?'
     ).bind(datasetId).first();
 
     if (row) {
-      return json({
+      const resp = {
         type: 'python',
         label: row.label,
         question: row.question_html,
@@ -154,7 +158,11 @@ export async function onRequestGet(context) {
         hints: row.hints,
         schema: row.schema_json,
         setupCode: row.setup_code,
-      }, 200, cors);
+      };
+      if (row.parts_json) {
+        try { resp.parts = JSON.parse(row.parts_json); } catch {}
+      }
+      return json(resp, 200, cors);
     }
 
     return json({ error: 'Dataset not found' }, 404, cors);
@@ -169,7 +177,7 @@ export async function onRequestGet(context) {
     }
 
     const { results } = await env.CONTENT_DB.prepare(
-      'SELECT name, expected_query, min_match_ratio, fail_msg, max_rows, min_rows, min_cols, check_function, assertion FROM test_cases WHERE question_id = ? ORDER BY test_index'
+      'SELECT name, expected_query, min_match_ratio, fail_msg, max_rows, min_rows, min_cols, check_function, assertion, part FROM test_cases WHERE question_id = ? ORDER BY test_index'
     ).bind(testId).all();
 
     if (results.length === 0) {
@@ -187,6 +195,7 @@ export async function onRequestGet(context) {
       if (r.min_cols !== null) test.minCols = r.min_cols;
       if (r.check_function) test.checkFunction = r.check_function;
       if (r.assertion) test.assertion = r.assertion;
+      if (r.part !== null && r.part !== undefined) test.part = r.part;
       return test;
     });
 

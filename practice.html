@@ -1501,6 +1501,30 @@
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--border);
   }
+  .question-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding: 0 0.3rem;
+  }
+  .question-panel-header .schema-title {
+    margin-bottom: 0;
+    padding: 0;
+  }
+  .part-selector select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 6px;
+    cursor: pointer;
+    outline: none;
+    max-width: 190px;
+  }
+  .part-selector select:hover { border-color: var(--accent); }
   .question-text {
     font-size: 0.78rem;
     line-height: 1.65;
@@ -2533,7 +2557,12 @@
         <!-- Schema Reference Sidebar -->
         <div class="schema-sidebar" id="schemaSidebar">
           <div class="question-panel" id="questionPanel">
-            <div class="schema-title">&#x1F3AF; QUESTION</div>
+            <div class="question-panel-header">
+              <div class="schema-title">&#x1F3AF; QUESTION</div>
+              <div class="part-selector" id="partSelector" style="display:none;">
+                <select id="partSelect" onchange="switchPart(parseInt(this.value))"></select>
+              </div>
+            </div>
             <div class="question-text" id="questionText"></div>
           </div>
           <div class="schema-title">TABLE SCHEMA</div>
@@ -3039,6 +3068,9 @@ let conversationHistory = [];
 let isLoading = false;
 let activeFilter = 'all';
 let activeCaseId = null;
+let activePart = 1;
+let partEditorState = {};  // { caseId: { partNum: 'savedCode' } }
+let partsSolvedState = {}; // { caseId: { partNum: true } }
 
 // Code Editor state
 let sqlDB = null;             // Active DB instance (sql.js Database or PGlite)
@@ -4831,11 +4863,53 @@ async function setupCodeEnvironment(caseId) {
     mobileQ.textContent = '';
   }
 
+  // Reset part state for new case
+  activePart = 1;
+  if (!partEditorState[caseId]) partEditorState[caseId] = {};
+
+  // Render part dropdown if multi-part question
+  const partSelector = document.getElementById('partSelector');
+  const partSelect = document.getElementById('partSelect');
+  if (dataset && dataset.parts && dataset.parts.length > 1) {
+    partSelect.innerHTML = dataset.parts.map((label, i) => {
+      const num = i + 1;
+      const solved = partsSolvedState[caseId] && partsSolvedState[caseId][num];
+      return `<option value="${num}">${label}${solved ? ' ✓' : ''}</option>`;
+    }).join('');
+    partSelect.value = '1';
+    partSelector.style.display = '';
+  } else {
+    partSelector.style.display = 'none';
+  }
+
   if (isSQLCase(caseId)) {
     await setupSQLDatabase(caseId);
   } else if (isPythonCase(caseId)) {
     await setupPythonEnvironment(caseId);
   }
+}
+
+function switchPart(newPart) {
+  if (newPart === activePart || !activeCaseId) return;
+
+  // Save current editor content for the outgoing part
+  if (sqlEditor) {
+    if (!partEditorState[activeCaseId]) partEditorState[activeCaseId] = {};
+    partEditorState[activeCaseId][activePart] = sqlEditor.getValue();
+  }
+
+  activePart = newPart;
+
+  // Restore saved content for new part, or fall back to defaultQuery
+  if (sqlEditor) {
+    const dataset = SQL_DATASETS[activeCaseId] || PYTHON_DATASETS[activeCaseId];
+    const saved = partEditorState[activeCaseId] && partEditorState[activeCaseId][newPart];
+    sqlEditor.setValue(saved || (dataset && dataset.defaultQuery) || '');
+    setTimeout(() => sqlEditor.refresh(), 50);
+  }
+
+  // Clear results so stale test output from previous part isn't shown
+  resetCodeResults();
 }
 
 async function setupSQLDatabase(caseId) {
@@ -5161,11 +5235,22 @@ async function runTestCases() {
   }
 
   if (!activeCaseId) return;
-  const tests = await fetchTestCases(activeCaseId);
-  if (!tests || tests.length === 0) {
+  const allTests = await fetchTestCases(activeCaseId);
+  if (!allTests || allTests.length === 0) {
     document.getElementById('sqlResults').innerHTML = `<div class="sql-error" style="border-left-color: #f59e0b; background: #fffbeb;">
       <strong>⚠️ No test cases</strong><br>
       No offline tests defined for this case. Use <em>AI Help</em> for feedback instead.
+    </div>`;
+    return;
+  }
+
+  // Filter to only tests for the active part (if tests have part assignments)
+  const hasPartData = allTests.some(t => t.part !== undefined);
+  const tests = hasPartData ? allTests.filter(t => t.part === activePart) : allTests;
+  if (tests.length === 0) {
+    document.getElementById('sqlResults').innerHTML = `<div class="sql-error" style="border-left-color: #6366f1; background: #eef2ff;">
+      <strong>📝 No tests for this part</strong><br>
+      This part has no automated tests. Use <em>AI Help</em> to get feedback on your solution.
     </div>`;
     return;
   }
@@ -5426,11 +5511,30 @@ async function runTestCases() {
   document.getElementById('sqlExecInfo').textContent = `${passed}/${total} tests passed`;
   window._lastTestResults = results; // Store for AI Help context
 
-  // Auto-mark solved if all tests pass
+  // Auto-mark solved — track per-part, mark overall when all testable parts pass
   if (allPassed && activeCaseId) {
-    const solved = getSolvedCases();
-    if (!solved.includes(activeCaseId)) {
-      markCaseSolved(activeCaseId);
+    if (!partsSolvedState[activeCaseId]) partsSolvedState[activeCaseId] = {};
+    partsSolvedState[activeCaseId][activePart] = true;
+
+    // Update dropdown to show ✓ on solved part
+    const partSelect = document.getElementById('partSelect');
+    if (partSelect) {
+      const opt = partSelect.querySelector(`option[value="${activePart}"]`);
+      if (opt && !opt.textContent.includes('✓')) opt.textContent += ' ✓';
+    }
+
+    // Mark overall case solved when all parts that have tests are solved
+    const hasPartData = allTests.some(t => t.part !== undefined);
+    const testableParts = hasPartData
+      ? [...new Set(allTests.map(t => t.part))]
+      : [1];
+    const allPartsSolved = testableParts.every(p => partsSolvedState[activeCaseId][p]);
+
+    if (allPartsSolved) {
+      const solved = getSolvedCases();
+      if (!solved.includes(activeCaseId)) {
+        markCaseSolved(activeCaseId);
+      }
     }
   }
 }
@@ -5438,14 +5542,18 @@ async function runTestCases() {
 // ── Expected Output (runs expectedQuery from test cases and displays result) ──
 async function showExpectedOutput() {
   if (!activeCaseId) return;
-  const tests = await fetchTestCases(activeCaseId);
-  if (!tests || tests.length === 0) {
+  const allTests = await fetchTestCases(activeCaseId);
+  if (!allTests || allTests.length === 0) {
     document.getElementById('sqlResults').innerHTML = `<div class="sql-error" style="border-left-color: #f59e0b; background: #fffbeb;">
       <strong>⚠️ No expected output</strong><br>
       No reference queries defined for this case.
     </div>`;
     return;
   }
+
+  // Filter to active part if tests have part data
+  const hasPartData = allTests.some(t => t.part !== undefined);
+  const tests = hasPartData ? allTests.filter(t => t.part === activePart) : allTests;
 
   const isPy = sqlDialect === 'python';
   const expectedTests = tests.filter(t => t.expectedQuery && !isPy && sqlDB);
