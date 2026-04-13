@@ -1821,6 +1821,88 @@
     transition: width 0.3s;
   }
 
+  /* Behavioral Question Card */
+  .behavioral-card {
+    max-width: 720px;
+    margin: 1.5rem auto;
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+  .beh-question-section {
+    background: linear-gradient(135deg, #f0f5ff, #e8f0fe);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--accent);
+  }
+  .beh-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .beh-question-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.35rem;
+    color: #0f172a;
+    margin: 0 0 0.75rem;
+    line-height: 1.3;
+  }
+  .beh-tip {
+    font-size: 0.82rem;
+    color: #475569;
+    background: #fff;
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid #e2e8f0;
+  }
+  .beh-solution-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+  .beh-solution-body {
+    color: #334155;
+    font-size: 0.88rem;
+    line-height: 1.8;
+  }
+  .beh-solution-body strong { color: #0f172a; }
+  .beh-solution-body ul, .beh-solution-body ol {
+    padding-left: 1.2rem;
+    margin: 0.4rem 0;
+  }
+  .beh-solution-body li { margin: 0.2rem 0; }
+  .beh-ai-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+  }
+  .beh-ai-btn {
+    background: #fff;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .beh-ai-btn:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+  .beh-ai-hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
   /* Factor Tree Diagram */
   .factor-tree { margin: 0.5rem 0; font-size: 0.78rem; }
   .factor-tree-title {
@@ -3811,6 +3893,10 @@ async function loadCase(id) {
   msgs.innerHTML = '';
   conversationHistory = [];
 
+  // Restore chat input (may have been hidden by behavioral questions)
+  const inputArea = document.getElementById('inputArea');
+  if (inputArea) inputArea.style.display = '';
+
   // Show/hide code editor tab switcher
   updateTabVisibility(id);
   resetHints();
@@ -3843,13 +3929,43 @@ async function loadCase(id) {
   if (p.topic === 'behavioral') {
     const solBtn = document.getElementById('showSolutionBtn');
     closeSolutionPanel();
-    if (solBtn) solBtn.style.display = content.solution ? 'flex' : 'none';
-    const questionText = '**' + p.title + '**\n\nUse the STAR method (Situation, Task, Action, Result) to structure your response. Think about a specific example from your experience, then click **Show Solution** to see a strong model response.';
-    appendMessage('bot', questionText);
+    if (solBtn) solBtn.style.display = 'none'; // No separate solution panel needed
+
+    // Hide chat input by default
+    const inputArea = document.getElementById('inputArea');
+    if (inputArea) inputArea.style.display = 'none';
+
+    // Build static card
+    const msgs = document.getElementById('messages');
+    const sol = content.solution ? content.solution.replace(/\\n/g, '\n') : '';
+    const solHtml = sol ? formatSolutionMarkdown(sol) : '<em>Solution not available yet.</em>';
+
+    const card = document.createElement('div');
+    card.className = 'behavioral-card';
+    card.innerHTML =
+      '<div class="beh-question-section">' +
+        '<div class="beh-label">Question</div>' +
+        '<h3 class="beh-question-text">' + escapeHtml(p.title) + '</h3>' +
+        '<div class="beh-tip">Use the <strong>STAR method</strong> (Situation, Task, Action, Result) to structure your response.</div>' +
+      '</div>' +
+      '<div class="beh-solution-section">' +
+        '<div class="beh-label">Model Answer</div>' +
+        '<div class="beh-solution-body">' + solHtml + '</div>' +
+      '</div>' +
+      '<div class="beh-ai-section">' +
+        '<button class="beh-ai-btn" onclick="startBehavioralCoach()">' +
+          '&#x1F916; Practice with AI Coach' +
+        '</button>' +
+        '<span class="beh-ai-hint">Get personalized feedback on your own answer</span>' +
+      '</div>';
+    msgs.appendChild(card);
+
+    // Store coaching context for AI if user opts in
     if (content.prompt) {
       conversationHistory.push({ role: 'system', content: content.prompt });
+    } else {
+      conversationHistory.push({ role: 'system', content: 'You are an interview coach. The candidate is practicing this behavioral question: "' + p.title + '". Guide them using the STAR method. Give constructive feedback on their answer.' });
     }
-    conversationHistory.push({ role: 'assistant', content: questionText });
     return;
   }
 
@@ -3899,6 +4015,24 @@ async function loadCase(id) {
   } else {
     sendToAI(casePrompt, true); // true = hide user bubble (it's a system trigger)
   }
+}
+
+function startBehavioralCoach() {
+  // Show the chat input
+  const inputArea = document.getElementById('inputArea');
+  if (inputArea) inputArea.style.display = '';
+
+  // Hide the AI button so it's not clicked again
+  const aiSection = document.querySelector('.beh-ai-section');
+  if (aiSection) aiSection.style.display = 'none';
+
+  // Add a coaching prompt in the chat
+  appendMessage('bot', 'Great — let\'s practice! Share your answer to this question using the **STAR method**:\n\n- **Situation:** Set the context\n- **Task:** Your specific responsibility\n- **Action:** Steps you took\n- **Result:** Measurable outcome\n\nType your response below and I\'ll give you feedback.');
+  conversationHistory.push({ role: 'assistant', content: 'Share your answer using the STAR method and I\'ll give you feedback.' });
+
+  // Focus the chat input
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) chatInput.focus();
 }
 
 async function showPuzzleSolution() {
