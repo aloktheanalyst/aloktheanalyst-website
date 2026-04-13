@@ -3834,8 +3834,22 @@ async function loadCase(id) {
   // Remove the loading message
   if (msgs.lastChild) msgs.removeChild(msgs.lastChild);
 
-  if (!content || !content.prompt) {
+  if (!content || (!content.prompt && p.topic !== 'behavioral')) {
     appendMessage('bot', 'Failed to load this case. Please refresh the page and try again.');
+    return;
+  }
+
+  // Behavioral questions: show question + solution statically (no AI needed)
+  if (p.topic === 'behavioral') {
+    const solBtn = document.getElementById('showSolutionBtn');
+    closeSolutionPanel();
+    if (solBtn) solBtn.style.display = content.solution ? 'flex' : 'none';
+    const questionText = '**' + p.title + '**\n\nUse the STAR method (Situation, Task, Action, Result) to structure your response. Think about a specific example from your experience, then click **Show Solution** to see a strong model response.';
+    appendMessage('bot', questionText);
+    if (content.prompt) {
+      conversationHistory.push({ role: 'system', content: content.prompt });
+    }
+    conversationHistory.push({ role: 'assistant', content: questionText });
     return;
   }
 
