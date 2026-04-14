@@ -513,6 +513,27 @@
   .browse-card .solve-rate-badge {
     font-size: 0.58rem; margin-left: auto;
   }
+  /* Weekly challenge — browse banner */
+  .wc-banner {
+    margin: 0.5rem 1rem 0;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    border: 1px solid rgba(99,102,241,0.35);
+    border-radius: 12px; padding: 0.85rem 1.1rem;
+    cursor: pointer; display: flex; align-items: center; gap: 1rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .wc-banner:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+  .wc-banner-left { flex: 1; min-width: 0; }
+  .wc-banner-eyebrow { font-family: 'Bebas Neue', sans-serif; font-size: 0.68rem; letter-spacing: 1.5px; color: #a5b4fc; margin-bottom: 0.2rem; }
+  .wc-banner-title { font-size: 0.95rem; font-weight: 700; color: #e0e7ff; margin-bottom: 0.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wc-banner-meta { display: flex; align-items: center; gap: 0.4rem; }
+  .wc-banner-completions { font-size: 0.68rem; color: #818cf8; }
+  .wc-banner-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; flex-shrink: 0; }
+  .wc-banner-countdown { font-size: 0.65rem; font-family: 'JetBrains Mono', monospace; color: #818cf8; }
+  .wc-banner-streak { font-size: 0.65rem; color: #a5b4fc; }
+  .wc-banner-done { font-size: 0.65rem; color: #6ee7b7; font-weight: 600; }
+  .wc-banner-cta { font-size: 0.72rem; font-weight: 600; color: #c7d2fe; margin-top: 0.1rem; }
+
   /* Weekly challenge card */
   .weekly-challenge-card {
     margin: 0.5rem 0.6rem 0;
@@ -2541,6 +2562,26 @@
       <span class="browse-stats" id="browseStats"></span>
     </div>
   </div>
+
+  <!-- Weekly Challenge Banner -->
+  <div class="wc-banner" id="wcBanner" style="display:none" onclick="navigateToSolve(_weeklyChallenge&&_weeklyChallenge.questionId)">
+    <div class="wc-banner-left">
+      <div class="wc-banner-eyebrow">🔥 THIS WEEK'S CHALLENGE</div>
+      <div class="wc-banner-title" id="wcBannerTitle"></div>
+      <div class="wc-banner-meta">
+        <span class="difficulty hard" id="wcBannerDifficulty">hard</span>
+        <span class="prompt-tag" id="wcBannerTag">SQL</span>
+        <span class="wc-banner-completions" id="wcBannerCompletions"></span>
+      </div>
+    </div>
+    <div class="wc-banner-right">
+      <div class="wc-banner-countdown" id="wcBannerCountdown"></div>
+      <div class="wc-banner-streak" id="wcBannerStreak" style="display:none"></div>
+      <div class="wc-banner-done" id="wcBannerDone" style="display:none">✓ Completed</div>
+      <div class="wc-banner-cta">Attempt →</div>
+    </div>
+  </div>
+
   <div class="browse-filters" id="browseFilters">
     <span class="browse-chip active" data-topic="all" onclick="setBrowseFilter('topic', 'all', this)">All</span>
     <span class="browse-chip" data-topic="sql" onclick="setBrowseFilter('topic', 'sql', this)">SQL</span>
@@ -3359,36 +3400,55 @@ async function loadWeeklyChallenge() {
     if (!data.questionId) return;
     _weeklyChallenge = data;
 
+    const completionsText = data.completionCount === 1 ? '1 solved' : `${data.completionCount} solved`;
+
+    // ── Sidebar card ──
     document.getElementById('wcTitle').textContent = data.title;
     document.getElementById('wcDifficulty').textContent = data.difficulty;
     document.getElementById('wcDifficulty').className = `difficulty ${data.difficulty}`;
     document.getElementById('wcTag').textContent = data.tag;
-    document.getElementById('wcCompletions').textContent =
-      data.completionCount === 1 ? '1 solved' : `${data.completionCount} solved`;
-
+    document.getElementById('wcCompletions').textContent = completionsText;
     if (data.userCompleted) document.getElementById('wcDone').style.display = '';
     if (data.streak > 0) {
       const el = document.getElementById('wcStreak');
       el.textContent = `🔥 ${data.streak} week streak`;
       el.style.display = '';
     }
+    card.onclick = () => loadCase(data.questionId);
+    card.style.display = '';
 
-    // Countdown — refresh every minute
+    // ── Browse banner ──
+    const banner = document.getElementById('wcBanner');
+    if (banner) {
+      document.getElementById('wcBannerTitle').textContent = data.title;
+      document.getElementById('wcBannerDifficulty').textContent = data.difficulty;
+      document.getElementById('wcBannerDifficulty').className = `difficulty ${data.difficulty}`;
+      document.getElementById('wcBannerTag').textContent = data.tag;
+      document.getElementById('wcBannerCompletions').textContent = completionsText;
+      if (data.userCompleted) document.getElementById('wcBannerDone').style.display = '';
+      if (data.streak > 0) {
+        const el = document.getElementById('wcBannerStreak');
+        el.textContent = `🔥 ${data.streak} week streak`;
+        el.style.display = '';
+      }
+      banner.style.display = '';
+    }
+
+    // Countdown — shared timer for both
     function updateCountdown() {
-      const el = document.getElementById('wcCountdown');
-      if (!el) return;
       const diff = new Date(data.endsAt.replace(' ', 'T') + 'Z') - Date.now();
-      if (diff <= 0) { el.textContent = 'ended'; return; }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      el.textContent = d > 0 ? `${d}d ${h}h left` : `${h}h left`;
+      const text = diff <= 0 ? 'ended'
+        : Math.floor(diff / 86400000) > 0
+          ? `${Math.floor(diff / 86400000)}d ${Math.floor((diff % 86400000) / 3600000)}h left`
+          : `${Math.floor(diff / 3600000)}h left`;
+      const c1 = document.getElementById('wcCountdown');
+      const c2 = document.getElementById('wcBannerCountdown');
+      if (c1) c1.textContent = text;
+      if (c2) c2.textContent = text;
     }
     updateCountdown();
     if (_wcCountdownTimer) clearInterval(_wcCountdownTimer);
     _wcCountdownTimer = setInterval(updateCountdown, 60000);
-
-    card.onclick = () => loadCase(data.questionId);
-    card.style.display = '';
   } catch { /* never block UI */ }
 }
 
