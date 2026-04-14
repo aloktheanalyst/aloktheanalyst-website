@@ -641,6 +641,28 @@
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
+    position: relative;
+  }
+  @keyframes wc-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(129,140,248,0.4); }
+    50%       { box-shadow: 0 0 0 5px rgba(129,140,248,0); }
+  }
+  #wcSolveCountdown {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.68rem;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #1e1b4b, #2d1b69);
+    color: #a5b4fc;
+    border: 1px solid #4f46e5;
+    border-radius: 20px;
+    padding: 4px 14px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: wc-pulse 2s ease-in-out infinite;
+    font-weight: 600;
   }
 
   .active-case-info { display: flex; flex-direction: column; gap: 0.15rem; }
@@ -2662,6 +2684,7 @@
 
     <!-- CHAT HEADER -->
     <div class="chat-header">
+      <span id="wcSolveCountdown" style="display:none;"></span>
       <div class="active-case-info">
         <div class="active-case-title" id="activeCaseTitle">Select a case study to begin</div>
         <div class="active-case-meta" id="activeCaseMeta">ANALYTICS INTERVIEW PRACTICE · aloktheanalyst.com</div>
@@ -2676,7 +2699,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
             Prev
           </button>
-          <span id="wcSolveCountdown" style="display:none;font-size:0.65rem;font-family:'JetBrains Mono',monospace;background:#1e1b4b;color:#818cf8;border:1px solid #312e81;border-radius:4px;padding:2px 8px;letter-spacing:0.03em;white-space:nowrap;"></span>
           <button id="nextCaseBtn" onclick="navigatePrevNext(1)" title="Next question">
             Next
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
@@ -3445,7 +3467,7 @@ async function loadWeeklyChallenge() {
         const c3 = document.getElementById('wcSolveCountdown');
         if (c1) c1.textContent = text;
         if (c2) c2.textContent = text;
-        if (c3) { c3.textContent = '⏰ Challenge ended'; c3.style.display = (activeCaseId === data.questionId) ? 'inline' : 'none'; }
+        if (c3) { c3.textContent = '🔥 WEEKLY CHALLENGE · ended'; c3.style.display = (activeCaseId === data.questionId) ? 'inline' : 'none'; }
         return;
       }
       const days  = Math.floor(diff / 86400000);
@@ -3458,7 +3480,7 @@ async function loadWeeklyChallenge() {
       if (c1) c1.textContent = short;
       if (c2) c2.textContent = short;
       if (c3) {
-        c3.textContent = `⏳ ${short}`;
+        c3.textContent = `🔥 WEEKLY CHALLENGE · ${short}`;
         c3.style.display = (activeCaseId === data.questionId) ? 'inline' : 'none';
       }
     }
@@ -3482,12 +3504,12 @@ function refreshSolveCountdown() {
     return;
   }
   const diff = new Date(_weeklyChallenge.endsAt.replace(' ', 'T') + 'Z') - Date.now();
-  if (diff <= 0) { c3.textContent = '⏰ Challenge ended'; c3.style.display = 'inline'; return; }
+  if (diff <= 0) { c3.textContent = '🔥 WEEKLY CHALLENGE · ended'; c3.style.display = 'inline'; return; }
   const days  = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const mins  = Math.floor((diff % 3600000) / 60000);
   const short = days > 0 ? `${days}d ${hours}h left` : hours > 0 ? `${hours}h ${mins}m left` : `${mins}m left`;
-  c3.textContent = `⏳ ${short}`;
+  c3.textContent = `🔥 WEEKLY CHALLENGE · ${short}`;
   c3.style.display = 'inline';
 }
 
