@@ -503,6 +503,16 @@
     font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
     flex-shrink: 0;
   }
+  .solve-rate-badge {
+    font-size: 0.6rem; font-family: 'JetBrains Mono', monospace;
+    background: rgba(99,102,241,0.1); color: #6366f1;
+    padding: 0.1rem 0.45rem; border-radius: 3px;
+    font-weight: 600; letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .browse-card .solve-rate-badge {
+    font-size: 0.58rem; margin-left: auto;
+  }
   .solved-overlay {
     position: fixed; inset: 0; z-index: 2000;
     background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -2579,7 +2589,10 @@
       <div class="active-case-info">
         <div class="active-case-title" id="activeCaseTitle">Select a case study to begin</div>
         <div class="active-case-meta" id="activeCaseMeta">ANALYTICS INTERVIEW PRACTICE · aloktheanalyst.com</div>
-        <div id="activeCaseFramework" style="display:none;margin-top:4px;"></div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:2px;">
+          <div id="activeCaseFramework" style="display:none;"></div>
+          <span id="activeCaseSolveRate" style="display:none;"></span>
+        </div>
       </div>
       <div class="chat-actions">
 <div class="nav-prev-next">
@@ -3294,6 +3307,48 @@ function trackEvent(event, caseId, metadata) {
         metadata: metadata || null
       })
     }).catch(() => {}); // silently ignore failures
+  } catch { /* never block UI */ }
+}
+
+// ── Question attempt / solve tracking ────────────────────────────────────────
+function trackAttempt(questionId) {
+  if (!questionId) return;
+  fetch('/api/question-stats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ questionId, event: 'attempt' })
+  }).catch(() => {});
+}
+
+function trackSolve(questionId) {
+  if (!questionId) return;
+  fetch('/api/question-stats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ questionId, event: 'solve' })
+  }).catch(() => {});
+}
+
+// Cache so repeat loadCase calls don't re-fetch
+const _solveRateCache = {};
+
+async function fetchAndShowSolveRate(questionId) {
+  const el = document.getElementById('activeCaseSolveRate');
+  if (!el) return;
+  el.style.display = 'none';
+  if (!questionId) return;
+  try {
+    let data = _solveRateCache[questionId];
+    if (!data) {
+      const res = await fetch(`/api/question-stats?id=${encodeURIComponent(questionId)}`);
+      data = await res.json();
+      _solveRateCache[questionId] = data;
+    }
+    if (data.showBadge) {
+      el.className = 'solve-rate-badge';
+      el.textContent = `${data.solveRate}% solved this`;
+      el.style.display = '';
+    }
   } catch { /* never block UI */ }
 }
 
@@ -4053,6 +4108,7 @@ async function loadCase(id) {
   trackEvent('case_load', id, { tag: p.tag, difficulty: p.difficulty });
   document.getElementById('activeCaseTitle').textContent = p.title;
   document.getElementById('activeCaseMeta').textContent = `${p.tag.toUpperCase()} · ${p.difficulty.toUpperCase()} · aloktheanalyst.com`;
+  fetchAndShowSolveRate(id);
   const fwEl = document.getElementById('activeCaseFramework');
   if (p.framework) {
     fwEl.innerHTML = `<span class="framework-badge">📐 ${p.framework}</span>`;
@@ -5235,6 +5291,7 @@ async function runCode() {
     t.classList.toggle('active', t.dataset.rtab === 'output');
   });
   trackEvent('code_run', null, { dialect: sqlDialect });
+  trackAttempt(activeCaseId);
   if (sqlDialect === 'python') {
     await runPython();
   } else {
@@ -5787,6 +5844,7 @@ async function runTestCases() {
       if (isFirstSolve) {
         markCaseSolved(activeCaseId);
         showSolvedCelebration(activeCaseId);
+        trackSolve(activeCaseId);
       }
     }
   }
