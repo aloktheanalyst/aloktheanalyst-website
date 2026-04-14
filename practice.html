@@ -4354,7 +4354,10 @@ async function loadCase(id) {
   closeSolutionPanel();
   if (solBtn) {
     const hasSolution = !!content.solution;
-    solBtn.style.display = hasSolution ? 'flex' : 'none';
+    const isActiveChallenge = _weeklyChallenge
+      && _weeklyChallenge.questionId === id
+      && new Date(_weeklyChallenge.endsAt.replace(' ', 'T') + 'Z') > Date.now();
+    solBtn.style.display = (hasSolution && !isActiveChallenge) ? 'flex' : 'none';
   }
 
   // For puzzle/guesstimate cases: display statically (no LLM call)
