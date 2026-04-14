@@ -1529,6 +1529,100 @@
     padding: 0 0.3rem;
   }
 
+  /* ── REACTION BAR ── */
+  .reaction-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1rem;
+    margin: 0.1rem 0 0.5rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+  .reaction-bar .rb-label { margin-right: 0.25rem; }
+  .reaction-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    line-height: 1;
+  }
+  .reaction-btn:hover { border-color: var(--accent); background: rgba(37,99,235,0.06); transform: scale(1.1); }
+  .reaction-btn.selected { border-color: var(--accent); background: rgba(37,99,235,0.1); }
+  .reaction-followup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem 0.75rem;
+    border-top: 1px solid var(--border);
+    animation: rb-slide-in 0.15s ease;
+  }
+  @keyframes rb-slide-in {
+    from { opacity:0; transform:translateY(-4px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .rb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .rb-chip {
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 0.75rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .rb-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .rb-chip.selected { border-color: var(--accent); color: var(--accent); background: rgba(37,99,235,0.07); }
+  .rb-text-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.1rem;
+  }
+  .rb-text {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    resize: none;
+  }
+  .rb-text:focus { border-color: var(--accent); }
+  .rb-text::placeholder { color: var(--muted); }
+  .rb-send {
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    align-self: flex-end;
+  }
+  .rb-send:hover { background: #1d4ed8; }
+  .rb-send:disabled { background: var(--muted); cursor: not-allowed; }
+  .rb-done {
+    font-size: 0.78rem;
+    color: #16a34a;
+    padding: 0.3rem 0;
+  }
+
   /* ── INLINE AI FEEDBACK ── */
   .ai-feedback-panel {
     padding: 1rem 1.25rem;
@@ -4002,6 +4096,7 @@ async function loadCase(id) {
         '<span class="beh-ai-hint">Get personalized feedback on your own answer</span>' +
       '</div>';
     msgs.appendChild(card);
+    renderReactionBar(msgs, id);
 
     // Store coaching context for AI if user opts in
     if (content.prompt) {
@@ -4052,6 +4147,7 @@ async function loadCase(id) {
     };
     const suffix = suffixes[p.topic] || suffixes.casestudy;
     appendMessage('bot', displayText + suffix);
+    renderReactionBar(document.getElementById('messages'), id);
     // Store full coaching prompt as system context so AI can guide if user asks
     conversationHistory.push({ role: 'system', content: casePrompt });
     conversationHistory.push({ role: 'assistant', content: displayText + suffix });
@@ -4583,6 +4679,106 @@ function finalizeStreamingBubble(el, text) {
   if (bubble) bubble.innerHTML = formatMessage(text);
 }
 
+// ── REACTION BAR ──
+function renderReactionBar(container, questionId) {
+  // Remove any existing reaction bar in this container first
+  var existing = container.querySelector('.reaction-bar, .reaction-followup');
+  if (existing) existing.remove();
+
+  var bar = document.createElement('div');
+  bar.className = 'reaction-bar';
+  bar.innerHTML =
+    '<span class="rb-label">Was this helpful?</span>' +
+    '<button class="reaction-btn" data-vote="up" title="Yes">👍</button>' +
+    '<button class="reaction-btn" data-vote="down" title="No">👎</button>';
+  container.appendChild(bar);
+
+  bar.querySelector('[data-vote="up"]').addEventListener('click', function () {
+    var btn = this;
+    btn.classList.add('selected');
+    bar.querySelector('[data-vote="down"]').disabled = true;
+    bar.querySelector('.rb-label').textContent = 'Thanks! ✓';
+    sendReaction(questionId, 'up', null, null);
+  });
+
+  bar.querySelector('[data-vote="down"]').addEventListener('click', function () {
+    var btn = this;
+    btn.classList.add('selected');
+    bar.querySelector('[data-vote="up"]').disabled = true;
+
+    // Show follow-up
+    var followup = document.createElement('div');
+    followup.className = 'reaction-followup';
+    var chips = [
+      { id: 'wrong-answer', label: '❓ Wrong answer' },
+      { id: 'confusing',    label: '😕 Confusing' },
+      { id: 'bug',          label: '🐛 Bug' },
+      { id: 'other',        label: '💬 Other' },
+    ];
+    followup.innerHTML =
+      '<div class="rb-chips">' +
+        chips.map(function(c) {
+          return '<button class="rb-chip" data-chip="' + c.id + '">' + c.label + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div class="rb-text-row">' +
+        '<textarea class="rb-text" placeholder="Tell us more (optional)..." rows="2"></textarea>' +
+        '<button class="rb-send">Send</button>' +
+      '</div>';
+    container.appendChild(followup);
+
+    var selectedChip = null;
+    followup.querySelectorAll('.rb-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        followup.querySelectorAll('.rb-chip').forEach(function(c) { c.classList.remove('selected'); });
+        this.classList.add('selected');
+        selectedChip = this.dataset.chip;
+      });
+    });
+
+    var sendBtn = followup.querySelector('.rb-send');
+    sendBtn.addEventListener('click', function() {
+      var text = followup.querySelector('.rb-text').value.trim();
+      if (!selectedChip && !text) {
+        followup.querySelector('.rb-text').focus();
+        return;
+      }
+      sendBtn.disabled = true;
+      sendReaction(questionId, 'down', selectedChip, text || null);
+      followup.innerHTML = '<div class="rb-done">Thanks for the feedback! We\'ll look into it. ✓</div>';
+      bar.querySelector('.rb-label').textContent = 'Feedback sent';
+    });
+  });
+}
+
+function sendReaction(questionId, vote, chip, text) {
+  var p = PROMPTS ? PROMPTS.find(function(x) { return x.id === questionId; }) : null;
+  var label = p ? p.title : questionId;
+  var category = chip || (vote === 'up' ? 'helpful' : 'not-helpful');
+  var msg = vote === 'up'
+    ? 'Marked helpful 👍'
+    : ('Marked not helpful 👎' + (chip ? ' · ' + chip : '') + (text ? '\n' + text : ''));
+  var context = 'Category: reaction-' + category + '\nQuestion: ' + label + ' (' + questionId + ')\nVote: ' + vote;
+
+  var userEmail = null;
+  try {
+    var profile = JSON.parse(localStorage.getItem('userProfile') || 'null');
+    if (profile && profile.email) userEmail = profile.email;
+  } catch(e) {}
+
+  fetch('/api/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: msg + '\n\n--- Debug Context ---\n' + context,
+      category: 'reaction-' + category,
+      userEmail: userEmail,
+      page: location.pathname + ' > ' + questionId,
+      userAgent: navigator.userAgent,
+    }),
+  }).catch(function() {}); // fire and forget
+}
+
 // ── MESSAGE RENDERING ──
 function appendMessage(role, content) {
   const container = document.getElementById('messages');
@@ -4854,6 +5050,7 @@ async function setupCodeEnvironment(caseId) {
     qText.innerHTML = dataset.question;
     qPanel.style.display = '';
     mobileQ.innerHTML = '\uD83C\uDFAF ' + dataset.question;
+    renderReactionBar(qPanel, caseId);
   } else {
     qPanel.style.display = 'none';
     mobileQ.textContent = '';

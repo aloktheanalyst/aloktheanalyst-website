@@ -1,12 +1,36 @@
 // Cloudflare Pages Function — website feedback endpoint.
-// Sends feedback + optional screenshot to info@aloktheanalyst.com via Resend.
+// Writes all feedback to D1. Sends email via Resend for text feedback only
+// (not for silent reactions like 👍/👎).
 //
 // Required bindings:
 //   RESEND_API_KEY → Secret (Resend API key)
 //   SESSION_KV     → KV namespace (rate limiting)
+//   DB             → D1 database binding
 
-const RATE_LIMIT = 5;
+const RATE_LIMIT = 10;
 const RATE_WINDOW = 3600; // 1 hour
+
+// Reaction-only categories that should NOT trigger an email
+const REACTION_CATEGORIES = new Set([
+  'reaction-up', 'reaction-helpful',
+  'reaction-down', 'reaction-not-helpful',
+  'reaction-wrong-answer', 'reaction-confusing',
+  'reaction-bug', 'reaction-other',
+]);
+
+const CATEGORY_LABELS = {
+  'bug':                   '🐛 Bug',
+  'wrong-answer':          '❓ Wrong answer',
+  'suggestion':            '💡 Suggestion',
+  'reaction-up':           '👍 Helpful',
+  'reaction-helpful':      '👍 Helpful',
+  'reaction-down':         '👎 Not helpful',
+  'reaction-not-helpful':  '👎 Not helpful',
+  'reaction-wrong-answer': '👎 Wrong answer',
+  'reaction-confusing':    '👎 Confusing',
+  'reaction-bug':          '👎 Bug',
+  'reaction-other':        '👎 Other',
+};
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +45,11 @@ function json(body, status = 200) {
   });
 }
 
+async function hashIp(ip) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+}
+
 export async function onRequest(context) {
   const { env, request } = context;
 
@@ -30,10 +59,6 @@ export async function onRequest(context) {
 
   if (request.method !== 'POST') {
     return json({ error: 'Method not allowed' }, 405);
-  }
-
-  if (!env.RESEND_API_KEY) {
-    return json({ error: 'Email service not configured' }, 503);
   }
 
   // Rate limiting
@@ -58,7 +83,7 @@ export async function onRequest(context) {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { message, screenshot, page, userAgent } = body;
+  const { message, category, userEmail, screenshot, page, userAgent } = body;
 
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     return json({ error: 'Message is required' }, 400);
@@ -67,15 +92,54 @@ export async function onRequest(context) {
     return json({ error: 'Message too long (max 5000 characters)' }, 400);
   }
 
-  // Build email HTML
-  const timestamp = new Date().toISOString();
-
-  // Split user message from debug context (appended by client)
+  // Parse question_id from debug context if present
   const parts = message.trim().split('\n\n--- Debug Context ---\n');
   const userMessage = parts[0];
   const debugContext = parts[1] || '';
+  let questionId = null;
+  for (const line of debugContext.split('\n')) {
+    const m = line.match(/^Question:.+\(([^)]+)\)\s*$/);
+    if (m) { questionId = m[1]; break; }
+  }
 
-  // Build context table from debug lines
+  const timestamp = new Date().toISOString();
+  const isReaction = REACTION_CATEGORIES.has(category);
+  const categoryLabel = category ? (CATEGORY_LABELS[category] || category) : null;
+
+  // ── 1. Write to D1 ─────────────────────────────────────────────────────────
+  if (env.CONTENT_DB) {
+    try {
+      const ipHash = await hashIp(ip);
+      await env.CONTENT_DB.prepare(
+        `INSERT INTO feedback (question_id, category, message, page, ip_hash, user_agent, user_email, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        questionId,
+        category || null,
+        isReaction ? null : userMessage,   // don't store reaction placeholder text
+        page || null,
+        ipHash,
+        userAgent || null,
+        userEmail || null,
+        timestamp,
+      ).run();
+    } catch (err) {
+      console.error('D1 insert failed:', err);
+      // Don't block — still try email
+    }
+  }
+
+  // ── 2. Email — only for non-reaction (text) feedback ──────────────────────
+  if (isReaction) {
+    return json({ ok: true });
+  }
+
+  if (!env.RESEND_API_KEY) {
+    // D1 write succeeded; email not configured is non-fatal
+    return json({ ok: true });
+  }
+
+  // Build context table
   const contextHtml = debugContext
     ? '<table style="font-size:0.82rem;color:#334155;margin:0.75rem 0;border-collapse:collapse;">' +
       debugContext.split('\n').map(line => {
@@ -86,12 +150,17 @@ export async function onRequest(context) {
       '</table>'
     : '';
 
+  const categoryBadge = categoryLabel
+    ? `<span style="display:inline-block;padding:2px 10px;border-radius:20px;background:#eff6ff;color:#1d4ed8;font-size:0.8rem;font-weight:600;margin-bottom:0.75rem;">${categoryLabel}</span>`
+    : '';
+
   const html = `
     <div style="font-family:sans-serif;max-width:600px;">
       <h2 style="color:#2563eb;margin-bottom:0.5rem;">Website Feedback</h2>
       <p style="color:#64748b;font-size:0.85rem;margin-top:0;">
         ${timestamp} · <strong>${page || 'Unknown page'}</strong>
       </p>
+      ${categoryBadge}
       ${contextHtml}
       <div style="background:#f8faff;border:1px solid #e2e8f2;border-radius:8px;padding:1rem;margin:1rem 0;">
         <p style="margin:0;color:#334155;white-space:pre-wrap;">${escapeHtml(userMessage)}</p>
@@ -100,15 +169,15 @@ export async function onRequest(context) {
         IP: ${ip}<br>
         UA: ${userAgent || 'Unknown'}
       </p>
+      ${userEmail ? `<p style="color:#64748b;font-size:0.8rem;">Reply to: <a href="mailto:${escapeHtml(userEmail)}">${escapeHtml(userEmail)}</a></p>` : ''}
       ${screenshot ? '<p style="color:#64748b;font-size:0.8rem;">Screenshot attached.</p>' : ''}
     </div>
   `;
 
-  // Build Resend payload
   const emailPayload = {
     from: 'Feedback <feedback@aloktheanalyst.com>',
     to: ['info@aloktheanalyst.com'],
-    subject: `Feedback: ${page || '/'} [${timestamp.substring(11, 19)}]`,
+    subject: `Feedback${categoryLabel ? ' [' + categoryLabel.replace(/[^\w\s]/g, '').trim() + ']' : ''}: ${page || '/'} [${timestamp.substring(11, 19)}]`,
     html,
   };
 
@@ -119,7 +188,6 @@ export async function onRequest(context) {
     }];
   }
 
-  // Send via Resend
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
