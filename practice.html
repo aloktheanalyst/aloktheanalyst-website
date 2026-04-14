@@ -5557,7 +5557,7 @@ async function runTestCases() {
   }
 }
 
-function showSolvedCelebration(caseId) {
+function showSolvedCelebration(caseId, score) {
   if (document.getElementById('solvedOverlay')) return; // already showing
   const prompts = typeof PROMPTS !== 'undefined' ? PROMPTS : [];
   const q = prompts.find(p => p.id === caseId);
@@ -5569,13 +5569,15 @@ function showSolvedCelebration(caseId) {
     'That\'s the way to do it!',
   ];
   const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  const emoji = score >= 10 ? '🏆' : score >= 9 ? '🥇' : '🎉';
+  const headline = score != null ? `You scored ${score}/10` : 'All tests passed!';
   const overlay = document.createElement('div');
   overlay.className = 'solved-overlay';
   overlay.id = 'solvedOverlay';
   overlay.innerHTML = `
     <div class="solved-prompt">
-      <div class="solved-emoji">🎉</div>
-      <div class="solved-score">All tests passed!</div>
+      <div class="solved-emoji">${emoji}</div>
+      <div class="solved-score">${headline}</div>
       <div class="solved-msg"><strong>${escapeHtml(title)}</strong> marked as solved.<br>${msg}</div>
       <div class="solved-actions">
         <button class="btn-yes" onclick="dismissSolvedOverlay()">Nice, next question →</button>
@@ -5818,28 +5820,13 @@ Please provide your feedback in this exact format:
     resultsEl.innerHTML = `<div class="ai-feedback-panel">${formatMessage(reply)}</div>`;
     document.getElementById('sqlExecInfo').textContent = 'Feedback ready';
 
-    // If score >= 7 and not already solved, show full-screen solved prompt
+    // If score >= 8 and not already solved, celebrate and auto-mark solved
     if (scoreMatch && activeCaseId) {
       const score = parseInt(scoreMatch[1]);
       const solved = getSolvedCases();
       if (score >= 8 && !solved.includes(activeCaseId)) {
-        const caseId = activeCaseId;
-        const emoji = score >= 9 ? '🏆' : score >= 8 ? '🎉' : '👏';
-        const msg = score >= 9 ? 'Outstanding work!' : score >= 8 ? 'Great job!' : 'Well done!';
-        const overlay = document.createElement('div');
-        overlay.className = 'solved-overlay';
-        overlay.id = 'solvedOverlay';
-        overlay.innerHTML = `
-          <div class="solved-prompt">
-            <div class="solved-emoji">${emoji}</div>
-            <div class="solved-score">You scored ${score}/10</div>
-            <div class="solved-msg">${msg} Mark this question as complete?</div>
-            <div class="solved-actions">
-              <button class="btn-yes" onclick="markCaseSolved('${caseId}')">Yes, I'm done!</button>
-              <button class="btn-no" onclick="dismissSolvedOverlay()">Not yet</button>
-            </div>
-          </div>`;
-        document.body.appendChild(overlay);
+        markCaseSolved(activeCaseId);
+        showSolvedCelebration(activeCaseId, score);
       }
     }
   } catch (err) {
