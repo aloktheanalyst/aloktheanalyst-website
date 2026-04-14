@@ -85,10 +85,14 @@ function computeStreak(completedWeeks, currentWeekId) {
 }
 
 async function getCurrentChallenge(env, weekId) {
-  // 1. Manual entry for this week
+  // 1. Manual entry — find the nearest challenge whose end date is today or in the future
+  //    (robust against timezone drift in week_id computation)
   const manual = await env.DB.prepare(
-    'SELECT question_id FROM weekly_challenges WHERE week_id = ?'
-  ).bind(weekId).first();
+    `SELECT week_id, question_id FROM weekly_challenges
+     WHERE week_id >= date('now', '-6 days')
+     ORDER BY week_id ASC
+     LIMIT 1`
+  ).first();
   if (manual) return manual.question_id;
 
   // 2. Auto-rotate: all hard SQL questions from content DB, ranked by attempts
