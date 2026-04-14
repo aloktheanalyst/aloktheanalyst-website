@@ -5931,6 +5931,11 @@ async function runTestCases() {
           const assertMatch = errMsg.match(/AssertionError: (.+)/s) || errMsg.match(/assert.+/s);
           results.push({ name: test.name, pass: false, msg: assertMatch ? assertMatch[1] || assertMatch[0] : (test.msg || errMsg) });
         }
+      } else if (test.check && !isPy) {
+        // check function takes priority over expectedQuery when both are present
+        const targetOutput = outputText;
+        const r = test.check(targetOutput);
+        results.push({ name: test.name, pass: r.pass, msg: r.msg });
       } else if (test.expectedQuery && !isPy && sqlDB) {
         // ── expectedQuery-based test with auto-matching ──
         const expData = testExpectedData.find(d => d.index === tests.indexOf(test));
@@ -5972,11 +5977,6 @@ async function runTestCases() {
             results.push({ name: test.name, pass: false, msg: test.failMsg || `Only ${matched}/${keyValues.length} expected computed values found in your output.` });
           }
         }
-      } else if (test.check) {
-        // Output-based check — also use auto-matching for multi-statement SQL
-        const targetOutput = (!isPy && perStatementOutputs.length > 1) ? outputText : outputText;
-        const r = test.check(targetOutput);
-        results.push({ name: test.name, pass: r.pass, msg: r.msg });
       } else if (test.assertion && isPy) {
         results.push({ name: test.name, pass: false, msg: 'Python engine not available' });
       } else {
