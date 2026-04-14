@@ -354,6 +354,11 @@
 
   // ── Public API ─────────────────────────────────────────────────────────────
   window.openProfileModal = function () {
+    // Redirect to dedicated profile page instead of opening modal
+    window.location.href = '/profile';
+  };
+
+  window.openProfileModalInline = function () {
     // Close any nav dropdown
     var navMenu = document.getElementById('snavAuthMenu');
     if (navMenu) navMenu.classList.remove('open');

@@ -93,7 +93,7 @@ export async function onRequest(context) {
   if (request.method === 'GET') {
     try {
       const row = await env.DB.prepare(
-        'SELECT profile_data, solved_cases, updated_at FROM user_profile WHERE google_id = ?1'
+        'SELECT profile_data, solved_cases, updated_at, profile_complete FROM user_profile WHERE google_id = ?1'
       ).bind(googleId).first();
 
       if (!row) {
@@ -104,6 +104,7 @@ export async function onRequest(context) {
         profile: JSON.parse(row.profile_data || '{}'),
         solvedCases: JSON.parse(row.solved_cases || '[]'),
         updatedAt: row.updated_at,
+        profileComplete: row.profile_complete === 1,
       });
     } catch (err) {
       console.error('Profile fetch failed:', err);
@@ -134,17 +135,71 @@ export async function onRequest(context) {
       return json({ error: 'Solved cases data too large' }, 400);
     }
 
+    // Determine if profile is complete (name + targetRole required)
+    const p = profile || {};
+    const isComplete = !!(p.name && p.name.trim() && p.targetRole && p.targetRole.trim());
+
+    // Fetch email from user table to backfill
+    let emailFromUser = null;
+    try {
+      const userRow = await env.DB.prepare('SELECT email FROM user WHERE google_id = ?1').bind(googleId).first();
+      if (userRow) emailFromUser = userRow.email;
+    } catch { /* non-fatal */ }
+
     try {
       await env.DB.prepare(`
-        INSERT INTO user_profile (google_id, profile_data, solved_cases, updated_at)
-        VALUES (?1, ?2, ?3, CURRENT_TIMESTAMP)
+        INSERT INTO user_profile (
+          google_id, profile_data, solved_cases, updated_at,
+          email, name, current_role, target_role, exp_status, career_start_date,
+          target_companies, prep_stage, sql_level, python_level, tools,
+          discovery_source, city, timezone, linkedin_url, profile_complete
+        ) VALUES (
+          ?1, ?2, ?3, CURRENT_TIMESTAMP,
+          ?4, ?5, ?6, ?7, ?8, ?9,
+          ?10, ?11, ?12, ?13, ?14,
+          ?15, ?16, ?17, ?18, ?19
+        )
         ON CONFLICT(google_id) DO UPDATE SET
-          profile_data = excluded.profile_data,
-          solved_cases = excluded.solved_cases,
-          updated_at = CURRENT_TIMESTAMP
-      `).bind(googleId, profileStr, solvedStr).run();
+          profile_data     = excluded.profile_data,
+          solved_cases     = excluded.solved_cases,
+          updated_at       = CURRENT_TIMESTAMP,
+          email            = COALESCE(excluded.email, user_profile.email),
+          name             = excluded.name,
+          current_role     = excluded.current_role,
+          target_role      = excluded.target_role,
+          exp_status       = excluded.exp_status,
+          career_start_date= excluded.career_start_date,
+          target_companies = excluded.target_companies,
+          prep_stage       = excluded.prep_stage,
+          sql_level        = excluded.sql_level,
+          python_level     = excluded.python_level,
+          tools            = excluded.tools,
+          discovery_source = excluded.discovery_source,
+          city             = excluded.city,
+          timezone         = excluded.timezone,
+          linkedin_url     = excluded.linkedin_url,
+          profile_complete = excluded.profile_complete
+      `).bind(
+        googleId, profileStr, solvedStr,
+        emailFromUser,
+        p.name || null,
+        p.currentRole || null,
+        p.targetRole || null,
+        p.expStatus || null,
+        p.careerStartDate || null,
+        p.targetCompanies || null,
+        p.prepStage || null,
+        p.sqlLevel || null,
+        p.pythonLevel || null,
+        p.tools ? JSON.stringify(p.tools) : null,
+        p.discoverySource || null,
+        p.city || null,
+        p.timezone || null,
+        p.linkedinUrl || null,
+        isComplete ? 1 : 0,
+      ).run();
 
-      return json({ ok: true });
+      return json({ ok: true, profileComplete: isComplete });
     } catch (err) {
       console.error('Profile save failed:', err);
       return json({ error: 'Failed to save profile' }, 500);

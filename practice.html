@@ -3994,7 +3994,20 @@ function populateModelSelects() {
 // ═══════════════════════════════
 // CASES
 // ═══════════════════════════════
+function isProfileComplete() {
+  try {
+    var p = JSON.parse(localStorage.getItem('userProfile') || '{}');
+    return !!(p.name && p.name.trim() && p.targetRole && p.targetRole.trim());
+  } catch(e) { return false; }
+}
+
 async function loadCase(id) {
+  // Gate: logged-in users must complete profile before practising
+  if (currentUser && !isProfileComplete()) {
+    var dest = '/profile?next=' + encodeURIComponent('/practice?q=' + id);
+    window.location.href = dest;
+    return;
+  }
   activeCaseId = id;
   updatePrevNextButtons();
   document.documentElement.classList.add('case-active');

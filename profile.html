@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Profile — Alok The Analyst</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8faff;
+    --bg2: #ffffff;
+    --border: #e2e8f2;
+    --accent: #2563eb;
+    --accent2: #1d4ed8;
+    --text: #334155;
+    --muted: #64748b;
+    --dark: #0f172a;
+    --error: #ef4444;
+    --success: #22c55e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  /* ── Top bar ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 56px;
+  }
+  .topbar-brand {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
+    letter-spacing: 2px; color: var(--dark); text-decoration: none;
+  }
+  .topbar-brand span { color: var(--accent); }
+  .topbar-back {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.82rem; color: var(--muted); text-decoration: none;
+    padding: 0.4rem 0.75rem; border-radius: 6px; border: 1px solid var(--border);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .topbar-back:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Layout ── */
+  .page { max-width: 580px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  .page-header { margin-bottom: 2rem; }
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+    letter-spacing: 2px; color: var(--dark); line-height: 1;
+  }
+  .page-sub { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; line-height: 1.6; }
+
+  /* Required notice */
+  .required-notice {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.2);
+    border-radius: 8px; padding: 0.75rem 1rem;
+    font-size: 0.8rem; color: #1d4ed8; line-height: 1.5;
+    margin-bottom: 2rem;
+  }
+  .required-notice svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* ── Sections ── */
+  .section-group {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem;
+  }
+  .section-group-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 2px; color: var(--muted); text-transform: uppercase;
+    margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .required-tag {
+    font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0;
+    background: rgba(239,68,68,0.1); color: var(--error);
+    padding: 0.1rem 0.45rem; border-radius: 3px; font-weight: 600;
+  }
+  .optional-tag {
+    font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0;
+    background: #f1f5f9; color: var(--muted);
+    padding: 0.1rem 0.45rem; border-radius: 3px; font-weight: 600;
+  }
+
+  .field { margin-bottom: 1.1rem; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    font-size: 0.75rem; font-weight: 600; color: var(--muted);
+    letter-spacing: 0.3px; text-transform: uppercase;
+    margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.3rem;
+  }
+  .field-label .req { color: var(--error); font-size: 0.85rem; }
+
+  .field-input, .field-select {
+    width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 0.85rem; font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s; outline: none; box-sizing: border-box;
+  }
+  .field-input:focus, .field-select:focus { border-color: var(--accent); }
+  .field-input::placeholder { color: #b0bec5; }
+  .field-input.error, .field-select.error { border-color: var(--error); }
+
+  .field-row { display: flex; gap: 0.75rem; }
+  .field-row .field { flex: 1; margin-bottom: 0; }
+
+  /* Toggle */
+  .toggle-group { display: flex; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .toggle-btn {
+    flex: 1; padding: 0.5rem 0.6rem; font-size: 0.8rem;
+    border: none; border-right: 1px solid var(--border);
+    background: var(--bg); color: var(--muted); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .toggle-btn:last-child { border-right: none; }
+  .toggle-btn.active { background: var(--accent); color: #fff; }
+  .toggle-btn:hover:not(.active) { background: #f1f5f9; }
+
+  /* Chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip {
+    padding: 0.3rem 0.7rem; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    font-size: 0.75rem; cursor: pointer; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .chip.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .chip:hover:not(.selected) { border-color: var(--accent); color: var(--accent); }
+
+  /* Skill row */
+  .skill-row { display: flex; gap: 1rem; }
+  .skill-group { flex: 1; }
+  .skill-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.35rem; }
+
+  /* Exp display */
+  .exp-display {
+    font-size: 0.75rem; color: var(--success);
+    font-family: 'JetBrains Mono', monospace; margin-top: 0.5rem; min-height: 1.2em;
+  }
+
+  /* Working since */
+  #workingSince { margin-top: 0.6rem; }
+
+  /* Footer */
+  .form-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .footer-hint { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+  .footer-hint strong { color: var(--text); }
+  .save-btn {
+    padding: 0.7rem 2rem; border-radius: 8px; border: none;
+    background: var(--accent); color: #fff; font-weight: 600;
+    font-size: 0.88rem; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: background 0.2s; white-space: nowrap;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .save-btn:hover { background: var(--accent2); }
+  .save-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+  /* Error messages */
+  .field-error { font-size: 0.73rem; color: var(--error); margin-top: 0.3rem; display: none; }
+  .field-error.show { display: block; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--dark); color: #fff; padding: 0.65rem 1.4rem;
+    border-radius: 8px; font-size: 0.82rem; z-index: 9999;
+    opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: #166534; }
+  .toast.error { background: #991b1b; }
+
+  /* Not logged in state */
+  .auth-wall {
+    text-align: center; padding: 4rem 2rem;
+  }
+  .auth-wall-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .auth-wall-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
+    letter-spacing: 1.5px; color: var(--dark); margin-bottom: 0.6rem;
+  }
+  .auth-wall-sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+  .auth-wall-btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.7rem 1.8rem; background: var(--accent); color: #fff;
+    border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.88rem;
+  }
+
+  @media (max-width: 600px) {
+    .topbar { padding: 0 1rem; }
+    .page { padding: 1.5rem 1rem 3rem; }
+    .skill-row { flex-direction: column; gap: 0.75rem; }
+    .form-footer { flex-direction: column; align-items: stretch; }
+    .save-btn { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="/" class="topbar-brand">ALOK.<span>ANALYST</span></a>
+  <a href="/practice" class="topbar-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to Practice
+  </a>
+</nav>
+
+<div class="page" id="mainPage" style="display:none">
+
+  <div class="page-header">
+    <div class="page-title">YOUR PROFILE</div>
+    <div class="page-sub">Help us personalise your practice. Mandatory fields unlock AI coaching and question recommendations.</div>
+  </div>
+
+  <div class="required-notice">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <span><strong>Name</strong>, <strong>Experience</strong>, and <strong>Target Role</strong> are required to start practising.</span>
+  </div>
+
+  <!-- ── REQUIRED ── -->
+  <div class="section-group">
+    <div class="section-group-title">
+      Basic Info
+      <span class="required-tag">REQUIRED</span>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Name <span class="req">*</span></div>
+      <input class="field-input" id="fName" type="text" placeholder="Your name" autocomplete="name" />
+      <div class="field-error" id="fNameErr">Please enter your name.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Experience <span class="req">*</span></div>
+      <div class="toggle-group" id="expToggle">
+        <button class="toggle-btn active" data-val="working">Working</button>
+        <button class="toggle-btn" data-val="fresher">Fresher / Gap Year</button>
+      </div>
+      <div id="workingSince">
+        <div style="font-size:0.72rem;color:var(--muted);margin:0.5rem 0 0.3rem;">Working since</div>
+        <div class="field-row">
+          <div class="field">
+            <select class="field-select" id="fStartMonth">
+              <option value="">Month</option>
+              <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+              <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+              <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+              <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+            </select>
+          </div>
+          <div class="field">
+            <select class="field-select" id="fStartYear"><option value="">Year</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="exp-display" id="expDisplay"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Target Role <span class="req">*</span></div>
+      <select class="field-select" id="fTargetRole">
+        <option value="">What role are you preparing for?</option>
+        <option value="data_analyst">Data Analyst</option>
+        <option value="product_analyst">Product Analyst</option>
+        <option value="business_analyst">Business Analyst</option>
+        <option value="analytics_engineer">Analytics Engineer</option>
+        <option value="data_scientist">Data Scientist</option>
+        <option value="data_engineer">Data Engineer</option>
+      </select>
+      <div class="field-error" id="fTargetRoleErr">Please select your target role.</div>
+    </div>
+  </div>
+
+  <!-- ── OPTIONAL ── -->
+  <div class="section-group">
+    <div class="section-group-title">
+      Career Context
+      <span class="optional-tag">OPTIONAL</span>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Current Role</div>
+      <select class="field-select" id="fCurrentRole">
+        <option value="">Select your current role</option>
+        <option value="student">Student</option>
+        <option value="fresher">Fresher</option>
+        <option value="business_analyst">Business Analyst</option>
+        <option value="data_analyst">Data Analyst</option>
+        <option value="software_engineer">Software Engineer</option>
+        <option value="product_manager">Product Manager</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Preparation Stage</div>
+      <select class="field-select" id="fPrepStage">
+        <option value="">Where are you in your prep?</option>
+        <option value="just_starting">Just Starting</option>
+        <option value="actively_applying">Actively Applying</option>
+        <option value="interviews_lined_up">Have Interviews Lined Up</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Dream Companies</div>
+      <input class="field-input" id="fCompanies" type="text" placeholder="e.g., Google, Flipkart, Razorpay" />
+    </div>
+
+    <div class="field">
+      <div class="field-label">LinkedIn URL</div>
+      <input class="field-input" id="fLinkedin" type="url" placeholder="https://linkedin.com/in/yourname" />
+    </div>
+  </div>
+
+  <div class="section-group">
+    <div class="section-group-title">
+      Skills
+      <span class="optional-tag">OPTIONAL</span>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Skill Levels</div>
+      <div class="skill-row">
+        <div class="skill-group">
+          <div class="skill-label">SQL</div>
+          <div class="toggle-group" id="sqlLevel">
+            <button class="toggle-btn" data-val="beginner">Beginner</button>
+            <button class="toggle-btn" data-val="intermediate">Intermediate</button>
+            <button class="toggle-btn" data-val="advanced">Advanced</button>
+          </div>
+        </div>
+        <div class="skill-group">
+          <div class="skill-label">Python</div>
+          <div class="toggle-group" id="pythonLevel">
+            <button class="toggle-btn" data-val="beginner">Beginner</button>
+            <button class="toggle-btn" data-val="intermediate">Intermediate</button>
+            <button class="toggle-btn" data-val="advanced">Advanced</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Tools You Know</div>
+      <div class="chips" id="toolChips">
+        <button class="chip" data-val="excel">Excel</button>
+        <button class="chip" data-val="sql">SQL</button>
+        <button class="chip" data-val="python">Python</button>
+        <button class="chip" data-val="tableau">Tableau</button>
+        <button class="chip" data-val="powerbi">Power BI</button>
+        <button class="chip" data-val="looker">Looker</button>
+        <button class="chip" data-val="sheets">Google Sheets</button>
+        <button class="chip" data-val="r">R</button>
+        <button class="chip" data-val="dbt">dbt</button>
+        <button class="chip" data-val="spark">Spark</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-group">
+    <div class="section-group-title">
+      About You
+      <span class="optional-tag">OPTIONAL</span>
+    </div>
+
+    <div class="field-row" style="margin-bottom:1.1rem;">
+      <div class="field" style="margin:0;">
+        <div class="field-label">City</div>
+        <input class="field-input" id="fCity" type="text" placeholder="e.g., Bangalore, Mumbai" />
+      </div>
+      <div class="field" style="margin:0;">
+        <div class="field-label">How did you find us?</div>
+        <select class="field-select" id="fSource">
+          <option value="">Select one</option>
+          <option value="youtube">YouTube</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="instagram">Instagram</option>
+          <option value="telegram">Telegram</option>
+          <option value="friend">Friend / Referral</option>
+          <option value="google">Google Search</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-footer">
+    <div class="footer-hint">
+      <strong>Required fields</strong> must be filled to access practice questions.<br>
+      Profile is saved to your account and synced across devices.
+    </div>
+    <button class="save-btn" id="saveBtn" onclick="saveProfile()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      Save Profile
+    </button>
+  </div>
+</div>
+
+<!-- Auth wall for non-logged-in users -->
+<div class="page auth-wall" id="authWall" style="display:none">
+  <div class="auth-wall-icon">🔒</div>
+  <div class="auth-wall-title">SIGN IN REQUIRED</div>
+  <div class="auth-wall-sub">You need to sign in with Google to set up your profile.</div>
+  <a href="/api/auth/login?redirect=/profile" class="auth-wall-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+    Sign in with Google
+  </a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Year dropdown ──────────────────────────────────────────────────────────
+(function() {
+  var sel = document.getElementById('fStartYear');
+  var cur = new Date().getFullYear();
+  for (var y = cur; y >= cur - 30; y--) {
+    sel.innerHTML += '<option value="' + y + '">' + y + '</option>';
+  }
+})();
+
+// ── Experience toggle ──────────────────────────────────────────────────────
+document.getElementById('expToggle').addEventListener('click', function(e) {
+  var btn = e.target.closest('.toggle-btn');
+  if (!btn) return;
+  this.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('workingSince').style.display = btn.dataset.val === 'working' ? '' : 'none';
+  updateExpDisplay();
+});
+document.getElementById('fStartMonth').addEventListener('change', updateExpDisplay);
+document.getElementById('fStartYear').addEventListener('change', updateExpDisplay);
+
+function updateExpDisplay() {
+  var status = document.querySelector('#expToggle .toggle-btn.active').dataset.val;
+  var el = document.getElementById('expDisplay');
+  if (status === 'fresher') {
+    el.textContent = 'Fresher — no prior experience';
+    el.style.color = 'var(--accent)';
+    return;
+  }
+  var m = document.getElementById('fStartMonth').value;
+  var y = document.getElementById('fStartYear').value;
+  if (!m || !y) { el.textContent = ''; return; }
+  var start = new Date(parseInt(y), parseInt(m), 1);
+  var now = new Date();
+  var years = now.getFullYear() - start.getFullYear();
+  var months = now.getMonth() - start.getMonth();
+  if (months < 0) { years--; months += 12; }
+  var text = years === 0 && months === 0 ? 'Just getting started'
+    : years === 0 ? months + ' month' + (months > 1 ? 's' : '')
+    : months === 0 ? years + ' year' + (years > 1 ? 's' : '')
+    : years + 'y ' + months + 'm';
+  el.textContent = '~ ' + text + ' experience';
+  el.style.color = 'var(--success)';
+}
+
+// ── Skill toggles ──────────────────────────────────────────────────────────
+['sqlLevel', 'pythonLevel'].forEach(function(id) {
+  document.getElementById(id).addEventListener('click', function(e) {
+    var btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    this.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+  });
+});
+
+// ── Tool chips ─────────────────────────────────────────────────────────────
+document.getElementById('toolChips').addEventListener('click', function(e) {
+  var chip = e.target.closest('.chip');
+  if (chip) chip.classList.toggle('selected');
+});
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+// ── Load profile ───────────────────────────────────────────────────────────
+async function loadProfile() {
+  try {
+    var res = await fetch('/api/profile');
+    if (res.status === 401) {
+      // Not logged in
+      document.getElementById('authWall').style.display = '';
+      return;
+    }
+    document.getElementById('mainPage').style.display = '';
+    if (!res.ok) return;
+    var data = await res.json();
+    var p = data.profile || {};
+
+    document.getElementById('fName').value = p.name || '';
+    document.getElementById('fCurrentRole').value = p.currentRole || '';
+    document.getElementById('fTargetRole').value = p.targetRole || '';
+    document.getElementById('fCompanies').value = p.targetCompanies || '';
+    document.getElementById('fPrepStage').value = p.prepStage || '';
+    document.getElementById('fCity').value = p.city || '';
+    document.getElementById('fSource').value = p.discoverySource || '';
+    document.getElementById('fLinkedin').value = p.linkedinUrl || '';
+
+    // Experience
+    var expStatus = p.expStatus || 'working';
+    document.querySelectorAll('#expToggle .toggle-btn').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.val === expStatus);
+    });
+    document.getElementById('workingSince').style.display = expStatus === 'working' ? '' : 'none';
+    if (p.careerStartDate) {
+      var d = new Date(p.careerStartDate);
+      document.getElementById('fStartMonth').value = d.getMonth();
+      document.getElementById('fStartYear').value = d.getFullYear();
+    }
+    updateExpDisplay();
+
+    // Skill levels
+    [['sqlLevel', p.sqlLevel], ['pythonLevel', p.pythonLevel]].forEach(function(pair) {
+      if (!pair[1]) return;
+      document.querySelectorAll('#' + pair[0] + ' .toggle-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.val === pair[1]);
+      });
+    });
+
+    // Tools
+    var tools = p.tools || [];
+    document.querySelectorAll('#toolChips .chip').forEach(function(c) {
+      c.classList.toggle('selected', tools.indexOf(c.dataset.val) !== -1);
+    });
+  } catch(e) {
+    document.getElementById('mainPage').style.display = '';
+  }
+}
+
+// ── Validate ───────────────────────────────────────────────────────────────
+function validate() {
+  var ok = true;
+  var name = document.getElementById('fName').value.trim();
+  var role = document.getElementById('fTargetRole').value;
+
+  document.getElementById('fNameErr').classList.toggle('show', !name);
+  document.getElementById('fName').classList.toggle('error', !name);
+  if (!name) ok = false;
+
+  document.getElementById('fTargetRoleErr').classList.toggle('show', !role);
+  document.getElementById('fTargetRole').classList.toggle('error', !role);
+  if (!role) ok = false;
+
+  return ok;
+}
+
+// ── Save ───────────────────────────────────────────────────────────────────
+async function saveProfile() {
+  if (!validate()) {
+    showToast('Please fill in the required fields.', 'error');
+    document.getElementById('fName').focus();
+    return;
+  }
+
+  var btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  var expStatus = document.querySelector('#expToggle .toggle-btn.active').dataset.val;
+  var m = document.getElementById('fStartMonth').value;
+  var y = document.getElementById('fStartYear').value;
+  var careerStartDate = (expStatus === 'working' && m !== '' && y !== '')
+    ? new Date(parseInt(y), parseInt(m), 1).toISOString() : '';
+
+  var sqlBtn = document.querySelector('#sqlLevel .toggle-btn.active');
+  var pyBtn  = document.querySelector('#pythonLevel .toggle-btn.active');
+  var tools  = Array.from(document.querySelectorAll('#toolChips .chip.selected')).map(function(c) { return c.dataset.val; });
+
+  var timezone = '';
+  try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch(e) {}
+
+  var profile = {
+    name:            document.getElementById('fName').value.trim(),
+    currentRole:     document.getElementById('fCurrentRole').value,
+    targetRole:      document.getElementById('fTargetRole').value,
+    expStatus:       expStatus,
+    careerStartDate: careerStartDate,
+    targetCompanies: document.getElementById('fCompanies').value.trim(),
+    prepStage:       document.getElementById('fPrepStage').value,
+    sqlLevel:        sqlBtn ? sqlBtn.dataset.val : '',
+    pythonLevel:     pyBtn  ? pyBtn.dataset.val  : '',
+    tools:           tools,
+    discoverySource: document.getElementById('fSource').value,
+    city:            document.getElementById('fCity').value.trim(),
+    linkedinUrl:     document.getElementById('fLinkedin').value.trim(),
+    timezone:        timezone,
+    updatedAt:       new Date().toISOString(),
+  };
+
+  // Save to localStorage for instant access client-side
+  localStorage.setItem('userProfile', JSON.stringify(profile));
+
+  try {
+    var res = await fetch('/api/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile: profile }),
+    });
+    var data = await res.json();
+    if (data.ok) {
+      showToast('Profile saved! ✓', 'success');
+      setTimeout(function() {
+        // Redirect back to practice, or to ?next param if set
+        var params = new URLSearchParams(window.location.search);
+        window.location.href = params.get('next') || '/practice';
+      }, 800);
+    } else {
+      showToast(data.error || 'Failed to save. Please try again.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Save Profile';
+    }
+  } catch(e) {
+    showToast('Network error. Please try again.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Save Profile';
+  }
+}
+
+loadProfile();
+</script>
+</body>
+</html>

@@ -1,11 +1,12 @@
 // Cloudflare Pages Function — website feedback endpoint.
-// Writes all feedback to D1. Sends email via Resend for text feedback only
-// (not for silent reactions like 👍/👎).
+// Writes all feedback to D1 (aloktheanalyst_users / DB binding).
+// Sends email via Resend for text feedback only (not silent reactions).
+// Resolves google_id from session cookie when available.
 //
 // Required bindings:
 //   RESEND_API_KEY → Secret (Resend API key)
-//   SESSION_KV     → KV namespace (rate limiting)
-//   DB             → D1 database binding
+//   SESSION_KV     → KV namespace (rate limiting + sessions)
+//   DB             → D1 database (aloktheanalyst_users)
 
 const RATE_LIMIT = 10;
 const RATE_WINDOW = 3600; // 1 hour
@@ -48,6 +49,26 @@ function json(body, status = 200) {
 async function hashIp(ip) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+}
+
+function parseCookies(header) {
+  const out = {};
+  (header || '').split(';').forEach(c => {
+    const [k, ...v] = c.trim().split('=');
+    if (k) out[k.trim()] = v.join('=').trim();
+  });
+  return out;
+}
+
+async function resolveGoogleId(request, env) {
+  if (!env.SESSION_KV) return null;
+  try {
+    const cookies = parseCookies(request.headers.get('Cookie') || '');
+    if (!cookies.session) return null;
+    const raw = await env.SESSION_KV.get(`sess:${cookies.session}`);
+    if (!raw) return null;
+    return JSON.parse(raw).google_id || null;
+  } catch { return null; }
 }
 
 export async function onRequest(context) {
@@ -107,25 +128,28 @@ export async function onRequest(context) {
   const categoryLabel = category ? (CATEGORY_LABELS[category] || category) : null;
 
   // ── 1. Write to D1 ─────────────────────────────────────────────────────────
-  if (env.CONTENT_DB) {
+  if (env.DB) {
     try {
-      const ipHash = await hashIp(ip);
-      await env.CONTENT_DB.prepare(
-        `INSERT INTO feedback (question_id, category, message, page, ip_hash, user_agent, user_email, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      const [ipHash, googleId] = await Promise.all([
+        hashIp(ip),
+        resolveGoogleId(request, env),
+      ]);
+      await env.DB.prepare(
+        `INSERT INTO feedback (google_id, user_email, question_id, category, message, page, ip_hash, user_agent, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
+        googleId,
+        userEmail || null,
         questionId,
         category || null,
-        isReaction ? null : userMessage,   // don't store reaction placeholder text
+        isReaction ? null : userMessage,
         page || null,
         ipHash,
         userAgent || null,
-        userEmail || null,
         timestamp,
       ).run();
     } catch (err) {
       console.error('D1 insert failed:', err);
-      // Don't block — still try email
     }
   }
 
