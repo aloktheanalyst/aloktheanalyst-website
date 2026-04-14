@@ -6492,14 +6492,32 @@ function initResizeHandles() {
 }
 
 function resetPanelSizes() {
-  const schema = document.querySelector('.schema-sidebar');
+  const schema    = document.querySelector('.schema-sidebar');
   const editorWrap = document.querySelector('.sql-editor-wrapper');
-  schema.style.width = DEFAULT_SCHEMA_WIDTH + 'px';
-  editorWrap.style.height = DEFAULT_EDITOR_HEIGHT + 'px';
+  if (!schema || !editorWrap) return;
+
+  // Schema width: 28% of its parent, clamped to [140, 400]
+  const parentW  = schema.parentElement?.offsetWidth || 800;
+  const schemaW  = Math.min(400, Math.max(140, Math.round(parentW * 0.28)));
+  schema.style.width = schemaW + 'px';
+
+  // Editor height: 45% of its container, clamped to [80, 70% of container]
+  const container  = editorWrap.parentElement;
+  const containerH = container?.offsetHeight || 500;
+  const editorH    = Math.min(Math.round(containerH * 0.7), Math.max(80, Math.round(containerH * 0.45)));
+  editorWrap.style.height = editorH + 'px';
+
   localStorage.removeItem('editorPanelSchemaWidth');
   localStorage.removeItem('editorPanelEditorHeight');
   if (sqlEditor) sqlEditor.refresh();
 }
+
+// Auto-adjust layout on window resize (debounced)
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(resetPanelSizes, 200);
+});
 
 initResizeHandles();
 
