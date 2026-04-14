@@ -3997,7 +3997,9 @@ function populateModelSelects() {
 function isProfileComplete() {
   try {
     var p = JSON.parse(localStorage.getItem('userProfile') || '{}');
-    return !!(p.name && p.name.trim() && p.targetRole && p.targetRole.trim());
+    return !!(p.name && p.name.trim() &&
+              p.targetRole && p.targetRole.trim() &&
+              p.whatsappCountryCode && p.whatsappNumber && p.whatsappNumber.trim());
   } catch(e) { return false; }
 }
 

@@ -137,7 +137,11 @@ export async function onRequest(context) {
 
     // Determine if profile is complete (name + targetRole required)
     const p = profile || {};
-    const isComplete = !!(p.name && p.name.trim() && p.targetRole && p.targetRole.trim());
+    const isComplete = !!(
+      p.name && p.name.trim() &&
+      p.targetRole && p.targetRole.trim() &&
+      p.whatsappCountryCode && p.whatsappNumber && p.whatsappNumber.trim()
+    );
 
     // Fetch email from user table to backfill
     let emailFromUser = null;
@@ -152,12 +156,14 @@ export async function onRequest(context) {
           google_id, profile_data, solved_cases, updated_at,
           email, name, current_role, target_role, exp_status, career_start_date,
           target_companies, prep_stage, sql_level, python_level, tools,
-          discovery_source, city, timezone, linkedin_url, profile_complete
+          discovery_source, city, timezone, linkedin_url,
+          whatsapp_country_code, whatsapp_number, profile_complete
         ) VALUES (
           ?1, ?2, ?3, CURRENT_TIMESTAMP,
           ?4, ?5, ?6, ?7, ?8, ?9,
           ?10, ?11, ?12, ?13, ?14,
-          ?15, ?16, ?17, ?18, ?19
+          ?15, ?16, ?17, ?18,
+          ?19, ?20, ?21
         )
         ON CONFLICT(google_id) DO UPDATE SET
           profile_data     = excluded.profile_data,
@@ -177,8 +183,10 @@ export async function onRequest(context) {
           discovery_source = excluded.discovery_source,
           city             = excluded.city,
           timezone         = excluded.timezone,
-          linkedin_url     = excluded.linkedin_url,
-          profile_complete = excluded.profile_complete
+          linkedin_url          = excluded.linkedin_url,
+          whatsapp_country_code = excluded.whatsapp_country_code,
+          whatsapp_number       = excluded.whatsapp_number,
+          profile_complete      = excluded.profile_complete
       `).bind(
         googleId, profileStr, solvedStr,
         emailFromUser,
@@ -196,6 +204,8 @@ export async function onRequest(context) {
         p.city || null,
         p.timezone || null,
         p.linkedinUrl || null,
+        p.whatsappCountryCode || null,
+        p.whatsappNumber || null,
         isComplete ? 1 : 0,
       ).run();
 

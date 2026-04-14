@@ -136,6 +136,48 @@
   .skill-group { flex: 1; }
   .skill-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.35rem; }
 
+  /* Phone / WhatsApp row */
+  .phone-row { display: flex; gap: 0.5rem; }
+  .phone-number { flex: 1; }
+
+  /* Custom searchable country code picker */
+  .cc-wrap { position: relative; width: 170px; flex-shrink: 0; }
+  .cc-input {
+    width: 100%; padding: 0.6rem 2rem 0.6rem 0.8rem; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 0.85rem; font-family: 'DM Sans', sans-serif;
+    outline: none; box-sizing: border-box; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .cc-input:focus { border-color: var(--accent); }
+  .cc-input.error { border-color: var(--error); }
+  .cc-input::placeholder { color: #b0bec5; }
+  .cc-arrow {
+    position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%);
+    pointer-events: none; color: var(--muted);
+  }
+  .cc-dropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #fff; border: 1.5px solid var(--border); border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.12); z-index: 500;
+    max-height: 220px; overflow-y: auto; display: none;
+  }
+  .cc-dropdown.open { display: block; }
+  .cc-group-label {
+    padding: 0.3rem 0.75rem; font-size: 0.68rem; color: var(--muted);
+    font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    background: var(--bg); position: sticky; top: 0;
+  }
+  .cc-option {
+    padding: 0.45rem 0.75rem; font-size: 0.82rem; cursor: pointer;
+    display: flex; align-items: center; gap: 0.5rem; color: var(--text);
+    transition: background 0.1s;
+  }
+  .cc-option:hover, .cc-option.focused { background: #eff6ff; color: var(--accent); }
+  .cc-option .cc-flag { font-size: 1rem; line-height: 1; }
+  .cc-option .cc-code { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--accent); min-width: 36px; }
+  .cc-empty { padding: 0.75rem; font-size: 0.82rem; color: var(--muted); text-align: center; }
+
   /* Exp display */
   .exp-display {
     font-size: 0.75rem; color: var(--success);
@@ -222,7 +264,7 @@
 
   <div class="required-notice">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-    <span><strong>Name</strong>, <strong>Experience</strong>, and <strong>Target Role</strong> are required to start practising.</span>
+    <span><strong>Name</strong>, <strong>Experience</strong>, <strong>Target Role</strong>, and <strong>WhatsApp Number</strong> are required to start practising.</span>
   </div>
 
   <!-- ── REQUIRED ── -->
@@ -276,6 +318,21 @@
         <option value="data_engineer">Data Engineer</option>
       </select>
       <div class="field-error" id="fTargetRoleErr">Please select your target role.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">WhatsApp Number <span class="req">*</span></div>
+      <div class="phone-row">
+        <div class="cc-wrap" id="ccWrap">
+          <input class="cc-input" id="fWhatsappCode" type="text"
+                 placeholder="🌍 Code" autocomplete="off" />
+          <svg class="cc-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          <div class="cc-dropdown" id="ccDropdown"></div>
+        </div>
+        <input class="field-input phone-number" id="fWhatsappNumber" type="tel"
+               placeholder="9876543210" inputmode="numeric" />
+      </div>
+      <div class="field-error" id="fWhatsappErr">Please enter a valid WhatsApp number with country code.</div>
     </div>
   </div>
 
@@ -418,6 +475,179 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ── Country code picker ────────────────────────────────────────────────────
+var COUNTRIES = [
+  // Popular
+  { flag:'🇮🇳', code:'+91',  name:'India' },
+  { flag:'🇺🇸', code:'+1',   name:'USA / Canada' },
+  { flag:'🇬🇧', code:'+44',  name:'UK' },
+  { flag:'🇦🇪', code:'+971', name:'UAE' },
+  { flag:'🇸🇬', code:'+65',  name:'Singapore' },
+  { flag:'🇦🇺', code:'+61',  name:'Australia' },
+  { flag:'🇩🇪', code:'+49',  name:'Germany' },
+  { flag:'🇫🇷', code:'+33',  name:'France' },
+  // Asia
+  { flag:'🇦🇫', code:'+93',  name:'Afghanistan' },
+  { flag:'🇧🇩', code:'+880', name:'Bangladesh' },
+  { flag:'🇨🇳', code:'+86',  name:'China' },
+  { flag:'🇭🇰', code:'+852', name:'Hong Kong' },
+  { flag:'🇮🇩', code:'+62',  name:'Indonesia' },
+  { flag:'🇯🇵', code:'+81',  name:'Japan' },
+  { flag:'🇰🇷', code:'+82',  name:'South Korea' },
+  { flag:'🇲🇾', code:'+60',  name:'Malaysia' },
+  { flag:'🇳🇵', code:'+977', name:'Nepal' },
+  { flag:'🇵🇰', code:'+92',  name:'Pakistan' },
+  { flag:'🇵🇭', code:'+63',  name:'Philippines' },
+  { flag:'🇱🇰', code:'+94',  name:'Sri Lanka' },
+  { flag:'🇹🇼', code:'+886', name:'Taiwan' },
+  { flag:'🇹🇭', code:'+66',  name:'Thailand' },
+  { flag:'🇻🇳', code:'+84',  name:'Vietnam' },
+  // Middle East
+  { flag:'🇧🇭', code:'+973', name:'Bahrain' },
+  { flag:'🇮🇶', code:'+964', name:'Iraq' },
+  { flag:'🇯🇴', code:'+962', name:'Jordan' },
+  { flag:'🇰🇼', code:'+965', name:'Kuwait' },
+  { flag:'🇱🇧', code:'+961', name:'Lebanon' },
+  { flag:'🇴🇲', code:'+968', name:'Oman' },
+  { flag:'🇶🇦', code:'+974', name:'Qatar' },
+  { flag:'🇸🇦', code:'+966', name:'Saudi Arabia' },
+  { flag:'🇹🇷', code:'+90',  name:'Turkey' },
+  // Africa
+  { flag:'🇪🇬', code:'+20',  name:'Egypt' },
+  { flag:'🇬🇭', code:'+233', name:'Ghana' },
+  { flag:'🇰🇪', code:'+254', name:'Kenya' },
+  { flag:'🇳🇬', code:'+234', name:'Nigeria' },
+  { flag:'🇿🇦', code:'+27',  name:'South Africa' },
+  { flag:'🇹🇿', code:'+255', name:'Tanzania' },
+  { flag:'🇺🇬', code:'+256', name:'Uganda' },
+  // Europe
+  { flag:'🇦🇹', code:'+43',  name:'Austria' },
+  { flag:'🇧🇪', code:'+32',  name:'Belgium' },
+  { flag:'🇩🇰', code:'+45',  name:'Denmark' },
+  { flag:'🇫🇮', code:'+358', name:'Finland' },
+  { flag:'🇬🇷', code:'+30',  name:'Greece' },
+  { flag:'🇮🇪', code:'+353', name:'Ireland' },
+  { flag:'🇮🇹', code:'+39',  name:'Italy' },
+  { flag:'🇳🇱', code:'+31',  name:'Netherlands' },
+  { flag:'🇳🇴', code:'+47',  name:'Norway' },
+  { flag:'🇵🇱', code:'+48',  name:'Poland' },
+  { flag:'🇵🇹', code:'+351', name:'Portugal' },
+  { flag:'🇷🇺', code:'+7',   name:'Russia' },
+  { flag:'🇪🇸', code:'+34',  name:'Spain' },
+  { flag:'🇸🇪', code:'+46',  name:'Sweden' },
+  { flag:'🇨🇭', code:'+41',  name:'Switzerland' },
+  { flag:'🇺🇦', code:'+380', name:'Ukraine' },
+  // Americas
+  { flag:'🇦🇷', code:'+54',  name:'Argentina' },
+  { flag:'🇧🇷', code:'+55',  name:'Brazil' },
+  { flag:'🇨🇱', code:'+56',  name:'Chile' },
+  { flag:'🇨🇴', code:'+57',  name:'Colombia' },
+  { flag:'🇲🇽', code:'+52',  name:'Mexico' },
+  { flag:'🇵🇪', code:'+51',  name:'Peru' },
+];
+
+var ccSelectedCode = '';
+var ccFocusedIdx   = -1;
+
+function ccFilter(q) {
+  if (!q) return COUNTRIES;
+  var s = q.toLowerCase().replace(/^\+/, '');
+  return COUNTRIES.filter(function(c) {
+    return c.name.toLowerCase().includes(s) ||
+           c.code.replace('+','').startsWith(s) ||
+           c.code.startsWith(q);
+  });
+}
+
+function ccRender(q) {
+  var dd = document.getElementById('ccDropdown');
+  var list = ccFilter(q);
+  ccFocusedIdx = -1;
+  if (!list.length) {
+    dd.innerHTML = '<div class="cc-empty">No results</div>';
+    return;
+  }
+  dd.innerHTML = list.map(function(c, i) {
+    return '<div class="cc-option" data-code="' + c.code + '" data-idx="' + i + '">' +
+      '<span class="cc-flag">' + c.flag + '</span>' +
+      '<span class="cc-code">' + c.code + '</span>' +
+      '<span>' + c.name + '</span>' +
+    '</div>';
+  }).join('');
+  dd.querySelectorAll('.cc-option').forEach(function(el) {
+    el.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      ccSelect(el.dataset.code);
+    });
+  });
+}
+
+function ccSelect(code) {
+  ccSelectedCode = code;
+  var country = COUNTRIES.find(function(c) { return c.code === code; });
+  var inp = document.getElementById('fWhatsappCode');
+  inp.value = country ? country.flag + ' ' + code + ' ' + country.name : code;
+  inp.classList.remove('error');
+  document.getElementById('ccDropdown').classList.remove('open');
+  document.getElementById('fWhatsappNumber').focus();
+}
+
+(function() {
+  var inp = document.getElementById('fWhatsappCode');
+  var dd  = document.getElementById('ccDropdown');
+
+  inp.addEventListener('focus', function() {
+    ccRender(ccSelectedCode ? '' : this.value);
+    dd.classList.add('open');
+  });
+
+  inp.addEventListener('input', function() {
+    ccSelectedCode = ''; // user is typing — clear previous selection
+    ccRender(this.value);
+    dd.classList.add('open');
+  });
+
+  inp.addEventListener('keydown', function(e) {
+    var opts = dd.querySelectorAll('.cc-option');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      ccFocusedIdx = Math.min(ccFocusedIdx + 1, opts.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      ccFocusedIdx = Math.max(ccFocusedIdx - 1, 0);
+    } else if (e.key === 'Enter' && ccFocusedIdx >= 0) {
+      e.preventDefault();
+      ccSelect(opts[ccFocusedIdx].dataset.code);
+      return;
+    } else if (e.key === 'Escape') {
+      dd.classList.remove('open');
+      return;
+    }
+    opts.forEach(function(o, i) { o.classList.toggle('focused', i === ccFocusedIdx); });
+    if (ccFocusedIdx >= 0) opts[ccFocusedIdx].scrollIntoView({ block: 'nearest' });
+  });
+
+  inp.addEventListener('blur', function() {
+    // If nothing selected, clear the input
+    if (!ccSelectedCode) inp.value = '';
+    setTimeout(function() { dd.classList.remove('open'); }, 150);
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('ccWrap').contains(e.target)) {
+      dd.classList.remove('open');
+    }
+  });
+})();
+
+function ccSetValue(code) {
+  if (!code) return;
+  ccSelectedCode = code;
+  var country = COUNTRIES.find(function(c) { return c.code === code; });
+  document.getElementById('fWhatsappCode').value =
+    country ? country.flag + ' ' + code + ' ' + country.name : code;
+}
+
 // ── Year dropdown ──────────────────────────────────────────────────────────
 (function() {
   var sel = document.getElementById('fStartYear');
@@ -509,6 +739,8 @@ async function loadProfile() {
     document.getElementById('fCity').value = p.city || '';
     document.getElementById('fSource').value = p.discoverySource || '';
     document.getElementById('fLinkedin').value = p.linkedinUrl || '';
+    if (p.whatsappCountryCode) ccSetValue(p.whatsappCountryCode);
+    document.getElementById('fWhatsappNumber').value = p.whatsappNumber || '';
 
     // Experience
     var expStatus = p.expStatus || 'working';
@@ -544,8 +776,11 @@ async function loadProfile() {
 // ── Validate ───────────────────────────────────────────────────────────────
 function validate() {
   var ok = true;
-  var name = document.getElementById('fName').value.trim();
-  var role = document.getElementById('fTargetRole').value;
+  var name   = document.getElementById('fName').value.trim();
+  var role   = document.getElementById('fTargetRole').value;
+  var code   = ccSelectedCode;
+  var number = document.getElementById('fWhatsappNumber').value.replace(/\D/g, '');
+  var whatsappOk = code && number.length >= 7 && number.length <= 15;
 
   document.getElementById('fNameErr').classList.toggle('show', !name);
   document.getElementById('fName').classList.toggle('error', !name);
@@ -554,6 +789,11 @@ function validate() {
   document.getElementById('fTargetRoleErr').classList.toggle('show', !role);
   document.getElementById('fTargetRole').classList.toggle('error', !role);
   if (!role) ok = false;
+
+  document.getElementById('fWhatsappErr').classList.toggle('show', !whatsappOk);
+  document.getElementById('fWhatsappCode').classList.toggle('error', !whatsappOk);
+  document.getElementById('fWhatsappNumber').classList.toggle('error', !whatsappOk);
+  if (!whatsappOk) ok = false;
 
   return ok;
 }
@@ -596,8 +836,10 @@ async function saveProfile() {
     tools:           tools,
     discoverySource: document.getElementById('fSource').value,
     city:            document.getElementById('fCity').value.trim(),
-    linkedinUrl:     document.getElementById('fLinkedin').value.trim(),
-    timezone:        timezone,
+    linkedinUrl:          document.getElementById('fLinkedin').value.trim(),
+    whatsappCountryCode:  ccSelectedCode,
+    whatsappNumber:       document.getElementById('fWhatsappNumber').value.replace(/\D/g, ''),
+    timezone:             timezone,
     updatedAt:       new Date().toISOString(),
   };
 
