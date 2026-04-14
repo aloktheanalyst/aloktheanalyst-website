@@ -513,6 +513,24 @@
   .browse-card .solve-rate-badge {
     font-size: 0.58rem; margin-left: auto;
   }
+  /* Weekly challenge card */
+  .weekly-challenge-card {
+    margin: 0.5rem 0.6rem 0;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    border: 1px solid rgba(99,102,241,0.35);
+    border-radius: 10px; padding: 0.7rem 0.8rem;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .weekly-challenge-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.25); }
+  .wc-header { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.35rem; }
+  .wc-label { font-family: 'Bebas Neue', sans-serif; font-size: 0.68rem; letter-spacing: 1.5px; color: #a5b4fc; flex: 1; }
+  .wc-countdown { font-size: 0.6rem; font-family: 'JetBrains Mono', monospace; color: #818cf8; }
+  .wc-title { font-size: 0.82rem; font-weight: 600; color: #e0e7ff; margin-bottom: 0.35rem; line-height: 1.35; }
+  .wc-meta { display: flex; align-items: center; gap: 0.4rem; }
+  .wc-completions { font-size: 0.65rem; color: #818cf8; margin-left: auto; }
+  .wc-streak { font-size: 0.65rem; color: #a5b4fc; margin-top: 0.3rem; }
+  .wc-done { font-size: 0.65rem; color: #6ee7b7; margin-top: 0.3rem; font-weight: 600; }
+
   .solved-overlay {
     position: fixed; inset: 0; z-index: 2000;
     background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -2572,6 +2590,23 @@
         <span class="topic-chip" data-topic="behavioral" onclick="filterTopic('behavioral', this)">Behavioral</span>
       </div>
     </div>
+    <!-- Weekly Challenge Card -->
+    <div class="weekly-challenge-card" id="weeklyChallengeCard" style="display:none">
+      <div class="wc-header">
+        <span>🔥</span>
+        <span class="wc-label">THIS WEEK'S CHALLENGE</span>
+        <span class="wc-countdown" id="wcCountdown"></span>
+      </div>
+      <div class="wc-title" id="wcTitle">Loading...</div>
+      <div class="wc-meta">
+        <span class="difficulty hard" id="wcDifficulty">hard</span>
+        <span class="prompt-tag" id="wcTag">SQL</span>
+        <span class="wc-completions" id="wcCompletions"></span>
+      </div>
+      <div class="wc-streak" id="wcStreak" style="display:none"></div>
+      <div class="wc-done" id="wcDone" style="display:none">✓ Completed this week</div>
+    </div>
+
     <div class="sidebar-scroll">
       <div class="prompt-section-title" id="sectionTitle">
         <span id="sectionTitleText">All Practice Problems</span>
@@ -3308,6 +3343,59 @@ function trackEvent(event, caseId, metadata) {
       })
     }).catch(() => {}); // silently ignore failures
   } catch { /* never block UI */ }
+}
+
+// ── Weekly challenge ──────────────────────────────────────────────────────────
+let _weeklyChallenge = null;
+let _wcCountdownTimer = null;
+
+async function loadWeeklyChallenge() {
+  const card = document.getElementById('weeklyChallengeCard');
+  if (!card) return;
+  try {
+    const res = await fetch('/api/weekly-challenge');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.questionId) return;
+    _weeklyChallenge = data;
+
+    document.getElementById('wcTitle').textContent = data.title;
+    document.getElementById('wcDifficulty').textContent = data.difficulty;
+    document.getElementById('wcDifficulty').className = `difficulty ${data.difficulty}`;
+    document.getElementById('wcTag').textContent = data.tag;
+    document.getElementById('wcCompletions').textContent =
+      data.completionCount === 1 ? '1 solved' : `${data.completionCount} solved`;
+
+    if (data.userCompleted) document.getElementById('wcDone').style.display = '';
+    if (data.streak > 0) {
+      const el = document.getElementById('wcStreak');
+      el.textContent = `🔥 ${data.streak} week streak`;
+      el.style.display = '';
+    }
+
+    // Countdown — refresh every minute
+    function updateCountdown() {
+      const el = document.getElementById('wcCountdown');
+      if (!el) return;
+      const diff = new Date(data.endsAt.replace(' ', 'T') + 'Z') - Date.now();
+      if (diff <= 0) { el.textContent = 'ended'; return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      el.textContent = d > 0 ? `${d}d ${h}h left` : `${h}h left`;
+    }
+    updateCountdown();
+    if (_wcCountdownTimer) clearInterval(_wcCountdownTimer);
+    _wcCountdownTimer = setInterval(updateCountdown, 60000);
+
+    card.onclick = () => loadCase(data.questionId);
+    card.style.display = '';
+  } catch { /* never block UI */ }
+}
+
+function refreshChallengeCard() {
+  // Re-fetch after a solve to update completion/streak state
+  _weeklyChallenge = null;
+  loadWeeklyChallenge();
 }
 
 // ── Question attempt / solve tracking ────────────────────────────────────────
@@ -5845,6 +5933,7 @@ async function runTestCases() {
         markCaseSolved(activeCaseId);
         showSolvedCelebration(activeCaseId);
         trackSolve(activeCaseId);
+        refreshChallengeCard();
       }
     }
   }
@@ -6120,6 +6209,8 @@ Please provide your feedback in this exact format:
       if (score >= 8 && !solved.includes(activeCaseId)) {
         markCaseSolved(activeCaseId);
         showSolvedCelebration(activeCaseId, score);
+        trackSolve(activeCaseId);
+        refreshChallengeCard();
       }
     }
   } catch (err) {
@@ -6464,6 +6555,9 @@ document.addEventListener('click', (e) => {
 
 // Check session on page load
 checkAuth();
+
+// Load weekly challenge card
+loadWeeklyChallenge();
 
 // Track session start
 trackEvent('session_start', null, { referrer: document.referrer || 'direct' });
