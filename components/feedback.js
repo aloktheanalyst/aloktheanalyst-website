@@ -111,11 +111,14 @@
     '  display:flex;align-items:flex-end;gap:0.6rem;',
     '  padding:0.9rem 1.4rem 1.2rem;border-top:1px solid #f1f5f9;margin-top:0.6rem;flex-shrink:0;',
     '}',
+    '.sfb-input-label {',
+    '  font-size:0.82rem;color:#64748b;padding:0.5rem 1.4rem 0;',
+    '}',
     '.sfb-input {',
     '  flex:1;resize:none;border:1.5px solid #e2e8f2;border-radius:10px;',
-    '  padding:0.7rem 0.9rem;font-size:0.88rem;font-family:"DM Sans",sans-serif;',
+    '  padding:0.8rem 1rem;font-size:0.9rem;font-family:"DM Sans",sans-serif;',
     '  color:#334155;background:#f8faff;outline:none;',
-    '  min-height:44px;max-height:130px;line-height:1.5;',
+    '  min-height:140px;max-height:260px;line-height:1.6;',
     '}',
     '.sfb-input:focus { border-color:#2563eb;background:#fff; }',
     '.sfb-input::placeholder { color:#94a3b8; }',
@@ -171,8 +174,9 @@
     '        <span class="sfb-screenshot-label">Screenshot attached</span>',
     '        <button class="sfb-screenshot-remove" id="sfbScreenshotRemove" title="Remove">&times;</button>',
     '      </div>',
+    '      <div class="sfb-input-label">The more detail you give, the faster we can fix it ✍️</div>',
     '      <div class="sfb-input-area">',
-    '        <textarea class="sfb-input" id="sfbInput" rows="2"></textarea>',
+    '        <textarea class="sfb-input" id="sfbInput" rows="5"></textarea>',
     '        <button class="sfb-send" id="sfbSend" aria-label="Send">',
     '          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>',
     '        </button>',
@@ -317,7 +321,7 @@
   // ── Auto-resize textarea ───────────────────────────────────────────────────
   input.addEventListener('input', function () {
     this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+    this.style.height = Math.min(this.scrollHeight, 260) + 'px';
   });
 
   // ── Send ───────────────────────────────────────────────────────────────────
