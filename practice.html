@@ -5103,12 +5103,6 @@ function removeTyping() {
 
 // ── UTILITIES ──
 function resetChat() {
-  // Clean up SQL editor state
-  updateTabVisibility(null);
-  switchTab('chat');
-  destroySQLDB();
-  resetHints();
-  closeSolutionPanel();
   resetPanelSizes();
 
   conversationHistory = [];
