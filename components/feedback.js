@@ -7,21 +7,12 @@
   var s = document.createElement('style');
   s.id = 'sfeedback-css';
   s.textContent = [
-    /* Floating trigger button */
-    '.sfb-trigger {',
-    '  position:fixed;bottom:1.5rem;left:1.5rem;z-index:1500;',
-    '  width:48px;height:48px;border-radius:50%;border:none;',
-    '  background:#2563eb;color:#fff;cursor:pointer;',
-    '  box-shadow:0 4px 16px rgba(37,99,235,0.35);',
-    '  display:flex;align-items:center;justify-content:center;',
-    '  transition:transform 0.2s,box-shadow 0.2s;',
-    '}',
-    '.sfb-trigger:hover { transform:scale(1.08);box-shadow:0 6px 24px rgba(37,99,235,0.45); }',
-    '.sfb-trigger svg { width:22px;height:22px; }',
+    /* Floating trigger button — hidden by default; triggered programmatically */
+    '.sfb-trigger { display:none; }',
 
     /* Panel */
     '.sfb-panel {',
-    '  position:fixed;bottom:5.5rem;left:1.5rem;z-index:1600;',
+    '  position:fixed;bottom:1.5rem;right:1.5rem;z-index:1600;',
     '  width:340px;',
     '  background:#fff;border:1px solid #e2e8f2;border-radius:14px;',
     '  box-shadow:0 12px 40px rgba(15,23,42,0.15);',
