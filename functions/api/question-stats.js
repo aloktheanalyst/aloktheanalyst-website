@@ -77,15 +77,18 @@ export async function onRequest(context) {
     if (!googleId) return json({ ok: true, skipped: true }); // anonymous — silently skip
 
     if (event === 'attempt') {
-      // Insert row only if it doesn't exist yet (first attempt only)
+      // Insert on first attempt, increment counter on subsequent runs
       await env.DB.prepare(
-        `INSERT OR IGNORE INTO question_attempts (question_id, google_id) VALUES (?, ?)`
+        `INSERT INTO question_attempts (question_id, google_id, attempt_count)
+         VALUES (?, ?, 1)
+         ON CONFLICT(question_id, google_id) DO UPDATE SET
+           attempt_count = attempt_count + 1`
       ).bind(questionId, googleId).run();
     } else {
       // solve: upsert — ensure row exists, then mark solved if not already
       await env.DB.prepare(
-        `INSERT INTO question_attempts (question_id, google_id, is_solved, solved_at)
-         VALUES (?, ?, 1, datetime('now'))
+        `INSERT INTO question_attempts (question_id, google_id, is_solved, solved_at, attempt_count)
+         VALUES (?, ?, 1, datetime('now'), 1)
          ON CONFLICT(question_id, google_id) DO UPDATE SET
            is_solved = 1,
            solved_at = COALESCE(solved_at, datetime('now'))`
