@@ -1,4 +1,4 @@
-/* Shared feedback widget — floating button + category-first panel.
+/* Shared feedback widget — triggered via SFeedback.toggle(buttonEl).
    Place <script src="/components/feedback.js"></script> before </body>. */
 (function () {
   if (document.getElementById('sfeedback-css')) return;
@@ -7,165 +7,147 @@
   var s = document.createElement('style');
   s.id = 'sfeedback-css';
   s.textContent = [
-    /* Floating trigger button — hidden by default; triggered programmatically */
+    /* Hidden programmatic trigger */
     '.sfb-trigger { display:none; }',
 
     /* Panel */
     '.sfb-panel {',
-    '  position:fixed;bottom:1.5rem;right:1.5rem;z-index:1600;',
-    '  width:340px;',
-    '  background:#fff;border:1px solid #e2e8f2;border-radius:14px;',
-    '  box-shadow:0 12px 40px rgba(15,23,42,0.15);',
+    '  position:fixed;z-index:1600;width:320px;',
+    '  background:#fff;border:1px solid #e2e8f2;border-radius:12px;',
+    '  box-shadow:0 8px 32px rgba(15,23,42,0.14);',
     '  display:none;flex-direction:column;overflow:hidden;',
     '  font-family:"DM Sans",sans-serif;',
+    '  transform-origin:bottom right;',
     '}',
     '.sfb-panel.open { display:flex; }',
 
     /* Header */
     '.sfb-header {',
     '  display:flex;align-items:center;justify-content:space-between;',
-    '  padding:0.85rem 1rem;border-bottom:1px solid #e2e8f2;',
+    '  padding:0.7rem 0.85rem;border-bottom:1px solid #f1f5f9;',
     '}',
     '.sfb-header-title {',
-    '  font-family:"Bebas Neue",sans-serif;font-size:1.05rem;',
-    '  letter-spacing:1.5px;color:#0f172a;display:flex;align-items:center;gap:0.4rem;',
+    '  font-family:"Bebas Neue",sans-serif;font-size:0.95rem;',
+    '  letter-spacing:1.5px;color:#0f172a;display:flex;align-items:center;gap:0.35rem;',
     '}',
     '.sfb-close {',
     '  background:none;border:none;cursor:pointer;color:#94a3b8;',
-    '  padding:0.2rem;line-height:1;transition:color 0.2s;',
+    '  padding:0.15rem;line-height:1;transition:color 0.15s;',
     '}',
     '.sfb-close:hover { color:#0f172a; }',
 
     /* Step 1: Category selection */
-    '.sfb-step-cats {',
-    '  padding:1rem;display:flex;flex-direction:column;gap:0.5rem;',
-    '}',
-    '.sfb-cat-prompt {',
-    '  font-size:0.82rem;color:#64748b;margin-bottom:0.25rem;',
-    '}',
-    '.sfb-cats {',
-    '  display:flex;flex-direction:column;gap:0.4rem;',
-    '}',
+    '.sfb-step-cats { padding:0.75rem; }',
+    '.sfb-cat-prompt { font-size:0.78rem;color:#64748b;margin-bottom:0.4rem; }',
+    '.sfb-cats { display:flex;flex-direction:column;gap:0.3rem; }',
     '.sfb-cat {',
-    '  display:flex;align-items:center;gap:0.6rem;',
-    '  padding:0.6rem 0.85rem;border-radius:10px;border:1.5px solid #e2e8f2;',
-    '  background:#f8faff;cursor:pointer;text-align:left;',
-    '  font-size:0.84rem;color:#334155;font-family:"DM Sans",sans-serif;',
+    '  display:flex;align-items:center;gap:0.55rem;',
+    '  padding:0.5rem 0.75rem;border-radius:8px;border:1.5px solid #e2e8f2;',
+    '  background:#f8faff;cursor:pointer;text-align:left;width:100%;',
+    '  font-size:0.82rem;color:#334155;font-family:"DM Sans",sans-serif;',
     '  transition:border-color 0.15s,background 0.15s;',
     '}',
     '.sfb-cat:hover { border-color:#2563eb;background:#eff6ff;color:#1d4ed8; }',
-    '.sfb-cat-icon { font-size:1rem;line-height:1; }',
+    '.sfb-cat-icon { font-size:0.95rem;line-height:1; }',
     '.sfb-cat-label { font-weight:500; }',
-    '.sfb-cat-desc { font-size:0.75rem;color:#94a3b8;margin-left:auto; }',
+    '.sfb-cat-desc { font-size:0.72rem;color:#94a3b8;margin-left:auto; }',
 
     /* Step 2: Input */
     '.sfb-step-input { display:flex;flex-direction:column; }',
 
-    /* Messages area */
+    /* Messages — only shown after send */
     '.sfb-messages {',
-    '  overflow-y:auto;padding:0.85rem 1rem 0;',
-    '  display:flex;flex-direction:column;gap:0.5rem;',
-    '  max-height:160px;',
+    '  overflow-y:auto;padding:0.6rem 0.85rem 0;',
+    '  display:flex;flex-direction:column;gap:0.4rem;',
+    '  max-height:120px;',
     '}',
     '.sfb-msg {',
-    '  max-width:90%;padding:0.55rem 0.8rem;border-radius:10px;',
-    '  font-size:0.81rem;line-height:1.5;word-wrap:break-word;',
+    '  max-width:92%;padding:0.45rem 0.7rem;border-radius:8px;',
+    '  font-size:0.8rem;line-height:1.45;word-wrap:break-word;',
     '}',
-    '.sfb-msg.system { background:#f1f5f9;color:#334155;align-self:flex-start; }',
     '.sfb-msg.user   { background:#2563eb;color:#fff;align-self:flex-end; }',
     '.sfb-msg.success{ background:#dcfce7;color:#166534;align-self:flex-start; }',
     '.sfb-msg.error  { background:#fef2f2;color:#991b1b;align-self:flex-start; }',
 
     /* Back link */
-    '.sfb-back-row {',
-    '  padding:0.4rem 1rem 0;',
-    '}',
+    '.sfb-back-row { padding:0.3rem 0.85rem 0; }',
     '.sfb-back {',
     '  background:none;border:none;cursor:pointer;',
-    '  color:#94a3b8;font-size:0.76rem;font-family:"DM Sans",sans-serif;',
-    '  padding:0;display:flex;align-items:center;gap:0.25rem;',
-    '  transition:color 0.15s;',
+    '  color:#94a3b8;font-size:0.73rem;font-family:"DM Sans",sans-serif;',
+    '  padding:0;display:flex;align-items:center;gap:0.2rem;transition:color 0.15s;',
     '}',
     '.sfb-back:hover { color:#2563eb; }',
 
-    /* Screenshot preview */
+    /* Screenshot — slim badge */
     '.sfb-screenshot {',
-    '  display:flex;align-items:center;gap:0.5rem;',
-    '  padding:0.4rem 1rem;border-top:1px solid #e2e8f2;',
-    '  font-size:0.72rem;color:#64748b;',
+    '  display:flex;align-items:center;gap:0.4rem;',
+    '  padding:0.3rem 0.85rem;border-top:1px solid #f1f5f9;',
+    '  font-size:0.71rem;color:#64748b;',
     '}',
     '.sfb-screenshot img {',
-    '  width:48px;height:32px;object-fit:cover;border-radius:4px;',
-    '  border:1px solid #e2e8f2;',
+    '  width:36px;height:24px;object-fit:cover;border-radius:3px;',
+    '  border:1px solid #e2e8f2;flex-shrink:0;',
     '}',
     '.sfb-screenshot-label { flex:1; }',
     '.sfb-screenshot-remove {',
     '  background:none;border:none;cursor:pointer;color:#94a3b8;',
-    '  font-size:0.75rem;padding:0.2rem;',
+    '  font-size:0.7rem;padding:0.1rem;line-height:1;',
     '}',
     '.sfb-screenshot-remove:hover { color:#ef4444; }',
 
     /* Input area */
     '.sfb-input-area {',
-    '  display:flex;align-items:flex-end;gap:0.5rem;',
-    '  padding:0.65rem 1rem;border-top:1px solid #e2e8f2;margin-top:0.5rem;',
+    '  display:flex;align-items:flex-end;gap:0.4rem;',
+    '  padding:0.55rem 0.85rem;border-top:1px solid #f1f5f9;margin-top:0.35rem;',
     '}',
     '.sfb-input {',
-    '  flex:1;resize:none;border:1px solid #e2e8f2;border-radius:10px;',
-    '  padding:0.55rem 0.75rem;font-size:0.82rem;font-family:"DM Sans",sans-serif;',
+    '  flex:1;resize:none;border:1px solid #e2e8f2;border-radius:8px;',
+    '  padding:0.45rem 0.65rem;font-size:0.81rem;font-family:"DM Sans",sans-serif;',
     '  color:#334155;background:#f8faff;outline:none;',
-    '  min-height:38px;max-height:100px;line-height:1.4;',
+    '  min-height:36px;max-height:90px;line-height:1.4;',
     '}',
     '.sfb-input:focus { border-color:#2563eb; }',
     '.sfb-input::placeholder { color:#94a3b8; }',
     '.sfb-send {',
-    '  width:36px;height:36px;border-radius:50%;border:none;',
+    '  width:34px;height:34px;border-radius:50%;border:none;',
     '  background:#2563eb;color:#fff;cursor:pointer;flex-shrink:0;',
     '  display:flex;align-items:center;justify-content:center;',
-    '  transition:background 0.2s;',
+    '  transition:background 0.15s;',
     '}',
     '.sfb-send:hover { background:#1d4ed8; }',
     '.sfb-send:disabled { background:#94a3b8;cursor:not-allowed; }',
-    '.sfb-send svg { width:16px;height:16px; }',
+    '.sfb-send svg { width:15px;height:15px; }',
 
-    /* Mobile */
+    /* Mobile — full-width sheet */
     '@media (max-width:768px) {',
-    '  .sfb-panel {',
-    '    left:0;right:0;bottom:0;width:100%;',
-    '    border-radius:14px 14px 0 0;',
-    '  }',
-    '  .sfb-trigger { bottom:1rem;left:1rem;width:44px;height:44px; }',
+    '  .sfb-panel { left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100%!important;border-radius:14px 14px 0 0; }',
     '}',
   ].join('\n');
   document.head.appendChild(s);
 
   // ── Category config ────────────────────────────────────────────────────────
   var CATS = [
-    { id: 'bug',          icon: '🐛', label: 'Bug',          desc: 'Something broken',   placeholder: 'What went wrong? What did you expect to happen?' },
-    { id: 'wrong-answer', icon: '❓', label: 'Wrong answer', desc: 'Incorrect content',  placeholder: 'What do you think is incorrect or missing from this question?' },
-    { id: 'suggestion',   icon: '💡', label: 'Suggestion',   desc: 'Idea or improvement',placeholder: 'What would you like to see added or improved?' },
+    { id: 'bug',          icon: '🐛', label: 'Bug',          desc: 'Something broken',    placeholder: 'What went wrong? What did you expect?' },
+    { id: 'wrong-answer', icon: '❓', label: 'Wrong answer', desc: 'Incorrect content',   placeholder: 'What do you think is incorrect or missing?' },
+    { id: 'suggestion',   icon: '💡', label: 'Suggestion',   desc: 'Idea or improvement', placeholder: 'What would you like to see improved?' },
   ];
 
   // ── HTML ───────────────────────────────────────────────────────────────────
   document.body.insertAdjacentHTML('beforeend', [
-    '<button class="sfb-trigger" id="sfbTrigger" aria-label="Send feedback" title="Send feedback">',
-    '  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    '</button>',
-    '<div class="sfb-panel" id="sfbPanel">',
+    '<button class="sfb-trigger" id="sfbTrigger" aria-label="Send feedback"></button>',
+    '<div class="sfb-panel" id="sfbPanel" role="dialog" aria-label="Send feedback">',
     '  <div class="sfb-header">',
     '    <div class="sfb-header-title" id="sfbHeaderTitle">SEND FEEDBACK</div>',
     '    <button class="sfb-close" id="sfbClose" aria-label="Close">',
-    '      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+    '      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>',
     '    </button>',
     '  </div>',
 
-    '  <!-- Step 1: category selection -->',
     '  <div class="sfb-step-cats" id="sfbStepCats">',
-    '    <div class="sfb-cat-prompt">What kind of feedback is this?</div>',
+    '    <div class="sfb-cat-prompt">What kind of feedback?</div>',
     '    <div class="sfb-cats" id="sfbCats"></div>',
     '  </div>',
 
-    '  <!-- Step 2: text input -->',
     '  <div class="sfb-step-input" id="sfbStepInput" style="display:none">',
     '    <div class="sfb-messages" id="sfbMessages"></div>',
     '    <div class="sfb-back-row">',
@@ -174,10 +156,10 @@
     '    <div class="sfb-screenshot" id="sfbScreenshot" style="display:none">',
     '      <img id="sfbScreenshotImg" src="" alt="Screenshot" />',
     '      <span class="sfb-screenshot-label">Screenshot attached</span>',
-    '      <button class="sfb-screenshot-remove" id="sfbScreenshotRemove" title="Remove screenshot">&times;</button>',
+    '      <button class="sfb-screenshot-remove" id="sfbScreenshotRemove" title="Remove">&times;</button>',
     '    </div>',
     '    <div class="sfb-input-area">',
-    '      <textarea class="sfb-input" id="sfbInput" placeholder="Tell us more..." rows="1"></textarea>',
+    '      <textarea class="sfb-input" id="sfbInput" rows="1"></textarea>',
     '      <button class="sfb-send" id="sfbSend" aria-label="Send">',
     '        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>',
     '      </button>',
@@ -218,6 +200,23 @@
     catsEl.appendChild(btn);
   });
 
+  // ── Position panel above/near anchor element ───────────────────────────────
+  function positionPanel(anchorEl) {
+    if (!anchorEl) return;
+    var rect = anchorEl.getBoundingClientRect();
+    var gap = 8;
+    var panelW = 320;
+    var vw = window.innerWidth;
+
+    // Align right edge with button, clamped to viewport
+    var rightFromEdge = vw - rect.right;
+    rightFromEdge = Math.max(8, Math.min(rightFromEdge, vw - panelW - 8));
+    panel.style.right  = rightFromEdge + 'px';
+    panel.style.left   = 'auto';
+    panel.style.bottom = (window.innerHeight - rect.top + gap) + 'px';
+    panel.style.top    = 'auto';
+  }
+
   // ── Navigation helpers ─────────────────────────────────────────────────────
   function showCategoryStep() {
     selectedCat = null;
@@ -228,6 +227,7 @@
     input.value = '';
     input.style.height = 'auto';
     sendBtn.disabled = false;
+    backBtn.style.display = '';
   }
 
   function selectCategory(cat) {
@@ -236,38 +236,36 @@
     stepCats.style.display = 'none';
     stepInput.style.display = '';
     input.placeholder = cat.placeholder;
-    // Re-show screenshot preview if one was captured
     if (screenshotBase64) screenshotArea.style.display = 'flex';
-    // Greeting message
     messages.innerHTML = '';
-    addMessage('Hi! ' + cat.placeholder, 'system');
     input.focus();
   }
 
-  // ── Toggle panel ───────────────────────────────────────────────────────────
+  // ── Open / close ───────────────────────────────────────────────────────────
+  function openPanel(anchorEl) {
+    positionPanel(anchorEl);
+    showCategoryStep();
+    panel.classList.add('open');
+    captureScreenshot(anchorEl);
+  }
+
+  function closePanel() {
+    panel.classList.remove('open');
+  }
+
+  // Legacy: clicking the hidden trigger (fallback)
   trigger.addEventListener('click', function () {
-    if (panel.classList.contains('open')) {
-      panel.classList.remove('open');
-    } else {
-      showCategoryStep();
-      panel.classList.add('open');
-      captureScreenshot();
-    }
+    if (panel.classList.contains('open')) { closePanel(); }
+    else { openPanel(null); }
   });
 
-  document.getElementById('sfbClose').addEventListener('click', function () {
-    panel.classList.remove('open');
-  });
+  document.getElementById('sfbClose').addEventListener('click', closePanel);
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && panel.classList.contains('open')) {
-      panel.classList.remove('open');
-    }
+    if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
   });
 
-  backBtn.addEventListener('click', function () {
-    showCategoryStep();
-  });
+  backBtn.addEventListener('click', showCategoryStep);
 
   // ── Screenshot capture ─────────────────────────────────────────────────────
   function loadHtml2Canvas(cb) {
@@ -279,14 +277,14 @@
     document.head.appendChild(script);
   }
 
-  function captureScreenshot() {
+  function captureScreenshot(anchorEl) {
     panel.style.display = 'none';
-    trigger.style.display = 'none';
 
     loadHtml2Canvas(function () {
       if (typeof html2canvas !== 'function') {
         panel.style.display = '';
-        trigger.style.display = '';
+        positionPanel(anchorEl);
+        panel.classList.add('open');
         return;
       }
       html2canvas(document.body, {
@@ -300,19 +298,19 @@
         y: window.scrollY,
       }).then(function (canvas) {
         panel.style.display = '';
-        trigger.style.display = '';
+        positionPanel(anchorEl);
         panel.classList.add('open');
         try {
           var dataUrl = canvas.toDataURL('image/png');
           screenshotBase64 = dataUrl.split(',')[1];
           screenshotImg.src = dataUrl;
-          screenshotArea.style.display = 'flex';
+          // Don't show screenshot badge until step 2
         } catch (e) {
           screenshotBase64 = null;
         }
       }).catch(function () {
         panel.style.display = '';
-        trigger.style.display = '';
+        positionPanel(anchorEl);
         panel.classList.add('open');
       });
     });
@@ -326,7 +324,7 @@
   // ── Auto-resize textarea ───────────────────────────────────────────────────
   input.addEventListener('input', function () {
     this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    this.style.height = Math.min(this.scrollHeight, 90) + 'px';
   });
 
   // ── Send ───────────────────────────────────────────────────────────────────
@@ -348,7 +346,6 @@
     sending = true;
     sendBtn.disabled = true;
 
-    // Gather context
     var pagePath = location.pathname;
     var contextLines = ['Category: ' + selectedCat.label];
     var userEmail = null;
@@ -409,4 +406,14 @@
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   });
+
+  // ── Public API ─────────────────────────────────────────────────────────────
+  window.SFeedback = {
+    toggle: function (anchorEl) {
+      if (panel.classList.contains('open')) { closePanel(); }
+      else { openPanel(anchorEl || null); }
+    },
+    open:  function (anchorEl) { openPanel(anchorEl || null); },
+    close: closePanel,
+  };
 }());
