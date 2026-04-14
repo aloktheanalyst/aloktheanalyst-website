@@ -5548,11 +5548,40 @@ async function runTestCases() {
 
     if (allPartsSolved) {
       const solved = getSolvedCases();
-      if (!solved.includes(activeCaseId)) {
+      const isFirstSolve = !solved.includes(activeCaseId);
+      if (isFirstSolve) {
         markCaseSolved(activeCaseId);
+        showSolvedCelebration(activeCaseId);
       }
     }
   }
+}
+
+function showSolvedCelebration(caseId) {
+  if (document.getElementById('solvedOverlay')) return; // already showing
+  const prompts = typeof PROMPTS !== 'undefined' ? PROMPTS : [];
+  const q = prompts.find(p => p.id === caseId);
+  const title = q ? q.title : 'Question';
+  const msgs = [
+    'Keep that momentum going!',
+    'One step closer to your dream role.',
+    'You\'re building real interview skills.',
+    'That\'s the way to do it!',
+  ];
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  const overlay = document.createElement('div');
+  overlay.className = 'solved-overlay';
+  overlay.id = 'solvedOverlay';
+  overlay.innerHTML = `
+    <div class="solved-prompt">
+      <div class="solved-emoji">🎉</div>
+      <div class="solved-score">All tests passed!</div>
+      <div class="solved-msg"><strong>${escapeHtml(title)}</strong> marked as solved.<br>${msg}</div>
+      <div class="solved-actions">
+        <button class="btn-yes" onclick="dismissSolvedOverlay()">Nice, next question →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
 }
 
 // ── Expected Output (runs expectedQuery from test cases and displays result) ──
