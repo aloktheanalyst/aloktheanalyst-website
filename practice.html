@@ -2114,6 +2114,25 @@
   }
   .sql-ai-btn:hover { background: rgba(37,99,235,0.06); border-color: var(--accent); }
 
+  .sql-feedback-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .sql-feedback-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(37,99,235,0.05); }
+  .sql-feedback-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
   /* Expected Output button */
   .sql-expected-btn {
     display: flex;
@@ -2685,6 +2704,10 @@
               </button>
               <button class="sql-ai-btn" onclick="switchResultTab('aihelp')" title="Get AI-powered scoring and feedback">
                 &#x1F916; AI Help
+              </button>
+              <button class="sql-feedback-btn" onclick="document.getElementById('sfbTrigger').click()" title="Send feedback about this question">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Feedback
               </button>
             </div>
           </div>
@@ -6455,7 +6478,14 @@ trackEvent('session_start', null, { referrer: document.referrer || 'direct' });
 </script>
 
 <script src="/components/profile.js"></script>
-<script src="/components/feedback.js?v=4"></script>
+<script src="/components/feedback.js?v=5"></script>
+<script>
+  // Hide floating bubble on practice page — toolbar button is used instead
+  document.addEventListener('DOMContentLoaded', function () {
+    var t = document.getElementById('sfbTrigger');
+    if (t) t.style.display = 'none';
+  });
+</script>
 <script src="/components/footer.js"></script>
 </body>
 </html>
