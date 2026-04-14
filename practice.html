@@ -2668,6 +2668,7 @@
         <div style="display:flex;align-items:center;gap:0.5rem;margin-top:2px;">
           <div id="activeCaseFramework" style="display:none;"></div>
           <span id="activeCaseSolveRate" style="display:none;"></span>
+          <span id="wcSolveCountdown" style="display:none;font-size:0.65rem;font-family:'JetBrains Mono',monospace;background:#1e1b4b;color:#818cf8;border:1px solid #312e81;border-radius:4px;padding:1px 7px;letter-spacing:0.03em;"></span>
         </div>
       </div>
       <div class="chat-actions">
@@ -3434,17 +3435,32 @@ async function loadWeeklyChallenge() {
       banner.style.display = '';
     }
 
-    // Countdown — shared timer for both
+    // Countdown — shared timer for sidebar card, browse banner, and solve-view header
     function updateCountdown() {
       const diff = new Date(data.endsAt.replace(' ', 'T') + 'Z') - Date.now();
-      const text = diff <= 0 ? 'ended'
-        : Math.floor(diff / 86400000) > 0
-          ? `${Math.floor(diff / 86400000)}d ${Math.floor((diff % 86400000) / 3600000)}h left`
-          : `${Math.floor(diff / 3600000)}h left`;
+      if (diff <= 0) {
+        const text = 'ended';
+        const c1 = document.getElementById('wcCountdown');
+        const c2 = document.getElementById('wcBannerCountdown');
+        const c3 = document.getElementById('wcSolveCountdown');
+        if (c1) c1.textContent = text;
+        if (c2) c2.textContent = text;
+        if (c3) { c3.textContent = '⏰ Challenge ended'; c3.style.display = (activeCaseId === data.questionId) ? 'inline' : 'none'; }
+        return;
+      }
+      const days  = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const mins  = Math.floor((diff % 3600000) / 60000);
+      const short = days > 0 ? `${days}d ${hours}h left` : hours > 0 ? `${hours}h ${mins}m left` : `${mins}m left`;
       const c1 = document.getElementById('wcCountdown');
       const c2 = document.getElementById('wcBannerCountdown');
-      if (c1) c1.textContent = text;
-      if (c2) c2.textContent = text;
+      const c3 = document.getElementById('wcSolveCountdown');
+      if (c1) c1.textContent = short;
+      if (c2) c2.textContent = short;
+      if (c3) {
+        c3.textContent = `⏳ ${short}`;
+        c3.style.display = (activeCaseId === data.questionId) ? 'inline' : 'none';
+      }
     }
     updateCountdown();
     if (_wcCountdownTimer) clearInterval(_wcCountdownTimer);
@@ -3456,6 +3472,23 @@ function refreshChallengeCard() {
   // Re-fetch after a solve to update completion/streak state
   _weeklyChallenge = null;
   loadWeeklyChallenge();
+}
+
+function refreshSolveCountdown() {
+  const c3 = document.getElementById('wcSolveCountdown');
+  if (!c3) return;
+  if (!_weeklyChallenge || activeCaseId !== _weeklyChallenge.questionId) {
+    c3.style.display = 'none';
+    return;
+  }
+  const diff = new Date(_weeklyChallenge.endsAt.replace(' ', 'T') + 'Z') - Date.now();
+  if (diff <= 0) { c3.textContent = '⏰ Challenge ended'; c3.style.display = 'inline'; return; }
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000) / 60000);
+  const short = days > 0 ? `${days}d ${hours}h left` : hours > 0 ? `${hours}h ${mins}m left` : `${mins}m left`;
+  c3.textContent = `⏳ ${short}`;
+  c3.style.display = 'inline';
 }
 
 // ── Question attempt / solve tracking ────────────────────────────────────────
@@ -4237,6 +4270,7 @@ async function loadCase(id) {
     return;
   }
   activeCaseId = id;
+  refreshSolveCountdown();
   updatePrevNextButtons();
   document.documentElement.classList.add('case-active');
   // Ensure we're in solve view and URL is updated
