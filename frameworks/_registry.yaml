@@ -221,3 +221,5 @@ cases:
     framework: product-analytics
   bj_outsource:
     framework: product-analytics
+  cs_pbn_biryani_waste:
+    framework: product-analytics
