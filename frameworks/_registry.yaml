@@ -137,6 +137,20 @@ cases:
     framework: funnel-analysis
   cs_coldstart:
     framework: product-analytics
+  cs_nykaa_kpis:
+    framework: metric-design
+  cs_zomato_kpis:
+    framework: metric-design
+  cs_spotify_kpis:
+    framework: metric-design
+  cs_tesla_kpis:
+    framework: metric-design
+  cs_pfizer_kpis:
+    framework: metric-design
+  cs_paytm_kpis:
+    framework: metric-design
+  cs_itc_kpis:
+    framework: metric-design
 
   # ── Framework Cases ──
   fw_market_entry:
