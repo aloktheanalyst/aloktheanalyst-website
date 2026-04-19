@@ -151,6 +151,36 @@ cases:
     framework: metric-design
   cs_itc_kpis:
     framework: metric-design
+  cs_uber_kpis:
+    framework: metric-design
+  cs_amazon_kpis:
+    framework: metric-design
+  cs_google_kpis:
+    framework: metric-design
+  cs_apple_kpis:
+    framework: metric-design
+  cs_walmart_kpis:
+    framework: metric-design
+  cs_microsoft_kpis:
+    framework: metric-design
+  cs_swiggy_kpis:
+    framework: metric-design
+  cs_flipkart_kpis:
+    framework: metric-design
+  cs_zerodha_kpis:
+    framework: metric-design
+  cs_ott_kpis:
+    framework: metric-design
+  cs_edtech_kpis:
+    framework: metric-design
+  cs_netflix_kpis:
+    framework: metric-design
+  cs_meta_kpis:
+    framework: metric-design
+  cs_airbnb_kpis:
+    framework: metric-design
+  cs_salesforce_kpis:
+    framework: metric-design
 
   # ── Framework Cases ──
   fw_market_entry:
