@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin — Add Question</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8faff; --surface: #ffffff; --surface2: #f0f5ff;
+    --border: #e2e8f2; --border2: #cbd5e9;
+    --accent: #2563eb; --accent2: #1d4ed8;
+    --green: #16a34a; --red: #dc2626; --amber: #d97706;
+    --text: #334155; --muted: #64748b; --heading: #0f172a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 24px; color: var(--heading); font-weight: 700; }
+  h2 { font-size: 18px; color: var(--heading); margin-bottom: 12px; font-weight: 600; }
+  h3 { font-size: 14px; color: var(--heading); margin: 16px 0 8px; font-weight: 600; }
+  .user-chip { font-size: 13px; color: var(--muted); background: var(--surface); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+  .tab { padding: 10px 20px; background: none; border: none; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .panel.active { display: block; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--heading); margin-bottom: 4px; }
+  .field label .req { color: var(--red); margin-left: 2px; }
+  .field label .opt { color: var(--muted); font-weight: 400; margin-left: 4px; font-size: 12px; }
+  .field small { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--border2); border-radius: 8px;
+    font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text);
+  }
+  .field textarea { font-family: 'JetBrains Mono', monospace; font-size: 13px; resize: vertical; min-height: 80px; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  .section { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-top: 16px; background: var(--surface2); }
+  .section-header { display: flex; justify-content: space-between; align-items: center; }
+  .section-header h3 { margin: 0; }
+
+  .btn { padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border2); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text); }
+  .btn:hover { background: var(--surface2); }
+  .btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn.primary:hover { background: var(--accent2); }
+  .btn.danger { color: var(--red); border-color: var(--red); }
+  .btn.danger:hover { background: #fef2f2; }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .actions { margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 18px; border-radius: 8px; color: white; font-size: 14px; z-index: 100; max-width: 420px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .toast.ok { background: var(--green); } .toast.err { background: var(--red); } .toast.info { background: var(--accent); }
+
+  .hint-item, .test-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+  .hint-item { display: flex; gap: 8px; align-items: center; }
+  .hint-item input { flex: 1; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; color: var(--heading); background: var(--surface2); }
+  td.actions-cell { text-align: right; white-space: nowrap; }
+  tr.hidden-row td { color: var(--muted); }
+  tr.hidden-row td:first-child::before { content: "🙈 "; }
+
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .filter-bar input, .filter-bar select { padding: 7px 10px; border: 1px solid var(--border2); border-radius: 7px; font-family: inherit; font-size: 13px; }
+
+  pre.preview { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 8px; font-size: 12px; overflow: auto; max-height: 300px; font-family: 'JetBrains Mono', monospace; }
+
+  .legend { font-size: 12px; color: var(--muted); margin-bottom: 12px; padding: 8px 12px; background: var(--surface2); border-radius: 6px; border-left: 3px solid var(--accent); }
+  .legend .req { color: var(--red); font-weight: 700; }
+
+  .schema-table { margin-bottom: 8px; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+  .schema-table input[type=text] { margin-bottom: 4px; }
+  .schema-table .cols { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  .toggle { position: relative; display: inline-block; width: 38px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: #cbd5e1; transition: .2s; border-radius: 22px; cursor: pointer; }
+  .toggle .slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: white; transition: .2s; border-radius: 50%; }
+  .toggle input:checked + .slider { background: var(--green); }
+  .toggle input:checked + .slider::before { transform: translateX(16px); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🔧 Admin — Question Manager</h1>
+    <span class="user-chip" id="userChip">Loading…</span>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="single">✍️ Single Question</button>
+    <button class="tab" data-tab="bulk">📦 Bulk Upload</button>
+    <button class="tab" data-tab="manage">📋 Manage Questions</button>
+  </div>
+
+  <!-- ═══════════════ SINGLE QUESTION TAB ═══════════════ -->
+  <div class="panel active" id="panel-single">
+    <div class="legend">
+      <span class="req">*</span> Required field &nbsp;•&nbsp; Others are optional &nbsp;•&nbsp; Topic-specific sections appear automatically below
+    </div>
+
+    <h2>Basic Info</h2>
+    <div class="row">
+      <div class="field">
+        <label>ID <span class="req">*</span></label>
+        <input type="text" id="f_id" placeholder="sql_company_topic" pattern="[a-z0-9_]+">
+        <small>Snake_case, alphanumeric + underscore. Prefix: sql_ / cs_ / python_ / pz_ / ge_ / bi_ / beh_</small>
+      </div>
+      <div class="field">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" id="f_title" placeholder="Company: Question Title">
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field">
+        <label>Topic <span class="req">*</span></label>
+        <select id="f_topic">
+          <option value="">— choose —</option>
+          <option value="sql">SQL</option>
+          <option value="casestudy">Case Study</option>
+          <option value="python">Python</option>
+          <option value="puzzles">Puzzle</option>
+          <option value="guesstimates">Guesstimate</option>
+          <option value="bi">BI</option>
+          <option value="behavioral">Behavioral</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Difficulty <span class="req">*</span></label>
+        <select id="f_difficulty">
+          <option value="">— choose —</option>
+          <option value="easy">easy</option>
+          <option value="medium">medium</option>
+          <option value="hard">hard</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tag <span class="req">*</span></label>
+        <select id="f_tag">
+          <option value="">— choose —</option>
+          <option value="SQL">SQL</option>
+          <option value="Case Study">Case Study</option>
+          <option value="Python">Python</option>
+          <option value="Puzzle">Puzzle</option>
+          <option value="Guesstimate">Guesstimate</option>
+          <option value="BI">BI</option>
+          <option value="Behavioral">Behavioral</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Framework <span class="opt">optional — case studies only</span></label>
+        <input type="text" id="f_framework" list="framework_list" placeholder="— choose or type new —">
+        <datalist id="framework_list"></datalist>
+        <small>Picks from existing frameworks, or type a new one.</small>
+      </div>
+      <div class="field">
+        <label>Visible <span class="opt">optional — default ON</span></label>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;">
+          <label class="toggle"><input type="checkbox" id="f_isVisible" checked><span class="slider"></span></label>
+          <small id="visibleLabel">Question will show in the public list</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>AI Coaching Prompt <span class="req">*</span></label>
+      <textarea id="f_prompt" rows="5" placeholder="Prompt used by the in-browser AI coach. Required for ALL question types."></textarea>
+    </div>
+
+    <!-- Solution (casestudy / puzzle / guesstimate / bi / behavioral) -->
+    <div class="section" id="sec-solution" style="display:none">
+      <h3>Solution <span class="req">*</span> <span class="opt">required for case-study / puzzle / guesstimate / BI / behavioral</span></h3>
+      <div class="field">
+        <textarea id="f_solution" rows="8" placeholder="Model solution (plain text or HTML)"></textarea>
+      </div>
+    </div>
+
+    <!-- SQL Dataset -->
+    <div class="section" id="sec-sql" style="display:none">
+      <h3>SQL Dataset <span class="req">*</span></h3>
+      <div class="row">
+        <div class="field"><label>Label <span class="req">*</span></label><input type="text" id="sql_label" placeholder="Interactive dataset title"></div>
+        <div class="field"><label>Default Query <span class="opt">optional</span></label><input type="text" id="sql_defaultQuery" placeholder="-- Write your SQL here"></div>
+      </div>
+      <div class="field"><label>Question HTML <span class="req">*</span></label><textarea id="sql_question" rows="4" placeholder="<em>Asked at CompanyName.</em><br><br>question HTML..."></textarea></div>
+      <div class="field"><label>Setup SQL (CREATE + INSERT) <span class="req">*</span></label><textarea id="sql_setup" rows="6" placeholder="CREATE TABLE customers (...); INSERT INTO customers VALUES (...);"></textarea></div>
+      <div class="field">
+        <label>Hints <span class="opt">optional</span></label>
+        <div id="sql_hints"></div>
+        <button type="button" class="btn small" onclick="addHint('sql_hints')">+ Add hint</button>
+      </div>
+      <div class="field">
+        <label>Schema <span class="opt">optional — shown as reference panel</span></label>
+        <div id="sql_schema"></div>
+        <button type="button" class="btn small" onclick="addSchemaTable('sql_schema')">+ Add table</button>
+      </div>
+    </div>
+
+    <!-- Python Dataset -->
+    <div class="section" id="sec-python" style="display:none">
+      <h3>Python Dataset <span class="req">*</span></h3>
+      <div class="row">
+        <div class="field"><label>Label <span class="req">*</span></label><input type="text" id="py_label"></div>
+        <div class="field"><label>Default Code <span class="opt">optional</span></label><input type="text" id="py_defaultQuery" placeholder="# Write your Python here"></div>
+      </div>
+      <div class="field"><label>Question HTML <span class="req">*</span></label><textarea id="py_question" rows="4"></textarea></div>
+      <div class="field"><label>Setup Code <span class="req">*</span></label><textarea id="py_setup" rows="6" placeholder="import pandas as pd\ndf = pd.DataFrame(...)"></textarea></div>
+      <div class="field">
+        <label>Hints <span class="opt">optional</span></label>
+        <div id="py_hints"></div>
+        <button type="button" class="btn small" onclick="addHint('py_hints')">+ Add hint</button>
+      </div>
+    </div>
+
+    <!-- Test Cases (sql / python) -->
+    <div class="section" id="sec-tests" style="display:none">
+      <h3>Test Cases <span class="req">*</span> <span class="opt">minimum 2 required for SQL / Python</span></h3>
+      <div id="tests_list"></div>
+      <button type="button" class="btn small" onclick="addTestCase()">+ Add test case</button>
+      <small style="display:block;margin-top:6px;">Each test needs a name and at least one of: expectedQuery / checkFunction / assertion / maxRows / minRows / minCols</small>
+    </div>
+
+    <!-- Factor Tree (optional) -->
+    <div class="section" id="sec-tree">
+      <h3>Factor Tree <span class="opt">optional — for RCA case studies</span></h3>
+      <div class="field">
+        <textarea id="f_factorTree" rows="4" placeholder='Paste JSON, e.g. {"root":"Revenue drop","children":[...]}'></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="previewSingle()">🔍 Preview JSON</button>
+      <button class="btn primary" onclick="submitSingle()">✅ Submit Question</button>
+    </div>
+    <pre class="preview" id="single_preview" style="display:none;margin-top:14px;"></pre>
+  </div>
+
+  <!-- ═══════════════ BULK UPLOAD TAB ═══════════════ -->
+  <div class="panel" id="panel-bulk">
+    <div class="legend">
+      Paste a JSON <b>array</b> of question objects. Max 100 per request. Fields with <span class="req">*</span> in the schema below are required.
+    </div>
+
+    <div class="actions" style="justify-content:flex-start;margin:0 0 12px;">
+      <button class="btn" onclick="loadExample('sql')">📋 Load SQL example</button>
+      <button class="btn" onclick="loadExample('casestudy')">📋 Load Case Study example</button>
+      <button class="btn" onclick="loadExample('python')">📋 Load Python example</button>
+      <button class="btn" onclick="downloadSchema()">📥 Download full schema</button>
+    </div>
+
+    <div class="field">
+      <label>JSON payload <span class="req">*</span></label>
+      <textarea id="bulk_json" rows="20" placeholder="[ { ... }, { ... } ]"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="validateBulk()">🔎 Validate</button>
+      <button class="btn primary" onclick="submitBulk()">⬆️ Upload all</button>
+    </div>
+    <pre class="preview" id="bulk_preview" style="display:none;margin-top:14px;"></pre>
+  </div>
+
+  <!-- ═══════════════ MANAGE TAB ═══════════════ -->
+  <div class="panel" id="panel-manage">
+    <div class="filter-bar">
+      <input type="text" id="search" placeholder="Search by id or title…" oninput="renderManage()">
+      <select id="filterTopic" onchange="renderManage()">
+        <option value="">All topics</option>
+        <option value="sql">SQL</option>
+        <option value="casestudy">Case Study</option>
+        <option value="python">Python</option>
+        <option value="puzzles">Puzzle</option>
+        <option value="guesstimates">Guesstimate</option>
+        <option value="bi">BI</option>
+        <option value="behavioral">Behavioral</option>
+      </select>
+      <select id="filterVisible" onchange="renderManage()">
+        <option value="">All</option>
+        <option value="1">Visible only</option>
+        <option value="0">Hidden only</option>
+      </select>
+      <button class="btn small" onclick="loadManage()">🔄 Refresh</button>
+      <span id="countInfo" style="margin-left:auto;color:var(--muted);font-size:13px;"></span>
+    </div>
+    <table>
+      <thead><tr><th>ID</th><th>Title</th><th>Topic</th><th>Difficulty</th><th>Order</th><th>Visible</th><th></th></tr></thead>
+      <tbody id="manage_rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API = '/api/admin/questions';
+
+// ── Toast ────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info', ms = 4000) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+// ── Tab switching ────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  if (t.dataset.tab === 'manage') loadManage();
+}));
+
+// ── Show current user (from Cloudflare Access header via cookie endpoint) ─
+fetch('/cdn-cgi/access/get-identity').then(r => r.ok ? r.json() : null).then(id => {
+  if (id?.email) document.getElementById('userChip').textContent = '👤 ' + id.email;
+  else document.getElementById('userChip').textContent = 'Not authenticated';
+}).catch(() => { document.getElementById('userChip').textContent = 'Auth unknown'; });
+
+// ── Populate framework datalist from existing DB values ─────────────────
+fetch(API).then(r => r.ok ? r.json() : null).then(j => {
+  if (!j?.questions) return;
+  const frameworks = [...new Set(j.questions.map(q => q.framework).filter(Boolean))].sort();
+  const dl = document.getElementById('framework_list');
+  dl.innerHTML = frameworks.map(f => `<option value="${f.replace(/"/g, '&quot;')}">`).join('');
+}).catch(() => {});
+
+// ── Topic-driven section visibility ──────────────────────────────────────
+document.getElementById('f_topic').addEventListener('change', (e) => {
+  const t = e.target.value;
+  const tag = document.getElementById('f_tag');
+  const map = { sql: 'SQL', casestudy: 'Case Study', python: 'Python', puzzles: 'Puzzle', guesstimates: 'Guesstimate', bi: 'BI', behavioral: 'Behavioral' };
+  // Auto-fill tag only if user hasn't manually chosen one yet
+  if (map[t] && !tag.value) tag.value = map[t];
+
+  document.getElementById('sec-sql').style.display = t === 'sql' ? 'block' : 'none';
+  document.getElementById('sec-python').style.display = t === 'python' ? 'block' : 'none';
+  document.getElementById('sec-tests').style.display = (t === 'sql' || t === 'python') ? 'block' : 'none';
+  document.getElementById('sec-solution').style.display = ['casestudy', 'puzzles', 'guesstimates', 'bi', 'behavioral'].includes(t) ? 'block' : 'none';
+});
+
+document.getElementById('f_isVisible').addEventListener('change', (e) => {
+  document.getElementById('visibleLabel').textContent = e.target.checked ? 'Question will show in the public list' : 'HIDDEN — URL works but not listed publicly';
+});
+
+// ── Dynamic Hints ────────────────────────────────────────────────────────
+function addHint(containerId, value = '') {
+  const c = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'hint-item';
+  div.innerHTML = `<input type="text" placeholder="Hint text" value="${value.replace(/"/g, '&quot;')}"><button type="button" class="btn small danger" onclick="this.parentElement.remove()">✕</button>`;
+  c.appendChild(div);
+}
+
+function collectHints(containerId) {
+  return [...document.querySelectorAll(`#${containerId} input`)].map(i => i.value.trim()).filter(Boolean);
+}
+
+// ── Schema tables (SQL only) ─────────────────────────────────────────────
+function addSchemaTable(containerId, preset = null) {
+  const c = document.getElementById(containerId);
+  const idx = c.children.length;
+  const div = document.createElement('div');
+  div.className = 'schema-table';
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+      <input type="text" placeholder="Table name" data-k="name" style="flex:1" value="${preset?.name || ''}">
+      <button type="button" class="btn small danger" onclick="this.closest('.schema-table').remove()">✕ Remove</button>
+    </div>
+    <input type="text" class="cols" placeholder="Columns — e.g. id INT, name TEXT, created_at DATE" data-k="columns" value="${preset ? preset.columns.map(c => c.name + ' ' + c.type).join(', ') : ''}">
+  `;
+  c.appendChild(div);
+}
+
+function collectSchema(containerId) {
+  return [...document.querySelectorAll(`#${containerId} .schema-table`)].map(div => {
+    const name = div.querySelector('[data-k=name]').value.trim();
+    const colsStr = div.querySelector('[data-k=columns]').value.trim();
+    if (!name || !colsStr) return null;
+    const columns = colsStr.split(',').map(s => s.trim()).filter(Boolean).map(c => {
+      const parts = c.split(/\s+/);
+      return { name: parts[0], type: parts.slice(1).join(' ') || 'TEXT' };
+    });
+    return { name, columns };
+  }).filter(Boolean);
+}
+
+// ── Test cases ───────────────────────────────────────────────────────────
+let testCounter = 0;
+function addTestCase(preset = null) {
+  const c = document.getElementById('tests_list');
+  const i = testCounter++;
+  const div = document.createElement('div');
+  div.className = 'test-item';
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <b>Test #${c.children.length + 1}</b>
+      <button type="button" class="btn small danger" onclick="this.closest('.test-item').remove()">✕</button>
+    </div>
+    <div class="field"><label>Name <span class="req">*</span></label><input type="text" data-k="name" value="${preset?.name || ''}"></div>
+    <div class="row">
+      <div class="field"><label>Expected Query <span class="opt">optional</span></label><textarea data-k="expectedQuery" rows="2">${preset?.expectedQuery || ''}</textarea></div>
+      <div class="field"><label>Fail Message <span class="opt">optional</span></label><textarea data-k="failMsg" rows="2">${preset?.failMsg || ''}</textarea></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>Min Match Ratio <span class="opt">0–1</span></label><input type="number" step="0.1" min="0" max="1" data-k="minMatchRatio" value="${preset?.minMatchRatio ?? ''}"></div>
+      <div class="field"><label>Max Rows <span class="opt">optional</span></label><input type="number" data-k="maxRows" value="${preset?.maxRows ?? ''}"></div>
+      <div class="field"><label>Min Rows <span class="opt">optional</span></label><input type="number" data-k="minRows" value="${preset?.minRows ?? ''}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Min Cols <span class="opt">optional</span></label><input type="number" data-k="minCols" value="${preset?.minCols ?? ''}"></div>
+      <div class="field"><label>Part # <span class="opt">default 1 — multi-part questions</span></label><input type="number" data-k="part" value="${preset?.part ?? 1}"></div>
+    </div>
+    <div class="field"><label>Check Function <span class="opt">optional — JS: function(out){return {pass:true,msg:''};}</span></label><textarea data-k="checkFunction" rows="3">${preset?.checkFunction || ''}</textarea></div>
+    <div class="field"><label>Python Assertion <span class="opt">optional — Python: assert ...</span></label><textarea data-k="assertion" rows="2">${preset?.assertion || ''}</textarea></div>
+  `;
+  c.appendChild(div);
+}
+
+function collectTests() {
+  return [...document.querySelectorAll('#tests_list .test-item')].map(div => {
+    const t = {};
+    div.querySelectorAll('[data-k]').forEach(el => {
+      const k = el.dataset.k;
+      let v = el.value.trim();
+      if (!v) return;
+      if (['minMatchRatio', 'maxRows', 'minRows', 'minCols', 'part'].includes(k)) v = Number(v);
+      t[k] = v;
+    });
+    return t;
+  }).filter(t => t.name);
+}
+
+// ── Build payload from single form ───────────────────────────────────────
+function buildSinglePayload() {
+  const topic = document.getElementById('f_topic').value;
+  const q = {
+    id: document.getElementById('f_id').value.trim(),
+    title: document.getElementById('f_title').value.trim(),
+    topic,
+    difficulty: document.getElementById('f_difficulty').value,
+    tag: document.getElementById('f_tag').value,
+    prompt: document.getElementById('f_prompt').value.trim(),
+    isVisible: document.getElementById('f_isVisible').checked,
+  };
+  const framework = document.getElementById('f_framework').value.trim();
+  if (framework) q.framework = framework;
+
+  if (['casestudy', 'puzzles', 'guesstimates', 'bi', 'behavioral'].includes(topic)) {
+    const sol = document.getElementById('f_solution').value.trim();
+    if (sol) q.solution = sol;
+  }
+
+  if (topic === 'sql') {
+    q.sqlDataset = {
+      label: document.getElementById('sql_label').value.trim(),
+      question: document.getElementById('sql_question').value.trim(),
+      defaultQuery: document.getElementById('sql_defaultQuery').value || undefined,
+      setup: document.getElementById('sql_setup').value.trim(),
+      hints: collectHints('sql_hints'),
+      schema: collectSchema('sql_schema'),
+    };
+    q.testCases = collectTests();
+  }
+  if (topic === 'python') {
+    q.pythonDataset = {
+      label: document.getElementById('py_label').value.trim(),
+      question: document.getElementById('py_question').value.trim(),
+      defaultQuery: document.getElementById('py_defaultQuery').value || undefined,
+      setupCode: document.getElementById('py_setup').value.trim(),
+      hints: collectHints('py_hints'),
+    };
+    q.testCases = collectTests();
+  }
+
+  const tree = document.getElementById('f_factorTree').value.trim();
+  if (tree) { try { q.factorTree = JSON.parse(tree); } catch { q.factorTree = tree; } }
+
+  return q;
+}
+
+function previewSingle() {
+  const p = document.getElementById('single_preview');
+  p.style.display = 'block';
+  p.textContent = JSON.stringify(buildSinglePayload(), null, 2);
+}
+
+async function submitSingle() {
+  const payload = buildSinglePayload();
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const j = await r.json();
+  if (r.ok) { toast('✅ Question added: ' + j.ids.join(', '), 'ok'); }
+  else { toast('❌ ' + (j.error || 'Failed') + ': ' + JSON.stringify(j.details || j.conflicts || ''), 'err', 8000); }
+}
+
+// ── Bulk upload ──────────────────────────────────────────────────────────
+function validateBulk() {
+  const p = document.getElementById('bulk_preview');
+  p.style.display = 'block';
+  try {
+    const data = JSON.parse(document.getElementById('bulk_json').value);
+    if (!Array.isArray(data)) { p.textContent = 'ERROR: payload must be an ARRAY [...] of question objects.'; return; }
+    p.textContent = `✅ Valid JSON — ${data.length} question${data.length === 1 ? '' : 's'}.\nIDs:\n` + data.map(q => '  • ' + q.id).join('\n');
+  } catch (e) { p.textContent = 'JSON parse error: ' + e.message; }
+}
+
+async function submitBulk() {
+  let data;
+  try { data = JSON.parse(document.getElementById('bulk_json').value); }
+  catch (e) { toast('JSON parse error: ' + e.message, 'err'); return; }
+  if (!Array.isArray(data)) { toast('Payload must be an array', 'err'); return; }
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  const j = await r.json();
+  if (r.ok) toast(`✅ Inserted ${j.inserted} questions`, 'ok');
+  else toast('❌ ' + (j.error || 'Failed') + ' — ' + JSON.stringify(j.details || j.conflicts || ''), 'err', 10000);
+}
+
+// ── Examples / schema download ───────────────────────────────────────────
+const EXAMPLES = {
+  sql: [{
+    id: 'sql_example_orders',
+    title: 'ExampleCo: Top customers by revenue',
+    topic: 'sql',
+    difficulty: 'medium',
+    tag: 'SQL',
+    prompt: 'You are coaching a candidate through this SQL problem…',
+    sqlDataset: {
+      label: 'Orders & customers',
+      question: '<em>Asked at ExampleCo.</em><br><br>Find the top 5 customers by total revenue.',
+      defaultQuery: '-- Write your SQL here\n',
+      setup: "CREATE TABLE customers (id INT, name TEXT); INSERT INTO customers VALUES (1,'Alice'),(2,'Bob'); CREATE TABLE orders (customer_id INT, amount INT); INSERT INTO orders VALUES (1,100),(2,50);",
+      hints: ['Join customers and orders', 'Use SUM() with GROUP BY'],
+      schema: [{ name: 'customers', columns: [{ name: 'id', type: 'INT' }, { name: 'name', type: 'TEXT' }] }]
+    },
+    testCases: [
+      { name: 'Returns 5 rows', maxRows: 5, minRows: 1, failMsg: 'Should return up to 5 customers' },
+      { name: 'Uses SUM', expectedQuery: 'SELECT c.name, SUM(o.amount) FROM customers c JOIN orders o ON c.id=o.customer_id GROUP BY c.name', minMatchRatio: 0.4 }
+    ],
+    framework: null,
+    isVisible: true
+  }],
+  casestudy: [{
+    id: 'cs_example_retention',
+    title: 'ExampleCo: Why is retention dropping?',
+    topic: 'casestudy',
+    difficulty: 'medium',
+    tag: 'Case Study',
+    prompt: 'You are coaching the candidate through this case…',
+    solution: '# Structured approach\n1. Define retention metric…\n2. Segment by cohort…',
+    framework: 'RCA',
+    isVisible: true
+  }],
+  python: [{
+    id: 'python_example_churn',
+    title: 'ExampleCo: Churn analysis with pandas',
+    topic: 'python',
+    difficulty: 'medium',
+    tag: 'Python',
+    prompt: 'Coach through the pandas churn analysis…',
+    pythonDataset: {
+      label: 'Churn data',
+      question: '<em>Asked at ExampleCo.</em><br><br>Compute monthly churn rate.',
+      setupCode: "import pandas as pd\ndf = pd.DataFrame({'user_id':[1,2,3],'churned':[0,1,0]})",
+      hints: ['Group by month', 'churn_rate = churned / total']
+    },
+    testCases: [
+      { name: 'Returns a DataFrame', assertion: 'assert isinstance(result, pd.DataFrame)' },
+      { name: 'Has churn_rate column', assertion: "assert 'churn_rate' in result.columns" }
+    ],
+    isVisible: true
+  }]
+};
+
+function loadExample(kind) {
+  document.getElementById('bulk_json').value = JSON.stringify(EXAMPLES[kind], null, 2);
+  toast('Example loaded — edit before submitting', 'info');
+}
+
+function downloadSchema() {
+  const schema = {
+    _README: 'Paste an ARRAY [...] of these objects in the bulk upload box. Max 100 per request.',
+    _LEGEND: '* = REQUIRED, ? = OPTIONAL (or topic-dependent)',
+    id: '* string, snake_case e.g. sql_company_topic',
+    title: '* string',
+    topic: '* one of: sql | casestudy | python | puzzles | guesstimates | bi | behavioral',
+    difficulty: '* easy | medium | hard',
+    tag: '* SQL | Case Study | Python | Puzzle | Guesstimate | BI | Behavioral',
+    prompt: '* string — AI coaching prompt (ALL types need this)',
+    framework: '? string — display name, case studies only',
+    sortOrder: '? number — auto = 9999 if missing',
+    isVisible: '? boolean — default true',
+    solution: '* (casestudy/puzzles/guesstimates/bi/behavioral) — model solution string',
+    sqlDataset: {
+      _required_when: 'topic === "sql"',
+      label: '* string',
+      question: '* string — HTML, e.g. "<em>Asked at X.</em><br><br>..."',
+      defaultQuery: "? string — default '-- Write your SQL here\\n'",
+      setup: '* string — CREATE TABLE + INSERT SQL',
+      hints: '? array of strings',
+      schema: '? array of { name, columns: [{name, type}] }',
+      parts: '? array — for multi-part questions'
+    },
+    pythonDataset: {
+      _required_when: 'topic === "python"',
+      label: '* string',
+      question: '* string — HTML',
+      defaultQuery: "? string — default '# Write your Python here\\n'",
+      setupCode: '* string — Python setup',
+      hints: '? array of strings',
+      schema: '? array',
+      parts: '? array'
+    },
+    testCases: {
+      _required_when: 'topic === "sql" or "python" (minimum 2 tests)',
+      _each: {
+        name: '* string',
+        expectedQuery: '? string — reference solution (SQL)',
+        minMatchRatio: '? number 0–1 — ratio against expectedQuery row/cell match',
+        failMsg: '? string',
+        maxRows: '? number',
+        minRows: '? number',
+        minCols: '? number',
+        checkFunction: '? string — JS: function(out){return {pass:bool,msg:str};}',
+        assertion: '? string — Python: assert ...',
+        part: '? number — default 1'
+      }
+    },
+    factorTree: '? object or string — for RCA case studies (JSON tree)'
+  };
+  const blob = new Blob([JSON.stringify(schema, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'question-schema.json';
+  a.click();
+}
+
+// ── Manage tab ───────────────────────────────────────────────────────────
+let allQuestions = [];
+async function loadManage() {
+  const r = await fetch(API);
+  if (!r.ok) { toast('Failed to load: ' + r.status, 'err'); return; }
+  const j = await r.json();
+  allQuestions = j.questions || [];
+  renderManage();
+}
+
+function renderManage() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const topic = document.getElementById('filterTopic').value;
+  const visFilter = document.getElementById('filterVisible').value;
+  const filtered = allQuestions.filter(q => {
+    if (topic && q.topic !== topic) return false;
+    if (visFilter !== '' && String(q.is_visible) !== visFilter) return false;
+    if (search && !(q.id.toLowerCase().includes(search) || q.title.toLowerCase().includes(search))) return false;
+    return true;
+  });
+  document.getElementById('countInfo').textContent = `${filtered.length} / ${allQuestions.length} questions`;
+  document.getElementById('manage_rows').innerHTML = filtered.map(q => `
+    <tr class="${q.is_visible ? '' : 'hidden-row'}">
+      <td><code>${q.id}</code></td>
+      <td>${escapeHtml(q.title)}</td>
+      <td>${q.topic}</td>
+      <td>${q.difficulty}</td>
+      <td>${q.sort_order}</td>
+      <td><label class="toggle"><input type="checkbox" ${q.is_visible ? 'checked' : ''} onchange="toggleVisibility('${q.id}', this.checked)"><span class="slider"></span></label></td>
+      <td class="actions-cell">
+        <button class="btn small danger" onclick="deleteQuestion('${q.id}')">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+async function toggleVisibility(id, visible) {
+  const r = await fetch(`${API}?id=${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isVisible: visible }) });
+  if (r.ok) {
+    const q = allQuestions.find(x => x.id === id); if (q) q.is_visible = visible ? 1 : 0;
+    renderManage();
+    toast(`${id} → ${visible ? 'visible' : 'hidden'}`, 'ok', 2000);
+  } else { toast('Toggle failed', 'err'); }
+}
+
+async function deleteQuestion(id) {
+  if (!confirm(`Delete ${id} and ALL its related rows? This cannot be undone.`)) return;
+  const r = await fetch(`${API}?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+  if (r.ok) { allQuestions = allQuestions.filter(q => q.id !== id); renderManage(); toast(`Deleted ${id}`, 'ok'); }
+  else { toast('Delete failed', 'err'); }
+}
+</script>
+</body>
+</html>

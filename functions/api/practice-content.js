@@ -98,7 +98,7 @@ export async function onRequestGet(context) {
   if (url.searchParams.get('list') === 'questions') {
     if (!env.CONTENT_DB) return json({ error: 'Database unavailable' }, 503, cors);
     const { results } = await env.CONTENT_DB.prepare(
-      'SELECT id, title, topic, difficulty, tag, framework FROM questions ORDER BY sort_order'
+      'SELECT id, title, topic, difficulty, tag, framework FROM questions WHERE is_visible = 1 ORDER BY sort_order'
     ).all();
     return json(results, 200, cors);
   }
