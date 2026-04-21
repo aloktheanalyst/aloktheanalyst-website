@@ -17,6 +17,7 @@
 const VALID_TOPICS = new Set(['sql', 'casestudy', 'python', 'puzzles', 'guesstimates', 'bi', 'behavioral']);
 const VALID_DIFFICULTY = new Set(['easy', 'medium', 'hard']);
 const VALID_TAGS = new Set(['SQL', 'Case Study', 'Python', 'Puzzle', 'Guesstimate', 'BI', 'Behavioral']);
+const TOPIC_TO_TAG = { sql: 'SQL', casestudy: 'Case Study', python: 'Python', puzzles: 'Puzzle', guesstimates: 'Guesstimate', bi: 'BI', behavioral: 'Behavioral' };
 const SOLUTION_TYPES = { casestudy: 'casestudy', puzzles: 'puzzle', guesstimates: 'guesstimate', bi: 'bi', behavioral: 'behavioral' };
 
 function json(body, status = 200) {
@@ -44,7 +45,9 @@ function validateQuestion(q) {
   if (!q.title || typeof q.title !== 'string') errs.push('title: required string');
   if (!VALID_TOPICS.has(q.topic)) errs.push(`topic: must be one of ${[...VALID_TOPICS].join('|')}`);
   if (!VALID_DIFFICULTY.has(q.difficulty)) errs.push('difficulty: must be easy|medium|hard');
-  if (!VALID_TAGS.has(q.tag)) errs.push(`tag: must be one of ${[...VALID_TAGS].join('|')}`);
+  // Auto-derive tag from topic if missing; accept an override only if valid
+  if (!q.tag) q.tag = TOPIC_TO_TAG[q.topic];
+  if (!VALID_TAGS.has(q.tag)) errs.push(`tag: must be one of ${[...VALID_TAGS].join('|')} (usually auto-derived from topic)`);
   if (!q.prompt || typeof q.prompt !== 'string') errs.push('prompt: required string (AI coaching prompt)');
 
   if (q.topic === 'sql') {

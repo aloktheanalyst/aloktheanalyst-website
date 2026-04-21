@@ -128,7 +128,7 @@
         <input type="text" id="f_title" placeholder="Company: Question Title">
       </div>
     </div>
-    <div class="row3">
+    <div class="row">
       <div class="field">
         <label>Topic <span class="req">*</span></label>
         <select id="f_topic">
@@ -141,6 +141,7 @@
           <option value="bi">BI</option>
           <option value="behavioral">Behavioral</option>
         </select>
+        <small>Display label (Tag) is auto-derived from Topic.</small>
       </div>
       <div class="field">
         <label>Difficulty <span class="req">*</span></label>
@@ -149,19 +150,6 @@
           <option value="easy">easy</option>
           <option value="medium">medium</option>
           <option value="hard">hard</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Tag <span class="req">*</span></label>
-        <select id="f_tag">
-          <option value="">— choose —</option>
-          <option value="SQL">SQL</option>
-          <option value="Case Study">Case Study</option>
-          <option value="Python">Python</option>
-          <option value="Puzzle">Puzzle</option>
-          <option value="Guesstimate">Guesstimate</option>
-          <option value="BI">BI</option>
-          <option value="Behavioral">Behavioral</option>
         </select>
       </div>
     </div>
@@ -343,14 +331,12 @@ fetch(API).then(r => r.ok ? r.json() : null).then(j => {
   dl.innerHTML = frameworks.map(f => `<option value="${f.replace(/"/g, '&quot;')}">`).join('');
 }).catch(() => {});
 
+// ── Topic → Tag mapping (tag is auto-derived) ───────────────────────────
+const TOPIC_TO_TAG = { sql: 'SQL', casestudy: 'Case Study', python: 'Python', puzzles: 'Puzzle', guesstimates: 'Guesstimate', bi: 'BI', behavioral: 'Behavioral' };
+
 // ── Topic-driven section visibility ──────────────────────────────────────
 document.getElementById('f_topic').addEventListener('change', (e) => {
   const t = e.target.value;
-  const tag = document.getElementById('f_tag');
-  const map = { sql: 'SQL', casestudy: 'Case Study', python: 'Python', puzzles: 'Puzzle', guesstimates: 'Guesstimate', bi: 'BI', behavioral: 'Behavioral' };
-  // Auto-fill tag only if user hasn't manually chosen one yet
-  if (map[t] && !tag.value) tag.value = map[t];
-
   document.getElementById('sec-sql').style.display = t === 'sql' ? 'block' : 'none';
   document.getElementById('sec-python').style.display = t === 'python' ? 'block' : 'none';
   document.getElementById('sec-tests').style.display = (t === 'sql' || t === 'python') ? 'block' : 'none';
@@ -457,7 +443,7 @@ function buildSinglePayload() {
     title: document.getElementById('f_title').value.trim(),
     topic,
     difficulty: document.getElementById('f_difficulty').value,
-    tag: document.getElementById('f_tag').value,
+    tag: TOPIC_TO_TAG[topic] || '',
     prompt: document.getElementById('f_prompt').value.trim(),
     isVisible: document.getElementById('f_isVisible').checked,
   };
@@ -540,7 +526,6 @@ const EXAMPLES = {
     title: 'ExampleCo: Top customers by revenue',
     topic: 'sql',
     difficulty: 'medium',
-    tag: 'SQL',
     prompt: 'You are coaching a candidate through this SQL problem…',
     sqlDataset: {
       label: 'Orders & customers',
@@ -562,7 +547,6 @@ const EXAMPLES = {
     title: 'ExampleCo: Why is retention dropping?',
     topic: 'casestudy',
     difficulty: 'medium',
-    tag: 'Case Study',
     prompt: 'You are coaching the candidate through this case…',
     solution: '# Structured approach\n1. Define retention metric…\n2. Segment by cohort…',
     framework: 'RCA',
@@ -573,7 +557,6 @@ const EXAMPLES = {
     title: 'ExampleCo: Churn analysis with pandas',
     topic: 'python',
     difficulty: 'medium',
-    tag: 'Python',
     prompt: 'Coach through the pandas churn analysis…',
     pythonDataset: {
       label: 'Churn data',
@@ -602,7 +585,7 @@ function downloadSchema() {
     title: '* string',
     topic: '* one of: sql | casestudy | python | puzzles | guesstimates | bi | behavioral',
     difficulty: '* easy | medium | hard',
-    tag: '* SQL | Case Study | Python | Puzzle | Guesstimate | BI | Behavioral',
+    tag: '? auto-derived from topic (SQL | Case Study | Python | Puzzle | Guesstimate | BI | Behavioral) — override only if needed',
     prompt: '* string — AI coaching prompt (ALL types need this)',
     framework: '? string — display name, case studies only',
     sortOrder: '? number — auto = 9999 if missing',
