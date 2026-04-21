@@ -2356,6 +2356,258 @@
   .browse-grid-wrapper::-webkit-scrollbar { width: 4px; }
   .browse-grid-wrapper::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
+  /* ── HERO STRIP (state-aware 3-card) ── */
+  .hero-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+    padding: 0 2rem 1rem;
+    background: var(--bg);
+  }
+  .hero-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 112px;
+    cursor: pointer;
+    transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+  }
+  .hero-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
+  }
+  .hero-card-eyebrow {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .hero-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .hero-card-subtitle {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .hero-card-meta {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: auto;
+  }
+  .hero-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    gap: 0.5rem;
+  }
+  .hero-card-countdown {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .hero-card-cta {
+    font-size: 0.78rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: auto;
+    align-self: flex-end;
+  }
+  /* Card 1 — Resume */
+  .hero-resume .hero-card-eyebrow { color: var(--accent); }
+  .hero-resume.is-empty .hero-card-title { color: var(--muted); font-weight: 500; }
+  /* Card 2 — Challenge */
+  .hero-challenge {
+    background: linear-gradient(135deg, rgba(249,115,22,0.06), rgba(249,115,22,0.02));
+    border-color: rgba(249,115,22,0.25);
+  }
+  .hero-challenge .hero-card-eyebrow { color: #c2410c; }
+  .hero-challenge:hover { border-color: #f97316; }
+  /* Card 3 — Progress */
+  .hero-week { cursor: default; }
+  .hero-week:hover { transform: none; box-shadow: none; border-color: var(--border); }
+  .hero-week-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+  }
+  .hero-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--white);
+    letter-spacing: 0.5px;
+  }
+  .hero-stat-num.has-streak { color: #ea580c; }
+  .hero-stat-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  @media (max-width: 900px) {
+    .hero-strip { grid-template-columns: 1fr; padding: 0 1rem 0.75rem; }
+    .hero-card { min-height: 96px; }
+    .hero-stat-num { font-size: 1.5rem; }
+  }
+
+  /* ── CONTRIBUTION HEATMAP ── */
+  .heatmap-section {
+    padding: 0 2rem 1rem;
+    background: var(--bg);
+  }
+  .heatmap-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.15rem;
+  }
+  .heatmap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.85rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .heatmap-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.2px;
+  }
+  .heatmap-summary {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .heatmap-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.35rem;
+  }
+  .heatmap-scroll::-webkit-scrollbar { height: 4px; }
+  .heatmap-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .heatmap-grid-outer {
+    display: flex;
+    gap: 0.4rem;
+    min-width: max-content;
+  }
+  .heatmap-daylabels {
+    display: grid;
+    grid-template-rows: repeat(7, 11px);
+    gap: 3px;
+    font-size: 0.58rem;
+    color: var(--muted);
+    padding-top: 14px; /* align with grid, below month labels */
+  }
+  .heatmap-daylabels span {
+    line-height: 11px;
+    height: 11px;
+    visibility: hidden;
+  }
+  .heatmap-daylabels span.shown { visibility: visible; }
+  .heatmap-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .heatmap-months {
+    display: flex;
+    gap: 3px;
+    height: 11px;
+    font-size: 0.58rem;
+    color: var(--muted);
+    position: relative;
+  }
+  .heatmap-month-label {
+    position: absolute;
+    line-height: 11px;
+  }
+  .heatmap-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 11px);
+    grid-auto-columns: 11px;
+    gap: 3px;
+  }
+  .heatmap-cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    background: var(--surface2);
+    border: 1px solid rgba(0,0,0,0.02);
+    cursor: default;
+    transition: transform 0.1s;
+  }
+  .heatmap-cell:hover { transform: scale(1.25); outline: 1px solid var(--accent); }
+  .heatmap-cell.empty-future { background: transparent; border: none; }
+  .heatmap-cell.l0 { background: #ebedf0; }
+  .heatmap-cell.l1 { background: #9be9a8; }
+  .heatmap-cell.l2 { background: #40c463; }
+  .heatmap-cell.l3 { background: #30a14e; }
+  .heatmap-cell.l4 { background: #216e39; }
+  .heatmap-legend {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+  .heatmap-legend-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  /* Tooltip */
+  .heatmap-tip {
+    position: fixed;
+    pointer-events: none;
+    background: #0f172a;
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 0.35rem 0.55rem;
+    border-radius: 5px;
+    white-space: nowrap;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .heatmap-tip.visible { opacity: 1; }
+  @media (max-width: 900px) {
+    .heatmap-section { padding: 0 1rem 0.75rem; }
+    .heatmap-wrap { padding: 0.85rem 0.85rem 0.75rem; }
+  }
+
   .browse-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
@@ -2587,8 +2839,88 @@
     </div>
   </div>
 
-  <!-- Weekly Challenge Banner -->
-  <div class="wc-banner" id="wcBanner" style="display:none" onclick="navigateToSolve(_weeklyChallenge&&_weeklyChallenge.questionId)">
+  <!-- State-aware 3-card hero strip -->
+  <div class="hero-strip" id="heroStrip">
+    <!-- Card 1: Resume / Welcome -->
+    <div class="hero-card hero-resume is-empty" id="heroResume" onclick="heroResumeClick()">
+      <div class="hero-card-eyebrow">🎯 <span id="heroResumeEyebrow">START HERE</span></div>
+      <div class="hero-card-title" id="heroResumeTitle">Welcome — pick your first question</div>
+      <div class="hero-card-subtitle" id="heroResumeSubtitle">619 questions across SQL, Python, cases, and more.</div>
+      <div class="hero-card-cta" id="heroResumeCta">Browse below ↓</div>
+    </div>
+    <!-- Card 2: Weekly Challenge -->
+    <div class="hero-card hero-challenge" id="heroChallenge" style="display:none" onclick="heroChallengeClick()">
+      <div class="hero-card-eyebrow">🔥 THIS WEEK'S CHALLENGE</div>
+      <div class="hero-card-title" id="heroChallengeTitle">Loading…</div>
+      <div class="hero-card-meta">
+        <span class="difficulty hard" id="heroChallengeDifficulty">hard</span>
+        <span class="prompt-tag" id="heroChallengeTag">SQL</span>
+        <span id="heroChallengeCompletions" style="font-size:0.7rem;color:var(--muted);"></span>
+      </div>
+      <div class="hero-card-footer">
+        <span class="hero-card-countdown" id="heroChallengeCountdown"></span>
+        <span class="hero-card-cta" id="heroChallengeCta">Solve →</span>
+      </div>
+    </div>
+    <!-- Card 3: Your Progress -->
+    <div class="hero-card hero-week">
+      <div class="hero-card-eyebrow">📊 YOUR PROGRESS</div>
+      <div class="hero-week-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="heroStatWeek">0</div>
+          <div class="hero-stat-label">this week</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="heroStatTotal">0</div>
+          <div class="hero-stat-label">total solved</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="heroStatStreak">0</div>
+          <div class="hero-stat-label">day streak</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contribution heatmap -->
+  <div class="heatmap-section" id="heatmapSection" style="display:none">
+    <div class="heatmap-wrap">
+      <div class="heatmap-header">
+        <div class="heatmap-title">Your practice activity</div>
+        <div class="heatmap-summary" id="heatmapSummary">0 solves in the last year</div>
+      </div>
+      <div class="heatmap-scroll">
+        <div class="heatmap-grid-outer">
+          <div class="heatmap-daylabels">
+            <span>Sun</span>
+            <span class="shown">Mon</span>
+            <span>Tue</span>
+            <span class="shown">Wed</span>
+            <span>Thu</span>
+            <span class="shown">Fri</span>
+            <span>Sat</span>
+          </div>
+          <div class="heatmap-main">
+            <div class="heatmap-months" id="heatmapMonths"></div>
+            <div class="heatmap-grid" id="heatmapGrid"></div>
+          </div>
+        </div>
+      </div>
+      <div class="heatmap-legend">
+        <span>Less</span>
+        <span class="heatmap-legend-cell l0"></span>
+        <span class="heatmap-legend-cell l1"></span>
+        <span class="heatmap-legend-cell l2"></span>
+        <span class="heatmap-legend-cell l3"></span>
+        <span class="heatmap-legend-cell l4"></span>
+        <span>More</span>
+      </div>
+    </div>
+  </div>
+  <div class="heatmap-tip" id="heatmapTip"></div>
+
+  <!-- Weekly Challenge Banner (legacy — hidden now that hero card 2 replaces it) -->
+  <div class="wc-banner" id="wcBanner" style="display:none !important" onclick="navigateToSolve(_weeklyChallenge&&_weeklyChallenge.questionId)">
     <div class="wc-banner-left">
       <div class="wc-banner-eyebrow">🔥 THIS WEEK'S CHALLENGE</div>
       <div class="wc-banner-title" id="wcBannerTitle"></div>
@@ -3485,7 +3817,7 @@ async function loadWeeklyChallenge() {
     card.onclick = () => loadCase(data.questionId);
     card.style.display = '';
 
-    // ── Browse banner ──
+    // ── Browse banner (legacy — kept hidden, hero card 2 replaces it) ──
     const banner = document.getElementById('wcBanner');
     if (banner) {
       document.getElementById('wcBannerTitle').textContent = data.title;
@@ -3499,7 +3831,21 @@ async function loadWeeklyChallenge() {
         el.textContent = `🔥 ${data.streak} week streak`;
         el.style.display = '';
       }
-      banner.style.display = '';
+      // banner stays hidden via inline style
+    }
+
+    // ── Hero card 2 (Challenge) ──
+    const heroCh = document.getElementById('heroChallenge');
+    if (heroCh) {
+      document.getElementById('heroChallengeTitle').textContent = data.title;
+      const diffEl = document.getElementById('heroChallengeDifficulty');
+      diffEl.textContent = data.difficulty;
+      diffEl.className = `difficulty ${data.difficulty}`;
+      document.getElementById('heroChallengeTag').textContent = data.tag;
+      document.getElementById('heroChallengeCompletions').textContent = completionsText;
+      const ctaEl = document.getElementById('heroChallengeCta');
+      if (data.userCompleted) { ctaEl.textContent = '✓ Completed'; ctaEl.style.color = 'var(--green)'; }
+      heroCh.style.display = '';
     }
 
     // Countdown — shared timer for sidebar card, browse banner, and solve-view header
@@ -3513,6 +3859,8 @@ async function loadWeeklyChallenge() {
         if (c1) c1.textContent = text;
         if (c2) c2.textContent = text;
         if (c3) { c3.textContent = '🔥 WEEKLY CHALLENGE · ended'; c3.style.display = (activeCaseId === data.questionId) ? 'inline' : 'none'; }
+        const c4e = document.getElementById('heroChallengeCountdown');
+        if (c4e) c4e.textContent = 'ended';
         return;
       }
       const days  = Math.floor(diff / 86400000);
@@ -3522,8 +3870,10 @@ async function loadWeeklyChallenge() {
       const c1 = document.getElementById('wcCountdown');
       const c2 = document.getElementById('wcBannerCountdown');
       const c3 = document.getElementById('wcSolveCountdown');
+      const c4 = document.getElementById('heroChallengeCountdown');
       if (c1) c1.textContent = short;
       if (c2) c2.textContent = short;
+      if (c4) c4.textContent = short;
       if (c3) {
         c3.textContent = `🔥 WEEKLY CHALLENGE · ${short}`;
         c3.style.display = (activeCaseId === data.questionId) ? 'inline' : 'none';
@@ -3985,8 +4335,11 @@ window.onload = async () => {
   } catch (err) {
     console.error('Failed to load questions from D1:', err);
   }
+  addVisitToday();
   route();
   renderPromptList();
+  renderHeroStrip();
+  renderHeatmap();
   updateKeyStatuses();
   updatePillDisplay();
   // Set initial status bar label using selected model
@@ -4004,23 +4357,381 @@ function getSolvedCases() {
 }
 function saveSolvedCases(ids) { localStorage.setItem('solvedCases', JSON.stringify(ids)); }
 
+// ── Solve timestamps (for streak + weekly count) ──
+function getSolvedTimestamps() {
+  try { return JSON.parse(localStorage.getItem('solvedTimestamps') || '{}'); } catch { return {}; }
+}
+function setSolvedTimestamp(id) {
+  const ts = getSolvedTimestamps();
+  if (!ts[id]) {
+    ts[id] = new Date().toISOString();
+    localStorage.setItem('solvedTimestamps', JSON.stringify(ts));
+  }
+}
+
+// ── Last-attempted (for hero card 1) ──
+function setLastAttempted(id) {
+  if (!id) return;
+  localStorage.setItem('lastAttempted', id);
+  localStorage.setItem('lastAttemptedAt', new Date().toISOString());
+}
+function getLastAttempted() {
+  const id = localStorage.getItem('lastAttempted');
+  if (!id) return null;
+  return { id, at: localStorage.getItem('lastAttemptedAt') };
+}
+
+// ── Visit tracking (login-based streak + heatmap) ──
+function getVisitDays() {
+  try { return JSON.parse(localStorage.getItem('visitDays') || '[]'); } catch { return []; }
+}
+function addVisitToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const days = getVisitDays();
+  if (!days.includes(today)) {
+    days.push(today);
+    // Cap history to ~400 days to keep localStorage bounded
+    if (days.length > 420) days.splice(0, days.length - 420);
+    localStorage.setItem('visitDays', JSON.stringify(days));
+  }
+}
+
+// Union of solve-day-keys and visit-day-keys — used for streak + heatmap
+function getActiveDayKeys() {
+  const keys = new Set(getVisitDays());
+  Object.values(getSolvedTimestamps()).forEach(iso => {
+    keys.add(new Date(iso).toISOString().slice(0, 10));
+  });
+  // Include server-side attempts too (logged-in users)
+  const server = getServerAttempts();
+  Object.keys(server).forEach(k => keys.add(k));
+  return keys;
+}
+
+// Count solves on a given day (YYYY-MM-DD)
+function solvesOnDay(dayKey) {
+  let n = 0;
+  Object.values(getSolvedTimestamps()).forEach(iso => {
+    if (new Date(iso).toISOString().slice(0, 10) === dayKey) n++;
+  });
+  return n;
+}
+
+// ── Server-side attempts (D1-backed, for logged-in users) ──
+// Cache in localStorage so we don't refetch on every render; refresh on page load.
+function getServerAttempts() {
+  try { return JSON.parse(localStorage.getItem('serverAttempts') || '{}'); } catch { return {}; }
+}
+function setServerAttempts(days) {
+  try { localStorage.setItem('serverAttempts', JSON.stringify(days || {})); } catch { /* quota */ }
+}
+
+async function fetchServerAttempts() {
+  // Only attempt for logged-in users — skip for anonymous to avoid 401 noise.
+  if (!currentUser) return;
+  try {
+    const res = await fetch('/api/attempts?days=400', { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.days) {
+      setServerAttempts(data.days);
+      // If server knows a more recent last-loaded case, prefer it for the Resume card
+      if (data.lastLoad && data.lastLoad.case_id) {
+        const localAt = localStorage.getItem('lastAttemptedAt');
+        if (!localAt || new Date(data.lastLoad.at) > new Date(localAt)) {
+          localStorage.setItem('lastAttempted', data.lastLoad.case_id);
+          localStorage.setItem('lastAttemptedAt', data.lastLoad.at);
+        }
+      }
+      // Re-render anything that depends on this
+      renderHeatmap();
+      renderHeroStrip();
+    }
+  } catch { /* non-fatal */ }
+}
+
+// Fire-and-forget: record an attempt event (load or solve) to D1
+function recordAttempt(caseId, eventType) {
+  if (!caseId || !window.currentUser) return; // skip for anonymous
+  if (eventType !== 'load' && eventType !== 'solve') return;
+  try {
+    fetch('/api/attempts', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ case_id: caseId, event_type: eventType }),
+      keepalive: true,
+    }).then(() => {
+      // Optimistically update local cache so today's cell lights up without refetch
+      const today = new Date().toISOString().slice(0, 10);
+      const days = getServerAttempts();
+      if (!days[today]) days[today] = { loads: 0, solves: 0 };
+      days[today][eventType === 'solve' ? 'solves' : 'loads']++;
+      setServerAttempts(days);
+    }).catch(() => { /* swallow */ });
+  } catch { /* swallow */ }
+}
+
+// ── Streak calculation (consecutive days ending today or yesterday) ──
+// Uses visits OR solves — "active" days
+function computeStreak() {
+  const dayKeys = getActiveDayKeys();
+  if (dayKeys.size === 0) return 0;
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  // Allow grace: streak can start from yesterday if nothing today yet
+  let cursor = new Date(today);
+  const todayKey = today.toISOString().slice(0, 10);
+  if (!dayKeys.has(todayKey)) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  while (dayKeys.has(cursor.toISOString().slice(0, 10))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+function computeSolvedThisWeek() {
+  const ts = getSolvedTimestamps();
+  const now = new Date();
+  const monday = new Date(now);
+  const day = monday.getDay() || 7; // Sun=0 → 7
+  monday.setDate(monday.getDate() - (day - 1));
+  monday.setHours(0, 0, 0, 0);
+  return Object.values(ts).filter(iso => new Date(iso) >= monday).length;
+}
+
+// ── Hero card click handlers ──
+function heroResumeClick() {
+  const last = getLastAttempted();
+  if (last && last.id) {
+    loadCase(last.id);
+  } else {
+    // No history yet — scroll to the grid
+    const grid = document.getElementById('browseGrid');
+    if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+function heroChallengeClick() {
+  if (_weeklyChallenge && _weeklyChallenge.questionId) {
+    loadCase(_weeklyChallenge.questionId);
+  }
+}
+
+// ── Main renderer ──
+function renderHeroStrip() {
+  // Card 1: Resume
+  const last = getLastAttempted();
+  const resumeCard = document.getElementById('heroResume');
+  if (!resumeCard) return;
+  if (last && last.id && Array.isArray(PROMPTS) && PROMPTS.length) {
+    const p = PROMPTS.find(x => x.id === last.id);
+    if (p) {
+      resumeCard.classList.remove('is-empty');
+      document.getElementById('heroResumeEyebrow').textContent = 'RESUME WHERE YOU LEFT OFF';
+      document.getElementById('heroResumeTitle').textContent = p.title;
+      const solved = getSolvedCases().includes(p.id);
+      const ago = last.at ? timeAgo(new Date(last.at)) : '';
+      document.getElementById('heroResumeSubtitle').textContent =
+        `${p.tag} · ${p.difficulty}${ago ? ' · ' + ago : ''}${solved ? ' · ✓ solved' : ''}`;
+      document.getElementById('heroResumeCta').textContent = solved ? 'Review →' : 'Continue →';
+    }
+  }
+
+  // Card 3: Progress
+  const totalSolved = getSolvedCases().length;
+  const weekSolved = computeSolvedThisWeek();
+  const streak = computeStreak();
+  const totalEl = document.getElementById('heroStatTotal');
+  const weekEl = document.getElementById('heroStatWeek');
+  const streakEl = document.getElementById('heroStatStreak');
+  if (totalEl) totalEl.textContent = totalSolved;
+  if (weekEl) weekEl.textContent = weekSolved;
+  if (streakEl) {
+    streakEl.textContent = streak > 0 ? `${streak}🔥` : '0';
+    streakEl.classList.toggle('has-streak', streak > 0);
+  }
+}
+
+function timeAgo(date) {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks}w ago`;
+  return date.toLocaleDateString();
+}
+
+// ── Contribution heatmap ──
+function renderHeatmap() {
+  const section = document.getElementById('heatmapSection');
+  const grid = document.getElementById('heatmapGrid');
+  const monthsEl = document.getElementById('heatmapMonths');
+  if (!section || !grid) return;
+
+  // Only show heatmap if we have at least some activity
+  const visitDays = getVisitDays();
+  const solvedTs = getSolvedTimestamps();
+  const serverDays = getServerAttempts();
+  if (visitDays.length === 0 && Object.keys(solvedTs).length === 0 && Object.keys(serverDays).length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  // Compute the range: end = today, start = 52 weeks ago aligned to Sunday
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = new Date(today);
+  const start = new Date(today);
+  start.setDate(start.getDate() - 364); // 52 weeks × 7 days, roughly
+  // Align start to previous Sunday
+  const startDow = start.getDay(); // 0 = Sun
+  start.setDate(start.getDate() - startDow);
+
+  const visitSet = new Set(visitDays);
+  // Group solves by day
+  const solvesByDay = {};
+  Object.values(solvedTs).forEach(iso => {
+    const k = new Date(iso).toISOString().slice(0, 10);
+    solvesByDay[k] = (solvesByDay[k] || 0) + 1;
+  });
+
+  // Build cells — column-major (grid-auto-flow: column)
+  grid.innerHTML = '';
+  monthsEl.innerHTML = '';
+
+  let totalSolves = 0;
+  let activeDays = 0;
+  const monthLabelPositions = []; // {col, label}
+  let lastMonth = -1;
+  let col = 0;
+
+  const cursor = new Date(start);
+  while (cursor <= end || cursor.getDay() !== 0) {
+    // Track month transitions for labels (on first-of-month cells that fall on a Sunday-ish col)
+    if (cursor.getDay() === 0) {
+      if (cursor.getMonth() !== lastMonth) {
+        monthLabelPositions.push({ col, month: cursor.getMonth() });
+        lastMonth = cursor.getMonth();
+      }
+    }
+
+    const dayKey = cursor.toISOString().slice(0, 10);
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell';
+
+    if (cursor > end) {
+      cell.classList.add('empty-future');
+    } else {
+      // Combine local + server data. Server is authoritative for logged-in users,
+      // but local data (solvedTimestamps, visitDays) covers anonymous mode and
+      // captures events that may not have round-tripped yet.
+      const localSolves = solvesByDay[dayKey] || 0;
+      const srv = serverDays[dayKey] || { loads: 0, solves: 0 };
+      const solves = Math.max(localSolves, srv.solves || 0);
+      const loads = srv.loads || 0;
+      const visited = visitSet.has(dayKey) || loads > 0;
+      const activity = (visited ? 1 : 0) + solves; // visit-only = 1; solves stack
+
+      let level = 'l0';
+      if (activity >= 1 && activity <= 1) level = 'l1';
+      else if (activity >= 2 && activity <= 2) level = 'l2';
+      else if (activity >= 3 && activity <= 4) level = 'l3';
+      else if (activity >= 5) level = 'l4';
+      cell.classList.add(level);
+
+      if (activity > 0) activeDays++;
+      totalSolves += solves;
+
+      // Tooltip data
+      const niceDate = cursor.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const parts = [];
+      if (solves > 0) parts.push(`${solves} solve${solves > 1 ? 's' : ''}`);
+      if (loads > 0 && solves === 0) parts.push(`${loads} visit${loads > 1 ? 's' : ''}`);
+      else if (visited && solves === 0) parts.push('visited');
+      const summary = parts.length ? parts.join(' · ') : 'No activity';
+      cell.dataset.tip = `${summary} · ${niceDate}`;
+      cell.addEventListener('mouseenter', heatmapShowTip);
+      cell.addEventListener('mouseleave', heatmapHideTip);
+      cell.addEventListener('mousemove', heatmapMoveTip);
+    }
+
+    grid.appendChild(cell);
+    cursor.setDate(cursor.getDate() + 1);
+    if (cursor.getDay() === 0) col++;
+  }
+
+  // Month labels — positioned by column (each col = 11px + 3px gap = 14px)
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  monthLabelPositions.forEach(({ col, month }, idx) => {
+    // Skip if this label would overlap with the next (need ≥3 cols between)
+    const next = monthLabelPositions[idx + 1];
+    if (next && next.col - col < 3) return;
+    const lbl = document.createElement('span');
+    lbl.className = 'heatmap-month-label';
+    lbl.style.left = `${col * 14}px`;
+    lbl.textContent = monthNames[month];
+    monthsEl.appendChild(lbl);
+  });
+
+  // Summary
+  const summaryEl = document.getElementById('heatmapSummary');
+  if (summaryEl) {
+    summaryEl.textContent = `${totalSolves} solve${totalSolves === 1 ? '' : 's'} · ${activeDays} active day${activeDays === 1 ? '' : 's'} in the last year`;
+  }
+}
+
+function heatmapShowTip(e) {
+  const tip = document.getElementById('heatmapTip');
+  if (!tip || !e.currentTarget.dataset.tip) return;
+  tip.textContent = e.currentTarget.dataset.tip;
+  tip.classList.add('visible');
+  heatmapMoveTip(e);
+}
+function heatmapMoveTip(e) {
+  const tip = document.getElementById('heatmapTip');
+  if (!tip) return;
+  tip.style.left = `${e.clientX + 12}px`;
+  tip.style.top = `${e.clientY - 32}px`;
+}
+function heatmapHideTip() {
+  const tip = document.getElementById('heatmapTip');
+  if (tip) tip.classList.remove('visible');
+}
+
 function toggleSolved(id, e) {
   e.stopPropagation();
   const solved = getSolvedCases();
   const idx = solved.indexOf(id);
-  if (idx >= 0) solved.splice(idx, 1); else solved.push(id);
+  const wasUnsolved = idx < 0;
+  if (idx >= 0) solved.splice(idx, 1); else { solved.push(id); setSolvedTimestamp(id); }
   saveSolvedCases(solved);
   pushToCloud();
+  if (wasUnsolved) recordAttempt(id, 'solve');
   renderPromptList(activeFilter);
   renderBrowseGrid();
+  renderHeroStrip();
+  renderHeatmap();
 }
 
 function markCaseSolved(id) {
   const solved = getSolvedCases();
-  if (!solved.includes(id)) { solved.push(id); saveSolvedCases(solved); }
+  const wasUnsolved = !solved.includes(id);
+  if (wasUnsolved) { solved.push(id); saveSolvedCases(solved); setSolvedTimestamp(id); }
   pushToCloud();
+  if (wasUnsolved) recordAttempt(id, 'solve');
   renderPromptList(activeFilter);
   renderBrowseGrid();
+  renderHeroStrip();
+  renderHeatmap();
   dismissSolvedOverlay();
 }
 
@@ -4337,6 +5048,8 @@ async function loadCase(id) {
     return;
   }
   activeCaseId = id;
+  setLastAttempted(id);
+  recordAttempt(id, 'load');
   refreshSolveCountdown();
   updatePrevNextButtons();
   document.documentElement.classList.add('case-active');
@@ -6684,6 +7397,9 @@ async function syncFromCloud() {
     if (cloudSolved.length === 0 && localSolved.length > 0) {
       pushToCloud();
     }
+
+    // Fetch D1-backed attempt history for heatmap + streak
+    fetchServerAttempts();
   } catch { /* network failure — localStorage still works */ }
 }
 
