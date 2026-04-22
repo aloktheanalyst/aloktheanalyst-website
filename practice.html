@@ -757,6 +757,21 @@
   .qs-title { font-size: 0.82rem; font-weight: 600; color: var(--white); margin-bottom: 0.2rem; }
   .qs-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
 
+  .welcome-browse-btn {
+    margin-top: 0.6rem;
+    padding: 0.65rem 1.3rem;
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .welcome-browse-btn:hover { background: var(--accent-hover, #1d4ed8); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+
   /* MESSAGE BUBBLES */
   .msg {
     display: flex;
@@ -2387,36 +2402,27 @@
   }
   .browse-view-toggle svg { width: 13px; height: 13px; }
 
-  /* ── DASHBOARD COLLAPSE CONTROL ── */
-  .dashboard-toggle-row {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0 2rem;
-    margin-top: -0.25rem;
-    margin-bottom: 0.25rem;
+  /* ── DASHBOARD AUTOHIDE (scroll-driven) ── */
+  /* The hero strip + heatmap animate out when the user scrolls down in the
+     browse list, and slide back in when they return to the top. Purely
+     scroll-driven — no manual toggle. */
+  .hero-strip, .heatmap-section {
+    transition: max-height 0.28s ease, opacity 0.2s ease, margin 0.28s ease, padding 0.28s ease;
+    overflow: hidden;
+    max-height: 600px;
+    opacity: 1;
   }
-  .dashboard-collapse-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 500;
-    padding: 0.25rem 0.65rem;
-    border-radius: 16px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    transition: all 0.15s;
-  }
-  .dashboard-collapse-btn:hover { color: var(--accent); border-color: var(--accent); }
-  .dashboard-collapse-btn svg { width: 12px; height: 12px; transition: transform 0.18s; }
   body.dashboard-collapsed .hero-strip,
-  body.dashboard-collapsed .heatmap-section { display: none !important; }
-  body.dashboard-collapsed .dashboard-collapse-btn svg { transform: rotate(-90deg); }
+  body.dashboard-collapsed .heatmap-section,
+  body.dashboard-collapsed .heatmap-tip {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    pointer-events: none;
+  }
 
   /* ── LIST VIEW (tabular) ── */
   .browse-list {
@@ -3054,15 +3060,7 @@
     </div>
   </div>
 
-  <!-- Dashboard collapse toggle -->
-  <div class="dashboard-toggle-row">
-    <button class="dashboard-collapse-btn" id="dashboardCollapseBtn" onclick="toggleDashboard()" title="Hide / show your dashboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
-      <span id="dashboardCollapseLabel">Hide dashboard</span>
-    </button>
-  </div>
-
-  <!-- State-aware 3-card hero strip -->
+  <!-- State-aware 3-card hero strip (auto-hides when the user scrolls down in the list below) -->
   <div class="hero-strip" id="heroStrip">
     <!-- Card 1: Resume / Welcome -->
     <div class="hero-card hero-resume is-empty" id="heroResume" onclick="heroResumeClick()">
@@ -3297,33 +3295,14 @@
 
     <!-- MESSAGES -->
     <div class="messages" id="messages">
-      <!-- Welcome state -->
+      <!-- Welcome state (shown only as a fallback — normal entry is Browse → pick a question) -->
       <div class="welcome-state" id="welcomeState">
         <div class="welcome-icon">📊</div>
-        <h2>READY TO <span>PRACTICE</span>?</h2>
-        <p>Choose a case study from the sidebar, or pick a quick start below. Get real interview-style questions with instant AI feedback.</p>
-        <div class="quick-starts">
-          <div class="qs-card" onclick="startQuickCase('sql_window')">
-            <div class="qs-icon">🗄️</div>
-            <div class="qs-title">SQL Window Functions</div>
-            <div class="qs-desc">RANK, DENSE_RANK, running totals</div>
-          </div>
-          <div class="qs-card" onclick="startQuickCase('ab_test')">
-            <div class="qs-icon">🧪</div>
-            <div class="qs-title">A/B Test Analysis</div>
-            <div class="qs-desc">Statistical significance, p-values</div>
-          </div>
-          <div class="qs-card" onclick="startQuickCase('funnel')">
-            <div class="qs-icon">📉</div>
-            <div class="qs-title">Funnel Drop-off</div>
-            <div class="qs-desc">Diagnose & fix conversion issues</div>
-          </div>
-          <div class="qs-card" onclick="startQuickCase('python_clean')">
-            <div class="qs-icon">🐍</div>
-            <div class="qs-title">Data Cleaning (Python)</div>
-            <div class="qs-desc">Pandas, missing data, outliers</div>
-          </div>
-        </div>
+        <h2>PICK A <span>QUESTION</span></h2>
+        <p>Browse the question library and pick anything that matches what you&rsquo;re prepping for. You&rsquo;ll get the prompt, an interactive editor for SQL/Python, and an AI coach.</p>
+        <button class="welcome-browse-btn" onclick="navigateToBrowse()">
+          &larr; Back to questions
+        </button>
       </div>
     </div>
 
@@ -4479,19 +4458,35 @@ function renderBrowseView() {
   updateBrowseChipCounts();
 }
 
-// ── Dashboard collapse (hero + heatmap) ──
-function applyDashboardState() {
-  var collapsed = false;
-  try { collapsed = localStorage.getItem('dashboardCollapsed') === '1'; } catch {}
-  document.body.classList.toggle('dashboard-collapsed', collapsed);
-  var label = document.getElementById('dashboardCollapseLabel');
-  if (label) label.textContent = collapsed ? 'Show dashboard' : 'Hide dashboard';
-}
-function toggleDashboard() {
-  var collapsed = document.body.classList.toggle('dashboard-collapsed');
-  try { localStorage.setItem('dashboardCollapsed', collapsed ? '1' : '0'); } catch {}
-  var label = document.getElementById('dashboardCollapseLabel');
-  if (label) label.textContent = collapsed ? 'Show dashboard' : 'Hide dashboard';
+// ── Dashboard autohide (scroll-driven) ──
+// When the user scrolls down in the browse list, collapse hero + heatmap so
+// there's more room for questions. When they scroll back to the top, bring
+// the dashboard back. No manual toggle, no localStorage — purely reactive.
+function initDashboardAutoCollapse() {
+  var wrap = document.querySelector('.browse-grid-wrapper');
+  if (!wrap || wrap._autoCollapseAttached) return;
+  wrap._autoCollapseAttached = true;
+
+  var EXPAND_AT = 10;   // scrolled back to (near) top → expand
+  var COLLAPSE_AT = 60; // scrolled down past this → collapse
+  var ticking = false;
+
+  function update() {
+    ticking = false;
+    var top = wrap.scrollTop;
+    var isCollapsed = document.body.classList.contains('dashboard-collapsed');
+    if (!isCollapsed && top > COLLAPSE_AT) {
+      document.body.classList.add('dashboard-collapsed');
+    } else if (isCollapsed && top < EXPAND_AT) {
+      document.body.classList.remove('dashboard-collapsed');
+    }
+  }
+
+  wrap.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  }, { passive: true });
 }
 
 function sortByKey(key) {
@@ -4701,9 +4696,10 @@ window.onload = async () => {
   renderPromptList();
   renderHeroStrip();
   renderHeatmap();
-  // Apply persisted view + dashboard preferences, then render the browse view
-  applyDashboardState();
+  // Apply persisted view preference, then render the browse view.
+  // Dashboard collapse is now scroll-driven — no persisted state.
   setBrowseView(browseViewMode);
+  initDashboardAutoCollapse();
   updateKeyStatuses();
   updatePillDisplay();
   // Set initial status bar label using selected model
@@ -5411,6 +5407,29 @@ async function loadCase(id) {
     window.location.href = dest;
     return;
   }
+
+  // Validate case exists in PROMPTS before doing anything else.
+  // If PROMPTS didn't load or id is stale, bounce back to browse instead of
+  // leaving the user stranded on the welcome placeholder.
+  const p = PROMPTS.find(x => x.id === id);
+  if (!p) {
+    console.warn('loadCase: id not found in PROMPTS, returning to browse', id);
+    history.replaceState({}, '', window.location.pathname);
+    showBrowseView();
+    return;
+  }
+
+  // Clear welcome state + prior messages FIRST — before any code that might throw.
+  // This guarantees the user never sees the legacy "Ready to Practice?" state
+  // once they've picked a case.
+  const msgs = document.getElementById('messages');
+  if (msgs) {
+    const ws = document.getElementById('welcomeState');
+    if (ws) ws.remove();
+    msgs.innerHTML = '';
+  }
+  conversationHistory = [];
+
   activeCaseId = id;
   setLastAttempted(id);
   recordAttempt(id, 'load');
@@ -5430,7 +5449,6 @@ async function loadCase(id) {
     t.classList.toggle('active', t.dataset.rtab === 'output');
   });
   renderPromptList(activeFilter);
-  const p = PROMPTS.find(x => x.id === id);
   trackEvent('case_load', id, { tag: p.tag, difficulty: p.difficulty });
   document.getElementById('activeCaseTitle').textContent = p.title;
   document.getElementById('activeCaseMeta').textContent = `${p.tag.toUpperCase()} · ${p.difficulty.toUpperCase()} · aloktheanalyst.com`;
@@ -5442,13 +5460,6 @@ async function loadCase(id) {
   } else {
     fwEl.style.display = 'none';
   }
-
-  // Clear welcome state and messages
-  const msgs = document.getElementById('messages');
-  const ws = document.getElementById('welcomeState');
-  if (ws) ws.remove();
-  msgs.innerHTML = '';
-  conversationHistory = [];
 
   // Restore chat input (may have been hidden by behavioral questions)
   const inputArea = document.getElementById('inputArea');
@@ -6302,30 +6313,11 @@ function resetChat() {
   msgs.innerHTML = `
     <div class="welcome-state" id="welcomeState">
       <div class="welcome-icon">📊</div>
-      <h2>READY TO <span>PRACTICE</span>?</h2>
-      <p>Choose a case study from the sidebar, or pick a quick start below.</p>
-      <div class="quick-starts">
-        <div class="qs-card" onclick="startQuickCase('sql_window')">
-          <div class="qs-icon">🗄️</div>
-          <div class="qs-title">SQL Window Functions</div>
-          <div class="qs-desc">RANK, DENSE_RANK, running totals</div>
-        </div>
-        <div class="qs-card" onclick="startQuickCase('ab_test')">
-          <div class="qs-icon">🧪</div>
-          <div class="qs-title">A/B Test Analysis</div>
-          <div class="qs-desc">Statistical significance, p-values</div>
-        </div>
-        <div class="qs-card" onclick="startQuickCase('funnel')">
-          <div class="qs-icon">📉</div>
-          <div class="qs-title">Funnel Drop-off</div>
-          <div class="qs-desc">Diagnose & fix conversion issues</div>
-        </div>
-        <div class="qs-card" onclick="startQuickCase('python_clean')">
-          <div class="qs-icon">🐍</div>
-          <div class="qs-title">Data Cleaning (Python)</div>
-          <div class="qs-desc">Pandas, missing data, outliers</div>
-        </div>
-      </div>
+      <h2>PICK A <span>QUESTION</span></h2>
+      <p>Browse the question library and pick anything that matches what you&rsquo;re prepping for.</p>
+      <button class="welcome-browse-btn" onclick="navigateToBrowse()">
+        &larr; Back to questions
+      </button>
     </div>`;
   document.getElementById('activeCaseTitle').textContent = 'Select a case study to begin';
   document.getElementById('activeCaseMeta').textContent = 'ANALYTICS INTERVIEW PRACTICE · aloktheanalyst.com';
