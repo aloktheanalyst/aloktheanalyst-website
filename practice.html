@@ -2341,7 +2341,17 @@
     padding: 0.75rem 2rem;
     background: var(--bg);
     flex-wrap: wrap;
+    /* Stick below the header — gives the list a clear "top" so scrolling
+       up past the list naturally reveals the dashboard above. */
+    position: sticky;
+    top: var(--browse-header-h, 72px);
+    z-index: 4;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease;
   }
+  /* Once the dashboard has scrolled away, show a subtle divider under the
+     filters — lets the user feel they're now "at the top of the list". */
+  body.dash-hidden .browse-filters { border-bottom-color: var(--border); }
   .browse-chip {
     padding: 0.35rem 0.85rem;
     border: 1px solid var(--border);
@@ -2408,26 +2418,25 @@
   }
   .browse-view-toggle svg { width: 13px; height: 13px; }
 
-  /* ── DASHBOARD AUTOHIDE (scroll-driven) ── */
-  /* The hero strip + heatmap animate out when the user scrolls down in the
-     browse list, and slide back in when they return to the top. Purely
-     scroll-driven — no manual toggle. */
+  /* ── DASHBOARD SCROLL BEHAVIOR ──
+     The hero strip + heatmap are part of the natural scroll content. They
+     scroll out of view as the user scrolls down and back into view as they
+     scroll up. A subtle opacity + translateY fade (driven by the scroll
+     handler via CSS variables) makes the transition feel smoother than a
+     raw scroll.
+
+     The filters row sticks below the sticky header so once the dashboard
+     has scrolled away, the list has a clear "top" to scroll against —
+     reaching that top with further up-scroll naturally pulls the dashboard
+     back into view. */
   .hero-strip, .heatmap-section {
-    transition: max-height 0.28s ease, opacity 0.2s ease, margin 0.28s ease, padding 0.28s ease;
-    overflow: hidden;
-    max-height: 600px;
-    opacity: 1;
-  }
-  body.dashboard-collapsed .hero-strip,
-  body.dashboard-collapsed .heatmap-section,
-  body.dashboard-collapsed .heatmap-tip {
-    max-height: 0 !important;
-    opacity: 0 !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    pointer-events: none;
+    transform-origin: top;
+    will-change: opacity, transform;
+    /* Opacity drops as the dashboard scrolls out. CSS variable is set by JS
+       in requestAnimationFrame. Fallback: fully visible. */
+    opacity: var(--dash-visibility, 1);
+    transform: translateY(calc((1 - var(--dash-visibility, 1)) * -8px));
+    transition: opacity 0.08s linear;
   }
 
   /* ── LIST VIEW (tabular) ── */
@@ -4464,32 +4473,44 @@ function renderBrowseView() {
   updateBrowseChipCounts();
 }
 
-// ── Dashboard autohide (scroll-driven) ──
-// Default: dashboard is visible. When the user scrolls anywhere in the browse
-// view (hovering dashboard tiles, heatmap, filters, or the list), the hero
-// strip + heatmap animate out so the question list rises up. Scroll back to
-// the top and the dashboard slides back in. No manual toggle, no localStorage.
-function initDashboardAutoCollapse() {
+// ── Dashboard scroll-linked fade ──
+// The hero strip + heatmap are part of the normal scroll content — they
+// scroll out of view as the user scrolls down, and come back as they
+// scroll up. To make that feel smooth (not just "hard edge of viewport"),
+// we progressively fade + lift the dashboard based on scrollTop via the
+// --dash-visibility CSS variable (1 → fully visible, 0 → faded out).
+// The list reaches its "top" when filters stick beneath the header, so
+// scrolling up past that top naturally pulls the dashboard back in view.
+function initDashboardScrollFade() {
   var scroller = document.querySelector('.browse-view');
-  if (!scroller || scroller._autoCollapseAttached) return;
-  scroller._autoCollapseAttached = true;
+  if (!scroller || scroller._fadeAttached) return;
+  scroller._fadeAttached = true;
 
-  // Start expanded — explicitly clear any leftover class.
-  document.body.classList.remove('dashboard-collapsed');
+  // Publish the sticky header height as a CSS var so filters stick under it.
+  function publishHeaderHeight() {
+    var header = document.querySelector('.browse-header');
+    if (header) {
+      document.documentElement.style.setProperty(
+        '--browse-header-h', header.getBoundingClientRect().height + 'px'
+      );
+    }
+  }
+  publishHeaderHeight();
+  window.addEventListener('resize', publishHeaderHeight, { passive: true });
 
-  var EXPAND_AT = 10;    // scrolled back to (near) top → expand
-  var COLLAPSE_AT = 60;  // scrolled down past this → collapse
+  // Fade over the first ~180px of scroll. By the time the dashboard has
+  // mostly scrolled off, it's fully transparent.
+  var FADE_LENGTH = 180;
+  var HIDDEN_AT = 160;  // class-based signal for other styles (filters divider)
   var ticking = false;
 
   function update() {
     ticking = false;
     var top = scroller.scrollTop;
-    var isCollapsed = document.body.classList.contains('dashboard-collapsed');
-    if (!isCollapsed && top > COLLAPSE_AT) {
-      document.body.classList.add('dashboard-collapsed');
-    } else if (isCollapsed && top < EXPAND_AT) {
-      document.body.classList.remove('dashboard-collapsed');
-    }
+    // Progressive opacity: 1 at top, 0 past FADE_LENGTH.
+    var vis = Math.max(0, Math.min(1, 1 - top / FADE_LENGTH));
+    scroller.style.setProperty('--dash-visibility', vis.toFixed(3));
+    document.body.classList.toggle('dash-hidden', top > HIDDEN_AT);
   }
 
   scroller.addEventListener('scroll', function() {
@@ -4497,6 +4518,9 @@ function initDashboardAutoCollapse() {
     ticking = true;
     requestAnimationFrame(update);
   }, { passive: true });
+
+  // Initialize once in case the view loads scrolled (e.g. back-navigation).
+  update();
 }
 
 function sortByKey(key) {
@@ -4709,7 +4733,7 @@ window.onload = async () => {
   // Apply persisted view preference, then render the browse view.
   // Dashboard collapse is now scroll-driven — no persisted state.
   setBrowseView(browseViewMode);
-  initDashboardAutoCollapse();
+  initDashboardScrollFade();
   updateKeyStatuses();
   updatePillDisplay();
   // Set initial status bar label using selected model
@@ -5502,8 +5526,65 @@ async function loadCase(id) {
   // Remove the loading message
   if (msgs.lastChild) msgs.removeChild(msgs.lastChild);
 
-  if (!content || (!content.prompt && p.topic !== 'behavioral')) {
+  if (!content || (!content.prompt && p.topic !== 'behavioral' && p.topic !== 'puzzles')) {
     appendMessage('bot', 'Failed to load this case. Please refresh the page and try again.');
+    return;
+  }
+
+  // Puzzles: show the problem + solution card, then offer AI discussion
+  if (p.topic === 'puzzles') {
+    const solBtn = document.getElementById('showSolutionBtn');
+    closeSolutionPanel();
+    if (solBtn) solBtn.style.display = 'none'; // solution is inline in the card
+
+    // Hide chat input until user clicks AI button
+    const inputArea = document.getElementById('inputArea');
+    if (inputArea) inputArea.style.display = 'none';
+
+    // Extract just the puzzle question from the prompt (before coaching lines)
+    const casePrompt = CASE_PROMPTS[id] || content.prompt || '';
+    const cutMarkers = ['Guide the user:', '**Your Coaching Approach:**', 'Walk me through', 'Guide me through', 'Push me to'];
+    let cutIdx = -1;
+    for (const m of cutMarkers) { cutIdx = casePrompt.indexOf(m); if (cutIdx > 0) break; }
+    const probMarkers = ['**The Puzzle:**', '**The Problem:**'];
+    let startIdx = 0;
+    for (const m of probMarkers) { const i = casePrompt.indexOf(m); if (i >= 0) { startIdx = i; break; } }
+    const rawQuestion = cutIdx > 0
+      ? casePrompt.substring(startIdx, cutIdx).trim()
+      : (casePrompt || p.title);
+
+    const sol = content.solution ? content.solution.replace(/\\n/g, '\n') : '';
+    const solHtml = sol ? formatSolutionMarkdown(sol) : '<em>Solution not available yet.</em>';
+    const qHtml = formatSolutionMarkdown(rawQuestion);
+
+    const card = document.createElement('div');
+    card.className = 'behavioral-card';
+    card.innerHTML =
+      '<div class="beh-question-section">' +
+        '<div class="beh-label">Puzzle</div>' +
+        '<h3 class="beh-question-text">' + escapeHtml(p.title) + '</h3>' +
+        '<div class="beh-solution-body" style="margin-top:0.75rem">' + qHtml + '</div>' +
+        '<div class="beh-tip" style="margin-top:1rem">Think it through before reading the solution below. Cover it, reason out loud, then check.</div>' +
+      '</div>' +
+      '<div class="beh-solution-section">' +
+        '<div class="beh-label">Solution</div>' +
+        '<div class="beh-solution-body">' + solHtml + '</div>' +
+      '</div>' +
+      '<div class="beh-ai-section">' +
+        '<button class="beh-ai-btn" onclick="startPuzzleCoach()">' +
+          '&#x1F916; Ask AI about this puzzle' +
+        '</button>' +
+        '<span class="beh-ai-hint">Explore the reasoning, edge cases, or alternative approaches</span>' +
+      '</div>';
+    msgs.appendChild(card);
+    renderReactionBar(msgs, id);
+
+    // Seed system context with full prompt + solution so AI can discuss deeply
+    const systemCtx = casePrompt ||
+      'You are an analytical thinking coach. The user is reviewing this puzzle: "' + p.title + '".' +
+      (sol ? ' The solution is: ' + sol : '') +
+      ' Help them understand the reasoning, explore edge cases, and discuss alternative approaches.';
+    conversationHistory.push({ role: 'system', content: systemCtx });
     return;
   }
 
@@ -5618,6 +5699,22 @@ function startBehavioralCoach() {
   conversationHistory.push({ role: 'assistant', content: 'Share your answer using the STAR method and I\'ll give you feedback.' });
 
   // Focus the chat input
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) chatInput.focus();
+}
+
+function startPuzzleCoach() {
+  // Show chat input
+  const inputArea = document.getElementById('inputArea');
+  if (inputArea) inputArea.style.display = '';
+
+  // Hide AI button so it can't be double-clicked
+  const aiSection = document.querySelector('.beh-ai-section');
+  if (aiSection) aiSection.style.display = 'none';
+
+  appendMessage('bot', 'Happy to dig into this! What would you like to explore?\n\n- Did the solution surprise you? I can walk through **why** it works.\n- Want to discuss **edge cases** or variations?\n- Have an **alternative approach** you want to check?\n\nJust ask.');
+  conversationHistory.push({ role: 'assistant', content: 'Ask me anything about this puzzle — the reasoning, edge cases, or alternative approaches.' });
+
   const chatInput = document.getElementById('chatInput');
   if (chatInput) chatInput.focus();
 }
