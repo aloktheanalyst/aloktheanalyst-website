@@ -4504,7 +4504,7 @@ function sortByKey(key) {
   renderBrowseView();
 }
 
-function getFilteredPrompts() {
+function getFilteredBrowsePrompts() {
   var solved = getSolvedCases();
   var searchText = (document.getElementById('browseSearch')?.value || '').toLowerCase();
   var filtered = PROMPTS.slice();
@@ -4551,7 +4551,7 @@ function updateBrowseChipCounts() {
 function renderBrowseList() {
   var container = document.getElementById('browseList');
   if (!container) return;
-  var state = getFilteredPrompts();
+  var state = getFilteredBrowsePrompts();
   var filtered = state.filtered;
   var solved = state.solved;
 
@@ -4613,7 +4613,7 @@ function renderBrowseList() {
 function renderBrowseGrid() {
   var grid = document.getElementById('browseGrid');
   if (!grid) return;
-  var state = getFilteredPrompts();
+  var state = getFilteredBrowsePrompts();
   var filtered = state.filtered;
   var solved = state.solved;
 
