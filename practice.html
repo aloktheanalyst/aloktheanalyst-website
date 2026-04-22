@@ -2284,7 +2284,11 @@
   .test-result-item.fail .test-result-msg { color: #ef4444; }
 
   /* ── BROWSE VIEW ── */
-  .browse-view { display: flex; flex: 1; flex-direction: column; overflow: hidden; }
+  /* Whole view is one scroll container so the user can scroll while hovering
+     anywhere — dashboard tiles, heatmap, filters, or the list itself. */
+  .browse-view { display: flex; flex: 1; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+  .browse-view::-webkit-scrollbar { width: 4px; }
+  .browse-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   body.view-browse .browse-view { display: flex; }
   body.view-browse .app-layout { display: none; }
   body.view-solve .browse-view { display: none; }
@@ -2296,6 +2300,10 @@
   .browse-header {
     padding: 1.5rem 2rem 0;
     background: var(--bg);
+    /* Sticky so search + view toggle stay reachable as user scrolls */
+    position: sticky;
+    top: 0;
+    z-index: 5;
   }
   .browse-header-top {
     display: flex;
@@ -2364,12 +2372,10 @@
   }
 
   .browse-grid-wrapper {
-    flex: 1;
-    overflow-y: auto;
+    /* No local scroll — the whole .browse-view is the scroll container now
+       so the wheel works when hovering anywhere (dashboard, heatmap, list). */
     padding: 1rem 2rem 2rem;
   }
-  .browse-grid-wrapper::-webkit-scrollbar { width: 4px; }
-  .browse-grid-wrapper::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
   /* ── VIEW TOGGLE (List / Grid) ── */
   .browse-view-toggle {
@@ -4459,21 +4465,25 @@ function renderBrowseView() {
 }
 
 // ── Dashboard autohide (scroll-driven) ──
-// When the user scrolls down in the browse list, collapse hero + heatmap so
-// there's more room for questions. When they scroll back to the top, bring
-// the dashboard back. No manual toggle, no localStorage — purely reactive.
+// Default: dashboard is visible. When the user scrolls anywhere in the browse
+// view (hovering dashboard tiles, heatmap, filters, or the list), the hero
+// strip + heatmap animate out so the question list rises up. Scroll back to
+// the top and the dashboard slides back in. No manual toggle, no localStorage.
 function initDashboardAutoCollapse() {
-  var wrap = document.querySelector('.browse-grid-wrapper');
-  if (!wrap || wrap._autoCollapseAttached) return;
-  wrap._autoCollapseAttached = true;
+  var scroller = document.querySelector('.browse-view');
+  if (!scroller || scroller._autoCollapseAttached) return;
+  scroller._autoCollapseAttached = true;
 
-  var EXPAND_AT = 10;   // scrolled back to (near) top → expand
-  var COLLAPSE_AT = 60; // scrolled down past this → collapse
+  // Start expanded — explicitly clear any leftover class.
+  document.body.classList.remove('dashboard-collapsed');
+
+  var EXPAND_AT = 10;    // scrolled back to (near) top → expand
+  var COLLAPSE_AT = 60;  // scrolled down past this → collapse
   var ticking = false;
 
   function update() {
     ticking = false;
-    var top = wrap.scrollTop;
+    var top = scroller.scrollTop;
     var isCollapsed = document.body.classList.contains('dashboard-collapsed');
     if (!isCollapsed && top > COLLAPSE_AT) {
       document.body.classList.add('dashboard-collapsed');
@@ -4482,7 +4492,7 @@ function initDashboardAutoCollapse() {
     }
   }
 
-  wrap.addEventListener('scroll', function() {
+  scroller.addEventListener('scroll', function() {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(update);
