@@ -134,12 +134,19 @@ export async function onRequest(context) {
         hashIp(ip),
         resolveGoogleId(request, env),
       ]);
+      let resolvedEmail = userEmail || null;
+      if (!resolvedEmail && googleId) {
+        try {
+          const u = await env.DB.prepare(`SELECT email FROM user WHERE google_id = ?`).bind(googleId).first();
+          resolvedEmail = u?.email || null;
+        } catch { /* non-fatal */ }
+      }
       await env.DB.prepare(
         `INSERT INTO feedback (google_id, user_email, question_id, category, message, page, ip_hash, user_agent, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         googleId,
-        userEmail || null,
+        resolvedEmail,
         questionId,
         category || null,
         isReaction ? null : userMessage,

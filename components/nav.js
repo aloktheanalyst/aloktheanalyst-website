@@ -218,7 +218,7 @@
       </a>
       <ul class="snav-links">
         ${liHTML}
-        <li><a href="/practice.html" class="snav-cta">Practice Arena</a></li>
+        <li><a href="/practice" class="snav-cta">Practice Arena</a></li>
       </ul>
       <div class="snav-right">
         <div class="snav-auth" id="snavAuth">

@@ -180,6 +180,20 @@ async function handleCallback(context) {
     : '/practice';
   const safeRedirect = isLocalPath(rawRedirect) ? rawRedirect : '/practice';
 
+  // ── If profile is incomplete (or missing), force /profile flow first ──
+  let finalRedirect = safeRedirect;
+  try {
+    const row = await env.DB.prepare(
+      'SELECT profile_complete FROM user_profile WHERE google_id = ?1'
+    ).bind(gUser.id).first();
+    const complete = row && row.profile_complete === 1;
+    if (!complete) {
+      finalRedirect = `/profile?next=${encodeURIComponent(safeRedirect)}`;
+    }
+  } catch { /* if user_profile table missing or query fails, send to /profile to be safe */
+    finalRedirect = `/profile?next=${encodeURIComponent(safeRedirect)}`;
+  }
+
   // ── Set cookie and redirect ─────────────────────────────────────────────
   const sessionCookie = `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL}`;
   const clearState = 'oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
@@ -188,7 +202,7 @@ async function handleCallback(context) {
   return new Response(null, {
     status: 302,
     headers: [
-      ['Location', safeRedirect],
+      ['Location', finalRedirect],
       ['Set-Cookie', sessionCookie],
       ['Set-Cookie', clearState],
       ['Set-Cookie', clearRedirect],

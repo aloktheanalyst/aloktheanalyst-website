@@ -8,40 +8,56 @@ export async function onRequest(context) {
   const subtitle =
     'Access AI-powered case study coaching, RCA frameworks, and mock interviews — free with Google sign-in.';
 
-  // ── Validate session ──────────────────────────────────────────────────────
-  if (env.SESSION_KV) {
-    const cookies = parseCookies(request.headers.get('Cookie') || '');
-    const sessionId = cookies.session;
+  const url = new URL(request.url);
+  const redirectPath = url.pathname + url.search;
+  const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(redirectPath)}`;
 
-    if (sessionId) {
-      const sessionData = await env.SESSION_KV.get(`sess:${sessionId}`);
-      if (sessionData) {
-        // Valid session — serve the page
-        return next();
-      }
-    }
-  } else {
-    // SESSION_KV not bound — fail closed (block access until properly configured)
-    const url = new URL(request.url);
-    const redirectPath = url.pathname + url.search;
-    const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(redirectPath)}`;
+  // ── Validate session ──────────────────────────────────────────────────────
+  if (!env.SESSION_KV) {
+    // SESSION_KV not bound — fail closed
     return new Response(renderLoginPage({ title, subtitle, loginUrl }), {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
   }
 
-  // ── No valid session — return login page ──────────────────────────────────
-  const url = new URL(request.url);
-  const redirectPath = url.pathname + url.search;
-  const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(redirectPath)}`;
+  const cookies = parseCookies(request.headers.get('Cookie') || '');
+  const sessionId = cookies.session;
+  let googleId = null;
 
-  const html = renderLoginPage({ title, subtitle, loginUrl });
+  if (sessionId) {
+    try {
+      const raw = await env.SESSION_KV.get(`sess:${sessionId}`);
+      if (raw) googleId = JSON.parse(raw).google_id || null;
+    } catch { /* fall through to login */ }
+  }
 
-  return new Response(html, {
-    status: 200,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-  });
+  if (!googleId) {
+    return new Response(renderLoginPage({ title, subtitle, loginUrl }), {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+
+  // ── Profile completeness gate ────────────────────────────────────────────
+  // Logged in but profile incomplete → force /profile flow.
+  if (env.DB) {
+    try {
+      const row = await env.DB.prepare(
+        'SELECT profile_complete FROM user_profile WHERE google_id = ?1'
+      ).bind(googleId).first();
+      const complete = row && row.profile_complete === 1;
+      if (!complete) {
+        return Response.redirect(
+          `${url.origin}/profile?next=${encodeURIComponent(redirectPath)}`,
+          302
+        );
+      }
+    } catch { /* if DB lookup fails, allow access — don't lock out users */ }
+  }
+
+  // Valid session and complete profile — serve the page.
+  return next();
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

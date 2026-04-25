@@ -4846,7 +4846,7 @@ async function fetchServerAttempts() {
 
 // Fire-and-forget: record an attempt event (load or solve) to D1
 function recordAttempt(caseId, eventType) {
-  if (!caseId || !window.currentUser) return; // skip for anonymous
+  if (!caseId || !currentUser) return; // skip for anonymous
   if (eventType !== 'load' && eventType !== 'solve') return;
   try {
     fetch('/api/attempts', {

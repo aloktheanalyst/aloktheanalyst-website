@@ -135,11 +135,12 @@ export async function onRequest(context) {
       return json({ error: 'Solved cases data too large' }, 400);
     }
 
-    // Determine if profile is complete (name + targetRole required)
+    // Determine if profile is complete (name + targetRole + gender + whatsapp required)
     const p = profile || {};
     const isComplete = !!(
       p.name && p.name.trim() &&
       p.targetRole && p.targetRole.trim() &&
+      p.gender && p.gender.trim() &&
       p.whatsappCountryCode && p.whatsappNumber && p.whatsappNumber.trim()
     );
 
@@ -157,13 +158,13 @@ export async function onRequest(context) {
           email, name, current_role, target_role, exp_status, career_start_date,
           target_companies, prep_stage, sql_level, python_level, tools,
           discovery_source, city, timezone, linkedin_url,
-          whatsapp_country_code, whatsapp_number, profile_complete
+          whatsapp_country_code, whatsapp_number, gender, profile_complete
         ) VALUES (
           ?1, ?2, ?3, CURRENT_TIMESTAMP,
           ?4, ?5, ?6, ?7, ?8, ?9,
           ?10, ?11, ?12, ?13, ?14,
           ?15, ?16, ?17, ?18,
-          ?19, ?20, ?21
+          ?19, ?20, ?21, ?22
         )
         ON CONFLICT(google_id) DO UPDATE SET
           profile_data     = excluded.profile_data,
@@ -186,6 +187,7 @@ export async function onRequest(context) {
           linkedin_url          = excluded.linkedin_url,
           whatsapp_country_code = excluded.whatsapp_country_code,
           whatsapp_number       = excluded.whatsapp_number,
+          gender                = excluded.gender,
           profile_complete      = excluded.profile_complete
       `).bind(
         googleId, profileStr, solvedStr,
@@ -206,6 +208,7 @@ export async function onRequest(context) {
         p.linkedinUrl || null,
         p.whatsappCountryCode || null,
         p.whatsappNumber || null,
+        p.gender || null,
         isComplete ? 1 : 0,
       ).run();
 
